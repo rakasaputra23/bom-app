@@ -18,55 +18,59 @@
 
 @section('content')
 <div class="row">
+  <!-- Kode Material -->
   <div class="col-lg-3 col-6">
-    <div class="small-box bg-info">
+    <div class="small-box bg-primary">
       <div class="inner">
-        <h3>150</h3>
-        <p>Data Barang</p>
+        <h3>25</h3>
+        <p>Kode Material</p>
       </div>
       <div class="icon">
-        <i class="fas fa-cubes"></i>
+        <i class="fas fa-cube"></i>
       </div>
-      <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+      <a href="#" class="small-box-footer">Kelola Kode Material <i class="fas fa-arrow-circle-right"></i></a>
     </div>
   </div>
 
-  <div class="col-lg-3 col-6">
-    <div class="small-box bg-success">
-      <div class="inner">
-        <h3>53</h3>
-        <p>Pengguna</p>
-      </div>
-      <div class="icon">
-        <i class="fas fa-users"></i>
-      </div>
-      <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-    </div>
-  </div>
-
-  <div class="col-lg-3 col-6">
-    <div class="small-box bg-warning">
-      <div class="inner">
-        <h3>44</h3>
-        <p>Transaksi Hari Ini</p>
-      </div>
-      <div class="icon">
-        <i class="fas fa-receipt"></i>
-      </div>
-      <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-    </div>
-  </div>
-
+  <!-- Revisi -->
   <div class="col-lg-3 col-6">
     <div class="small-box bg-danger">
       <div class="inner">
-        <h3>65</h3>
-        <p>Stok Menipis</p>
+        <h3>5</h3>
+        <p>Revisi</p>
       </div>
       <div class="icon">
-        <i class="fas fa-exclamation-triangle"></i>
+        <i class="fas fa-edit"></i>
       </div>
-      <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+      <a href="#" class="small-box-footer">Lihat Revisi <i class="fas fa-arrow-circle-right"></i></a>
+    </div>
+  </div>
+
+  <!-- Proyek -->
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-success">
+      <div class="inner">
+        <h3>8</h3>
+        <p>Proyek</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-project-diagram"></i>
+      </div>
+      <a href="#" class="small-box-footer">Kelola Proyek <i class="fas fa-arrow-circle-right"></i></a>
+    </div>
+  </div>
+
+  <!-- YUOM -->
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-warning">
+      <div class="inner">
+        <h3>12</h3>
+        <p>YUOM</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-balance-scale"></i>
+      </div>
+      <a href="#" class="small-box-footer">Kelola YUOM <i class="fas fa-arrow-circle-right"></i></a>
     </div>
   </div>
 </div>
