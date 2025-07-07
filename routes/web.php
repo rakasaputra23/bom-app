@@ -32,3 +32,8 @@ Route::get('/dashboard', function () {
 Route::get('/profile', function () {
     return view('profile');
 })->name('profile');
+
+Route::view('/kode-material', 'master.kode_material')->name('kode.material');
+Route::view('/revisi', 'master.revisi')->name('revisi');
+Route::view('/proyek', 'master.proyek')->name('proyek');
+Route::view('/yuom', 'master.yuom')->name('yuom');

@@ -45,35 +45,40 @@
           </ul>
         
         <li class="nav-item has-treeview">
-          <a href="#" class="nav-link">
+        <a href="#" class="nav-link">
             <i class="nav-icon fas fa-database"></i>
-            <p>Data Master<i class="right fas fa-angle-left"></i></p>
-          </a>
-          <ul class="nav nav-treeview">
+            <p>
+            Data Master
+            <i class="right fas fa-angle-left"></i>
+            </p>
+        </a>
+        <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="#" class="nav-link">
+            <a href="{{ route('kode.material') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Kode Material</p>
-              </a>
+            </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link">
+            <a href="{{ route('revisi') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Revisi</p>
-              </a>
+            </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link">
+            <a href="{{ route('proyek') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Proyek</p>
-              </a>
+            </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link">
+            <a href="{{ route('yuom') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
                 <p>YUOM</p>
-              </a>
+            </a>
             </li>
+        </ul>
+        </li>
           </ul>
         </li>
         </li>
