@@ -31,6 +31,10 @@
     <form>
       <div class="row">
         <div class="form-group col-md-3">
+          <label for="nomor">Nomor</label>
+          <input type="text" class="form-control" id="nomor" placeholder="001">
+        </div>
+        <div class="form-group col-md-3">
           <label for="kode_material">Kode Material</label>
           <input type="text" class="form-control" id="kode_material" placeholder="KM001">
         </div>
@@ -42,6 +46,8 @@
           <label for="spesifikasi">Spesifikasi</label>
           <input type="text" class="form-control" id="spesifikasi" placeholder="Spesifikasi">
         </div>
+      </div>
+      <div class="row">
         <div class="form-group col-md-3">
           <label for="satuan">Satuan</label>
           <select class="form-control" id="satuan">
@@ -53,15 +59,16 @@
             <option value="Liter">Liter</option>
           </select>
         </div>
-      </div>
-      <div class="row">
-        <div class="col-md-12">
-          <button type="button" class="btn btn-primary">
-            <i class="fas fa-save"></i> Simpan
-          </button>
-          <button type="reset" class="btn btn-secondary">
-            <i class="fas fa-undo"></i> Reset
-          </button>
+        <div class="col-md-9">
+          <label>&nbsp;</label>
+          <div>
+            <button type="button" class="btn btn-primary">
+              <i class="fas fa-save"></i> Simpan
+            </button>
+            <button type="reset" class="btn btn-secondary">
+              <i class="fas fa-undo"></i> Reset
+            </button>
+          </div>
         </div>
       </div>
     </form>
@@ -70,6 +77,12 @@
 
 <!-- Filter Pencarian -->
 <div class="row">
+  <div class="col-md-2">
+    <div class="form-group">
+      <label>Cari Nomor</label>
+      <input type="text" class="form-control" id="search_nomor" placeholder="Cari nomor...">
+    </div>
+  </div>
   <div class="col-md-3">
     <div class="form-group">
       <label>Cari Kode Material</label>
@@ -82,7 +95,7 @@
       <input type="text" class="form-control" id="search_nama" placeholder="Cari berdasarkan nama...">
     </div>
   </div>
-  <div class="col-md-3">
+  <div class="col-md-2">
     <div class="form-group">
       <label>Filter Satuan</label>
       <select class="form-control" id="search_satuan">
@@ -113,16 +126,18 @@
         <thead>
           <tr>
             <th style="width: 5%;">No</th>
+            <th style="width: 10%;">Nomor</th>
             <th style="width: 15%;">Kode Material</th>
             <th style="width: 25%;">Nama Material</th>
-            <th style="width: 25%;">Spesifikasi</th>
+            <th style="width: 20%;">Spesifikasi</th>
             <th style="width: 10%;">Satuan</th>
-            <th style="width: 10%;">Aksi</th>
+            <th style="width: 15%;">Aksi</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>1</td>
+            <td>001</td>
             <td>KM001</td>
             <td>Besi Hollow</td>
             <td>2x4 galvanis</td>
@@ -138,6 +153,7 @@
           </tr>
           <tr>
             <td>2</td>
+            <td>002</td>
             <td>KM002</td>
             <td>Cat Tembok</td>
             <td>Vinilex 5kg</td>
@@ -153,6 +169,7 @@
           </tr>
           <tr>
             <td>3</td>
+            <td>003</td>
             <td>KM003</td>
             <td>Paku Beton</td>
             <td>3 inch</td>
@@ -168,6 +185,7 @@
           </tr>
           <tr>
             <td>4</td>
+            <td>004</td>
             <td>KM004</td>
             <td>Kabel Listrik</td>
             <td>NYM 2.5mm</td>
@@ -183,6 +201,7 @@
           </tr>
           <tr>
             <td>5</td>
+            <td>005</td>
             <td>KM005</td>
             <td>Semen Portland</td>
             <td>40kg per sak</td>
@@ -198,6 +217,7 @@
           </tr>
           <tr>
             <td>6</td>
+            <td>006</td>
             <td>KM006</td>
             <td>Thinner</td>
             <td>Epoxy grade A</td>
@@ -213,6 +233,7 @@
           </tr>
           <tr>
             <td>7</td>
+            <td>007</td>
             <td>KM007</td>
             <td>Pipa PVC</td>
             <td>4 inch grade A</td>
@@ -228,6 +249,7 @@
           </tr>
           <tr>
             <td>8</td>
+            <td>008</td>
             <td>KM008</td>
             <td>Genteng Beton</td>
             <td>Flat minimalis</td>
@@ -260,8 +282,12 @@
       <div class="modal-body">
         <form>
           <div class="form-group">
+            <label for="edit_nomor">Nomor</label>
+            <input type="text" class="form-control" id="edit_nomor">
+          </div>
+          <div class="form-group">
             <label for="edit_kode_material">Kode Material</label>
-            <input type="text" class="form-control" id="edit_kode_material" readonly>
+            <input type="text" class="form-control" id="edit_kode_material">
           </div>
           <div class="form-group">
             <label for="edit_nama_material">Nama Material</label>
@@ -355,7 +381,7 @@ $(document).ready(function() {
         text: '<i class="fas fa-file-excel"></i> Excel',
         className: 'btn btn-success btn-sm',
         exportOptions: {
-          columns: [0, 1, 2, 3, 4]
+          columns: [0, 1, 2, 3, 4, 5]
         }
       },
       {
@@ -363,7 +389,7 @@ $(document).ready(function() {
         text: '<i class="fas fa-file-pdf"></i> PDF',
         className: 'btn btn-danger btn-sm',
         exportOptions: {
-          columns: [0, 1, 2, 3, 4]
+          columns: [0, 1, 2, 3, 4, 5]
         }
       },
       {
@@ -371,7 +397,7 @@ $(document).ready(function() {
         text: '<i class="fas fa-print"></i> Print',
         className: 'btn btn-info btn-sm',
         exportOptions: {
-          columns: [0, 1, 2, 3, 4]
+          columns: [0, 1, 2, 3, 4, 5]
         }
       }
     ],
@@ -395,7 +421,7 @@ $(document).ready(function() {
     order: [[1, 'asc']],
     columnDefs: [
       { 
-        targets: [0, 5], 
+        targets: [0, 6], 
         orderable: false 
       }
     ]
@@ -403,20 +429,22 @@ $(document).ready(function() {
 
   // Custom search filters
   function applyFilters() {
+    var searchNomor = $('#search_nomor').val();
     var searchKode = $('#search_kode').val();
     var searchNama = $('#search_nama').val();
     var searchSatuan = $('#search_satuan').val();
 
     // Apply individual column filters
-    table.column(1).search(searchKode, true, false);
-    table.column(2).search(searchNama, true, false);
-    table.column(4).search(searchSatuan, true, false);
+    table.column(1).search(searchNomor, true, false);
+    table.column(2).search(searchKode, true, false);
+    table.column(3).search(searchNama, true, false);
+    table.column(5).search(searchSatuan, true, false);
 
     table.draw();
   }
 
   // Real-time search
-  $('#search_kode, #search_nama').on('keyup', function() {
+  $('#search_nomor, #search_kode, #search_nama').on('keyup', function() {
     clearTimeout($(this).data('timeout'));
     $(this).data('timeout', setTimeout(function() {
       applyFilters();
@@ -430,11 +458,13 @@ $(document).ready(function() {
   // Edit Modal
   $(document).on('click', '.btn-warning', function() {
     var row = $(this).closest('tr');
-    var kode = row.find('td:eq(1)').text();
-    var nama = row.find('td:eq(2)').text();
-    var spesifikasi = row.find('td:eq(3)').text();
-    var satuan = row.find('td:eq(4)').text();
+    var nomor = row.find('td:eq(1)').text();
+    var kode = row.find('td:eq(2)').text();
+    var nama = row.find('td:eq(3)').text();
+    var spesifikasi = row.find('td:eq(4)').text();
+    var satuan = row.find('td:eq(5)').text();
 
+    $('#edit_nomor').val(nomor);
     $('#edit_kode_material').val(kode);
     $('#edit_nama_material').val(nama);
     $('#edit_spesifikasi').val(spesifikasi);
@@ -444,10 +474,11 @@ $(document).ready(function() {
   // Delete Modal
   $(document).on('click', '.btn-danger', function() {
     var row = $(this).closest('tr');
-    var kode = row.find('td:eq(1)').text();
-    var nama = row.find('td:eq(2)').text();
+    var nomor = row.find('td:eq(1)').text();
+    var kode = row.find('td:eq(2)').text();
+    var nama = row.find('td:eq(3)').text();
     
-    $('#delete_item_name').text(kode + ' - ' + nama);
+    $('#delete_item_name').text(nomor + ' - ' + kode + ' - ' + nama);
   });
 
   // Success notification simulation

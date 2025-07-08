@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Revisi')
+@section('title', 'Unit of Measure (UoM)')
 
 @section('header')
 <div class="row mb-2">
   <div class="col-sm-6">
-    <h1 class="m-0">Revisi</h1>
+    <h1 class="m-0">Unit of Measure (UoM)</h1>
   </div>
   <div class="col-sm-6">
     <ol class="breadcrumb float-sm-right">
       <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-      <li class="breadcrumb-item active">Revisi</li>
+      <li class="breadcrumb-item active">Unit of Measure</li>
     </ol>
   </div>
 </div>
@@ -20,7 +20,7 @@
 <!-- Form Tambah -->
 <div class="card card-primary">
   <div class="card-header">
-    <h3 class="card-title">Tambah Revisi</h3>
+    <h3 class="card-title">Tambah Unit of Measure</h3>
     <div class="card-tools">
       <button type="button" class="btn btn-tool" data-card-widget="collapse">
         <i class="fas fa-minus"></i>
@@ -32,11 +32,11 @@
       <div class="row">
         <div class="form-group col-md-6">
           <label for="nomor">Nomor</label>
-          <input type="text" class="form-control" id="nomor" placeholder="REV001">
+          <input type="text" class="form-control" id="nomor" placeholder="UOM001">
         </div>
         <div class="form-group col-md-6">
-          <label for="jenis_revisi">Jenis Revisi</label>
-          <input type="text" class="form-control" id="jenis_revisi" placeholder="Jenis Revisi">
+          <label for="satuan">Satuan</label>
+          <input type="text" class="form-control" id="satuan" placeholder="Satuan">
         </div>
       </div>
       <div class="row">
@@ -63,8 +63,8 @@
   </div>
   <div class="col-md-6">
     <div class="form-group">
-      <label>Cari Jenis Revisi</label>
-      <input type="text" class="form-control" id="search_jenis" placeholder="Cari berdasarkan jenis revisi...">
+      <label>Cari Satuan</label>
+      <input type="text" class="form-control" id="search_satuan" placeholder="Cari berdasarkan satuan...">
     </div>
   </div>
 </div>
@@ -72,7 +72,7 @@
 <!-- DataTable -->
 <div class="card">
   <div class="card-header">
-    <h3 class="card-title">Daftar Revisi</h3>
+    <h3 class="card-title">Daftar Unit of Measure</h3>
     <div class="card-tools">
       <button type="button" class="btn btn-tool" data-card-widget="collapse">
         <i class="fas fa-minus"></i>
@@ -81,20 +81,20 @@
   </div>
   <div class="card-body">
     <div class="table-responsive">
-      <table id="revisiTable" class="table table-bordered table-striped table-hover">
+      <table id="yuomTable" class="table table-bordered table-striped table-hover">
         <thead>
           <tr>
             <th style="width: 10%;">No</th>
-            <th style="width: 25%;">Nomor</th>
-            <th style="width: 45%;">Jenis Revisi</th>
+            <th style="width: 35%;">Nomor</th>
+            <th style="width: 35%;">Satuan</th>
             <th style="width: 20%;">Aksi</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>1</td>
-            <td>REV001</td>
-            <td>Revisi Desain Struktur</td>
+            <td>UOM001</td>
+            <td>Kilogram</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -106,8 +106,8 @@
           </tr>
           <tr>
             <td>2</td>
-            <td>REV002</td>
-            <td>Revisi Anggaran Biaya</td>
+            <td>UOM002</td>
+            <td>Meter</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -119,8 +119,8 @@
           </tr>
           <tr>
             <td>3</td>
-            <td>REV003</td>
-            <td>Revisi Spesifikasi Teknis</td>
+            <td>UOM003</td>
+            <td>Pieces</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -132,8 +132,8 @@
           </tr>
           <tr>
             <td>4</td>
-            <td>REV004</td>
-            <td>Revisi Jadwal Pelaksanaan</td>
+            <td>UOM004</td>
+            <td>Liter</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -145,8 +145,47 @@
           </tr>
           <tr>
             <td>5</td>
-            <td>REV005</td>
-            <td>Revisi Metode Kerja</td>
+            <td>UOM005</td>
+            <td>Batang</td>
+            <td>
+              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>UOM006</td>
+            <td>Meter Persegi</td>
+            <td>
+              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>UOM007</td>
+            <td>Meter Kubik</td>
+            <td>
+              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>UOM008</td>
+            <td>Gram</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -167,7 +206,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="editModalLabel">Edit Revisi</h5>
+        <h5 class="modal-title" id="editModalLabel">Edit Unit of Measure</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -179,8 +218,8 @@
             <input type="text" class="form-control" id="edit_nomor" readonly>
           </div>
           <div class="form-group">
-            <label for="edit_jenis_revisi">Jenis Revisi</label>
-            <input type="text" class="form-control" id="edit_jenis_revisi">
+            <label for="edit_satuan">Satuan</label>
+            <input type="text" class="form-control" id="edit_satuan">
           </div>
         </form>
       </div>
@@ -203,7 +242,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <p>Apakah Anda yakin ingin menghapus revisi <strong id="delete_item_name"></strong>?</p>
+        <p>Apakah Anda yakin ingin menghapus unit of measure <strong id="delete_item_name"></strong>?</p>
         <div class="alert alert-warning">
           <i class="fas fa-exclamation-triangle"></i>
           Data yang telah dihapus tidak dapat dikembalikan!
@@ -243,7 +282,7 @@
 <script>
 $(document).ready(function() {
   // Initialize DataTable
-  var table = $('#revisiTable').DataTable({
+  var table = $('#yuomTable').DataTable({
     responsive: true,
     autoWidth: false,
     processing: true,
@@ -305,17 +344,17 @@ $(document).ready(function() {
   // Custom search filters
   function applyFilters() {
     var searchNomor = $('#search_nomor').val();
-    var searchJenis = $('#search_jenis').val();
+    var searchSatuan = $('#search_satuan').val();
 
     // Apply individual column filters
     table.column(1).search(searchNomor, true, false);
-    table.column(2).search(searchJenis, true, false);
+    table.column(2).search(searchSatuan, true, false);
 
     table.draw();
   }
 
   // Real-time search
-  $('#search_nomor, #search_jenis').on('keyup', function() {
+  $('#search_nomor, #search_satuan').on('keyup', function() {
     clearTimeout($(this).data('timeout'));
     $(this).data('timeout', setTimeout(function() {
       applyFilters();
@@ -326,19 +365,19 @@ $(document).ready(function() {
   $(document).on('click', '.btn-warning', function() {
     var row = $(this).closest('tr');
     var nomor = row.find('td:eq(1)').text();
-    var jenis = row.find('td:eq(2)').text();
+    var satuan = row.find('td:eq(2)').text();
 
     $('#edit_nomor').val(nomor);
-    $('#edit_jenis_revisi').val(jenis);
+    $('#edit_satuan').val(satuan);
   });
 
   // Delete Modal
   $(document).on('click', '.btn-danger', function() {
     var row = $(this).closest('tr');
     var nomor = row.find('td:eq(1)').text();
-    var jenis = row.find('td:eq(2)').text();
+    var satuan = row.find('td:eq(2)').text();
     
-    $('#delete_item_name').text(nomor + ' - ' + jenis);
+    $('#delete_item_name').text(nomor + ' - ' + satuan);
   });
 
   // Success notification simulation
