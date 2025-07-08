@@ -44,6 +44,11 @@ Route::get('/profile', function () {
     return view('profile');
 })->name('profile');
 
+// Tambahkan route untuk edit profile
+Route::get('/profile/edit', function () {
+    return view('profile.edit');
+})->name('profile.edit');
+
 // Master Data Routes
 Route::view('/kode-material', 'master.kode_material')->name('kode.material');
 Route::view('/revisi', 'master.revisi')->name('revisi');

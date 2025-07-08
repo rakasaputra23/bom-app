@@ -16,7 +16,7 @@
 
   <div class="card">
     <div class="card-body register-card-body">
-      <p class="login-box-msg">Register a new membership</p>
+      <p class="login-box-msg">Register</p>
 
       <form action="#" method="post">
         <div class="input-group mb-3">
@@ -57,7 +57,7 @@
         </div>
       </form>
 
-      <a href="{{ route('login') }}" class="text-center">I already have a membership</a>
+      <a href="{{ route('login') }}" class="text-center">I already have a account</a>
     </div>
   </div>
 </div>
