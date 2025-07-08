@@ -11,7 +11,6 @@
       </div>
       <div class="info">
         <a href="{{ route('profile') }}" class="d-block">Admin</a>
-
       </div>
     </div>
 
@@ -26,61 +25,59 @@
 
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
-            <i class="nav-icon fas fa-money-bill-wave"></i>
-            <p>Transaction<i class="right fas fa-angle-left"></i></p>
+            <i class="nav-icon fas fa-list-alt"></i>
+            <p>BOM Management<i class="right fas fa-angle-left"></i></p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="#" class="nav-link">
+              <a href="{{ route('bom.create') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Transaksi Penjualan</p>
+                <p>Create BOM</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link">
+              <a href="{{ route('bom.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Laporan</p>
+                <p>View BOM</p>
               </a>
             </li>
           </ul>
+        </li>
         
         <li class="nav-item has-treeview">
-        <a href="#" class="nav-link">
+          <a href="#" class="nav-link">
             <i class="nav-icon fas fa-database"></i>
             <p>
-            Data Master
-            <i class="right fas fa-angle-left"></i>
+              Data Master
+              <i class="right fas fa-angle-left"></i>
             </p>
-        </a>
-        <ul class="nav nav-treeview">
+          </a>
+          <ul class="nav nav-treeview">
             <li class="nav-item">
-            <a href="{{ route('kode.material') }}" class="nav-link">
+              <a href="{{ route('kode.material') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Kode Material</p>
-            </a>
+              </a>
             </li>
             <li class="nav-item">
-            <a href="{{ route('revisi') }}" class="nav-link">
+              <a href="{{ route('revisi') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Revisi</p>
-            </a>
+              </a>
             </li>
             <li class="nav-item">
-            <a href="{{ route('proyek') }}" class="nav-link">
+              <a href="{{ route('proyek') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Proyek</p>
-            </a>
+              </a>
             </li>
             <li class="nav-item">
-            <a href="{{ route('uom') }}" class="nav-link">
+              <a href="{{ route('uom') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
                 <p>UOM</p>
-            </a>
+              </a>
             </li>
-        </ul>
-        </li>
           </ul>
-        </li>
         </li>
       </ul>
     </nav>

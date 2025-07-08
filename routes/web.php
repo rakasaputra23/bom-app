@@ -54,3 +54,14 @@ Route::view('/kode-material', 'master.kode_material')->name('kode.material');
 Route::view('/revisi', 'master.revisi')->name('revisi');
 Route::view('/proyek', 'master.proyek')->name('proyek');
 Route::view('/uom', 'master.uom')->name('uom');
+
+// BOM Routes
+Route::prefix('bom')->group(function () {
+    Route::get('/', function () {
+        return view('bom.index');
+    })->name('bom.index');
+    
+    Route::get('/create', function () {
+        return view('bom.create');
+    })->name('bom.create');
+});
