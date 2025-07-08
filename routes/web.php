@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Authentication Routes
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
@@ -21,10 +22,20 @@ Route::get('/register', function () {
     return view('auth.register');
 })->name('register');
 
+// Password Reset Routes (Static Views Only)
 Route::get('/password/reset', function () {
     return view('auth.passwords.email');
 })->name('password.request');
 
+// Halaman update password statis
+Route::get('/password/update', function () {
+    return view('auth.passwords.reset', [
+        'token' => 'static-token-example',
+        'email' => 'example@email.com' // Optional: jika ingin menampilkan email contoh
+    ]);
+})->name('password.update');
+
+// Dashboard & Profile
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->name('dashboard');
@@ -33,6 +44,7 @@ Route::get('/profile', function () {
     return view('profile');
 })->name('profile');
 
+// Master Data Routes
 Route::view('/kode-material', 'master.kode_material')->name('kode.material');
 Route::view('/revisi', 'master.revisi')->name('revisi');
 Route::view('/proyek', 'master.proyek')->name('proyek');
