@@ -31,12 +31,12 @@
     <form>
       <div class="row">
         <div class="form-group col-md-6">
-          <label for="nomor">Nomor</label>
-          <input type="text" class="form-control" id="nomor" placeholder="UOM001">
-        </div>
-        <div class="form-group col-md-6">
           <label for="satuan">Satuan</label>
           <input type="text" class="form-control" id="satuan" placeholder="Satuan">
+        </div>
+        <div class="form-group col-md-6">
+          <label for="jenis">Jenis</label>
+          <input type="text" class="form-control" id="jenis" placeholder="Jenis">
         </div>
       </div>
       <div class="row">
@@ -57,14 +57,14 @@
 <div class="row">
   <div class="col-md-6">
     <div class="form-group">
-      <label>Cari Nomor</label>
-      <input type="text" class="form-control" id="search_nomor" placeholder="Cari berdasarkan nomor...">
+      <label>Cari Satuan</label>
+      <input type="text" class="form-control" id="search_satuan" placeholder="Cari berdasarkan satuan...">
     </div>
   </div>
   <div class="col-md-6">
     <div class="form-group">
-      <label>Cari Satuan</label>
-      <input type="text" class="form-control" id="search_satuan" placeholder="Cari berdasarkan satuan...">
+      <label>Cari Jenis</label>
+      <input type="text" class="form-control" id="search_jenis" placeholder="Cari berdasarkan jenis...">
     </div>
   </div>
 </div>
@@ -85,16 +85,16 @@
         <thead>
           <tr>
             <th style="width: 10%;">No</th>
-            <th style="width: 35%;">Nomor</th>
             <th style="width: 35%;">Satuan</th>
+            <th style="width: 35%;">Jenis</th>
             <th style="width: 20%;">Aksi</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>1</td>
-            <td>UOM001</td>
             <td>Kilogram</td>
+            <td>Berat</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -106,8 +106,8 @@
           </tr>
           <tr>
             <td>2</td>
-            <td>UOM002</td>
             <td>Meter</td>
+            <td>Panjang</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -119,8 +119,8 @@
           </tr>
           <tr>
             <td>3</td>
-            <td>UOM003</td>
             <td>Pieces</td>
+            <td>Satuan</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -132,8 +132,8 @@
           </tr>
           <tr>
             <td>4</td>
-            <td>UOM004</td>
             <td>Liter</td>
+            <td>Volume</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -145,8 +145,8 @@
           </tr>
           <tr>
             <td>5</td>
-            <td>UOM005</td>
             <td>Batang</td>
+            <td>Satuan</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -158,8 +158,8 @@
           </tr>
           <tr>
             <td>6</td>
-            <td>UOM006</td>
             <td>Meter Persegi</td>
+            <td>Luas</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -171,8 +171,8 @@
           </tr>
           <tr>
             <td>7</td>
-            <td>UOM007</td>
             <td>Meter Kubik</td>
+            <td>Volume</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -184,8 +184,8 @@
           </tr>
           <tr>
             <td>8</td>
-            <td>UOM008</td>
             <td>Gram</td>
+            <td>Berat</td>
             <td>
               <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
                 <i class="fas fa-edit"></i>
@@ -214,12 +214,12 @@
       <div class="modal-body">
         <form>
           <div class="form-group">
-            <label for="edit_nomor">Nomor</label>
-            <input type="text" class="form-control" id="edit_nomor" readonly>
+            <label for="edit_satuan">Satuan</label>
+            <input type="text" class="form-control" id="edit_satuan" readonly>
           </div>
           <div class="form-group">
-            <label for="edit_satuan">Satuan</label>
-            <input type="text" class="form-control" id="edit_satuan">
+            <label for="edit_jenis">Jenis</label>
+            <input type="text" class="form-control" id="edit_jenis">
           </div>
         </form>
       </div>
@@ -343,18 +343,18 @@ $(document).ready(function() {
 
   // Custom search filters
   function applyFilters() {
-    var searchNomor = $('#search_nomor').val();
     var searchSatuan = $('#search_satuan').val();
+    var searchJenis = $('#search_jenis').val();
 
     // Apply individual column filters
-    table.column(1).search(searchNomor, true, false);
-    table.column(2).search(searchSatuan, true, false);
+    table.column(1).search(searchSatuan, true, false);
+    table.column(2).search(searchJenis, true, false);
 
     table.draw();
   }
 
   // Real-time search
-  $('#search_nomor, #search_satuan').on('keyup', function() {
+  $('#search_satuan, #search_jenis').on('keyup', function() {
     clearTimeout($(this).data('timeout'));
     $(this).data('timeout', setTimeout(function() {
       applyFilters();
@@ -364,20 +364,20 @@ $(document).ready(function() {
   // Edit Modal
   $(document).on('click', '.btn-warning', function() {
     var row = $(this).closest('tr');
-    var nomor = row.find('td:eq(1)').text();
-    var satuan = row.find('td:eq(2)').text();
+    var satuan = row.find('td:eq(1)').text();
+    var jenis = row.find('td:eq(2)').text();
 
-    $('#edit_nomor').val(nomor);
     $('#edit_satuan').val(satuan);
+    $('#edit_jenis').val(jenis);
   });
 
   // Delete Modal
   $(document).on('click', '.btn-danger', function() {
     var row = $(this).closest('tr');
-    var nomor = row.find('td:eq(1)').text();
-    var satuan = row.find('td:eq(2)').text();
+    var satuan = row.find('td:eq(1)').text();
+    var jenis = row.find('td:eq(2)').text();
     
-    $('#delete_item_name').text(nomor + ' - ' + satuan);
+    $('#delete_item_name').text(satuan + ' - ' + jenis);
   });
 
   // Success notification simulation

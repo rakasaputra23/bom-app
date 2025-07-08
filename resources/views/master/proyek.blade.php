@@ -31,8 +31,8 @@
     <form>
       <div class="row">
         <div class="form-group col-md-6">
-          <label for="nomor">Nomor</label>
-          <input type="text" class="form-control" id="nomor" placeholder="PRJ001">
+          <label for="kode_proyek">Kode Proyek</label>
+          <input type="text" class="form-control" id="kode_proyek" placeholder="PRJ001">
         </div>
         <div class="form-group col-md-6">
           <label for="nama_proyek">Nama Proyek</label>
@@ -57,8 +57,8 @@
 <div class="row">
   <div class="col-md-6">
     <div class="form-group">
-      <label>Cari Nomor</label>
-      <input type="text" class="form-control" id="search_nomor" placeholder="Cari berdasarkan nomor...">
+      <label>Cari Kode Proyek</label>
+      <input type="text" class="form-control" id="search_kode" placeholder="Cari berdasarkan kode proyek...">
     </div>
   </div>
   <div class="col-md-6">
@@ -85,7 +85,7 @@
         <thead>
           <tr>
             <th style="width: 10%;">No</th>
-            <th style="width: 25%;">Nomor</th>
+            <th style="width: 25%;">Kode Proyek</th>
             <th style="width: 45%;">Nama Proyek</th>
             <th style="width: 20%;">Aksi</th>
           </tr>
@@ -188,8 +188,8 @@
       <div class="modal-body">
         <form>
           <div class="form-group">
-            <label for="edit_nomor">Nomor</label>
-            <input type="text" class="form-control" id="edit_nomor" readonly>
+            <label for="edit_kode_proyek">Kode Proyek</label>
+            <input type="text" class="form-control" id="edit_kode_proyek" readonly>
           </div>
           <div class="form-group">
             <label for="edit_nama_proyek">Nama Proyek</label>
@@ -317,18 +317,18 @@ $(document).ready(function() {
 
   // Custom search filters
   function applyFilters() {
-    var searchNomor = $('#search_nomor').val();
+    var searchKode = $('#search_kode').val();
     var searchNama = $('#search_nama').val();
 
     // Apply individual column filters
-    table.column(1).search(searchNomor, true, false);
+    table.column(1).search(searchKode, true, false);
     table.column(2).search(searchNama, true, false);
 
     table.draw();
   }
 
   // Real-time search
-  $('#search_nomor, #search_nama').on('keyup', function() {
+  $('#search_kode, #search_nama').on('keyup', function() {
     clearTimeout($(this).data('timeout'));
     $(this).data('timeout', setTimeout(function() {
       applyFilters();
@@ -338,20 +338,20 @@ $(document).ready(function() {
   // Edit Modal
   $(document).on('click', '.btn-warning', function() {
     var row = $(this).closest('tr');
-    var nomor = row.find('td:eq(1)').text();
+    var kode = row.find('td:eq(1)').text();
     var nama = row.find('td:eq(2)').text();
 
-    $('#edit_nomor').val(nomor);
+    $('#edit_kode_proyek').val(kode);
     $('#edit_nama_proyek').val(nama);
   });
 
   // Delete Modal
   $(document).on('click', '.btn-danger', function() {
     var row = $(this).closest('tr');
-    var nomor = row.find('td:eq(1)').text();
+    var kode = row.find('td:eq(1)').text();
     var nama = row.find('td:eq(2)').text();
     
-    $('#delete_item_name').text(nomor + ' - ' + nama);
+    $('#delete_item_name').text(kode + ' - ' + nama);
   });
 
   // Success notification simulation
