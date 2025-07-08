@@ -79,6 +79,30 @@
             </li>
           </ul>
         </li>
+
+        <li class="nav-item has-treeview">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-users-cog"></i>
+            <p>
+              User Management
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{{ route('user') }}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Users</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ route('user.group') }}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>User Groups</p>
+              </a>
+            </li>
+          </ul>
+        </li>
       </ul>
     </nav>
   </div>
