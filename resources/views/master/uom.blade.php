@@ -9,7 +9,7 @@
   </div>
   <div class="col-sm-6">
     <ol class="breadcrumb float-sm-right">
-      <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
       <li class="breadcrumb-item active">Unit of Measure</li>
     </ol>
   </div>
@@ -67,7 +67,7 @@
   <div class="col-md-6">
     <div class="form-group">
       <label>Cari Jenis</label>
-      <input type="text" class="form-control" id="search_qty" placeholder="Cari berdasarkan jenis...">
+      <input type="text" class="form-control" id="search_qty" placeholder="Cari berdasarkan qty...">
     </div>
   </div>
 </div>

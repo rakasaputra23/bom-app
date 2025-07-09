@@ -60,13 +60,13 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ route('revisi') }}" class="nav-link">
+            <a href="{{ route('revisi.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Revisi</p>
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ route('proyek') }}" class="nav-link">
+            <a href="{{ route('proyek.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Proyek</p>
             </a>

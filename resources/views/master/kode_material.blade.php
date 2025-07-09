@@ -42,7 +42,7 @@
           <div class="invalid-feedback"></div>
         </div>
         <div class="form-group col-md-4">
-          <label for="spesifikasi">Spesifikasi</label>
+          <label for="spesifikasi">Spesifikasi <span class="text-red">*</span></label>
           <input type="text" class="form-control" id="spesifikasi" name="spesifikasi" placeholder="Spesifikasi">
           <div class="invalid-feedback"></div>
         </div>

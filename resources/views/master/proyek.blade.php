@@ -9,7 +9,7 @@
   </div>
   <div class="col-sm-6">
     <ol class="breadcrumb float-sm-right">
-      <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
       <li class="breadcrumb-item active">Proyek</li>
     </ol>
   </div>
@@ -28,20 +28,23 @@
     </div>
   </div>
   <div class="card-body">
-    <form>
+    <form id="addForm">
+      @csrf
       <div class="row">
         <div class="form-group col-md-6">
-          <label for="kode_proyek">Kode Proyek</label>
-          <input type="text" class="form-control" id="kode_proyek" placeholder="PRJ001">
+          <label for="kode_proyek">Kode Proyek <span class="text-red">*</span></label>
+          <input type="text" class="form-control" id="kode_proyek" name="kode_proyek" placeholder="PRJ001" required>
+          <div class="invalid-feedback"></div>
         </div>
         <div class="form-group col-md-6">
-          <label for="nama_proyek">Nama Proyek</label>
-          <input type="text" class="form-control" id="nama_proyek" placeholder="Nama Proyek">
+          <label for="nama_proyek">Nama Proyek <span class="text-red">*</span></label>
+          <input type="text" class="form-control" id="nama_proyek" name="nama_proyek" placeholder="Nama Proyek" required>
+          <div class="invalid-feedback"></div>
         </div>
       </div>
       <div class="row">
         <div class="col-md-12">
-          <button type="button" class="btn btn-primary">
+          <button type="submit" class="btn btn-primary">
             <i class="fas fa-save"></i> Simpan
           </button>
           <button type="reset" class="btn btn-secondary">
@@ -58,13 +61,13 @@
   <div class="col-md-6">
     <div class="form-group">
       <label>Cari Kode Proyek</label>
-      <input type="text" class="form-control" id="search_kode" placeholder="Cari berdasarkan kode proyek...">
+      <input type="text" class="form-control" id="search_kode" placeholder="Cari berdasarkan kode...">
     </div>
   </div>
   <div class="col-md-6">
     <div class="form-group">
       <label>Cari Nama Proyek</label>
-      <input type="text" class="form-control" id="search_nama" placeholder="Cari berdasarkan nama proyek...">
+      <input type="text" class="form-control" id="search_nama" placeholder="Cari berdasarkan nama...">
     </div>
   </div>
 </div>
@@ -84,91 +87,14 @@
       <table id="proyekTable" class="table table-bordered table-striped table-hover">
         <thead>
           <tr>
-            <th style="width: 10%;">No</th>
-            <th style="width: 25%;">Kode Proyek</th>
-            <th style="width: 45%;">Nama Proyek</th>
+            <th style="width: 5%;">No</th>
+            <th style="width: 20%;">Kode Proyek</th>
+            <th style="width: 55%;">Nama Proyek</th>
             <th style="width: 20%;">Aksi</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>PRJ001</td>
-            <td>Pembangunan Gedung Kantor</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>PRJ002</td>
-            <td>Renovasi Rumah Sakit</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>PRJ003</td>
-            <td>Konstruksi Jembatan</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>PRJ004</td>
-            <td>Pembangunan Perumahan</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>5</td>
-            <td>PRJ005</td>
-            <td>Infrastruktur Jalan Raya</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>6</td>
-            <td>PRJ006</td>
-            <td>Pembangunan Mall</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
+          <!-- Data akan dimuat via AJAX -->
         </tbody>
       </table>
     </div>
@@ -186,20 +112,25 @@
         </button>
       </div>
       <div class="modal-body">
-        <form>
+        <form id="editForm">
+          @csrf
+          @method('PUT')
+          <input type="hidden" id="edit_id" name="id">
           <div class="form-group">
-            <label for="edit_kode_proyek">Kode Proyek</label>
-            <input type="text" class="form-control" id="edit_kode_proyek" readonly>
+            <label for="edit_kode_proyek">Kode Proyek <span class="text-red">*</span></label>
+            <input type="text" class="form-control" id="edit_kode_proyek" name="kode_proyek" required>
+            <div class="invalid-feedback"></div>
           </div>
           <div class="form-group">
-            <label for="edit_nama_proyek">Nama Proyek</label>
-            <input type="text" class="form-control" id="edit_nama_proyek">
+            <label for="edit_nama_proyek">Nama Proyek <span class="text-red">*</span></label>
+            <input type="text" class="form-control" id="edit_nama_proyek" name="nama_proyek" required>
+            <div class="invalid-feedback"></div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="button" class="btn btn-primary">Simpan Perubahan</button>
+        <button type="button" class="btn btn-primary" id="updateBtn">Simpan Perubahan</button>
       </div>
     </div>
   </div>
@@ -224,7 +155,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="button" class="btn btn-danger">Hapus</button>
+        <button type="button" class="btn btn-danger" id="deleteBtn">Hapus</button>
       </div>
     </div>
   </div>
@@ -236,6 +167,8 @@
 <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+<!-- Toastr -->
+<link rel="stylesheet" href="{{ asset('plugins/toastr/toastr.min.css') }}">
 @endpush
 
 @push('scripts')
@@ -252,14 +185,35 @@
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+<!-- Toastr -->
+<script src="{{ asset('plugins/toastr/toastr.min.js') }}"></script>
 
 <script>
 $(document).ready(function() {
   // Initialize DataTable
   var table = $('#proyekTable').DataTable({
+    processing: true,
+    serverSide: true,
+    ajax: {
+      url: '{{ route("proyek.getData") }}',
+      data: function(d) {
+        d.search_kode = $('#search_kode').val();
+        d.search_nama = $('#search_nama').val();
+      }
+    },
+    columns: [
+      { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+      { data: 'kode_proyek', name: 'kode_proyek' },
+      { data: 'nama_proyek', name: 'nama_proyek' },
+      { 
+        data: 'action', 
+        name: 'action', 
+        orderable: false, 
+        searchable: false 
+      }
+    ],
     responsive: true,
     autoWidth: false,
-    processing: true,
     dom: '<"row"<"col-md-6"B><"col-md-6"f>>' +
          '<"row"<"col-md-12"tr>>' +
          '<"row"<"col-md-5"i><"col-md-7"p>>',
@@ -306,69 +260,141 @@ $(document).ready(function() {
     },
     pageLength: 10,
     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-    order: [[1, 'asc']],
-    columnDefs: [
-      { 
-        targets: [0, 3], 
-        orderable: false 
-      }
-    ]
+    order: [[1, 'asc']]
   });
 
   // Custom search filters
-  function applyFilters() {
-    var searchKode = $('#search_kode').val();
-    var searchNama = $('#search_nama').val();
-
-    // Apply individual column filters
-    table.column(1).search(searchKode, true, false);
-    table.column(2).search(searchNama, true, false);
-
-    table.draw();
-  }
-
-  // Real-time search
   $('#search_kode, #search_nama').on('keyup', function() {
-    clearTimeout($(this).data('timeout'));
-    $(this).data('timeout', setTimeout(function() {
-      applyFilters();
-    }, 300));
+    table.ajax.reload();
   });
 
-  // Edit Modal
-  $(document).on('click', '.btn-warning', function() {
-    var row = $(this).closest('tr');
-    var kode = row.find('td:eq(1)').text();
-    var nama = row.find('td:eq(2)').text();
+  // Add Form Submit
+  $('#addForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    var formData = new FormData(this);
+    
+    $.ajax({
+      url: '{{ route("proyek.store") }}',
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+        if(response.success) {
+          toastr.success(response.message);
+          $('#addForm')[0].reset();
+          table.ajax.reload();
+          clearValidation();
+        }
+      },
+      error: function(xhr) {
+        if(xhr.status === 422) {
+          var errors = xhr.responseJSON.errors;
+          displayValidationErrors(errors);
+        } else {
+          toastr.error('Terjadi kesalahan saat menyimpan data');
+        }
+      }
+    });
+  });
 
+  // Edit Button Click
+  $(document).on('click', '.edit-btn', function() {
+    var id = $(this).data('id');
+    var kode = $(this).data('kode');
+    var nama = $(this).data('nama');
+    
+    $('#edit_id').val(id);
     $('#edit_kode_proyek').val(kode);
     $('#edit_nama_proyek').val(nama);
+    $('#editModal').modal('show');
+    clearValidation('#editForm');
   });
 
-  // Delete Modal
-  $(document).on('click', '.btn-danger', function() {
-    var row = $(this).closest('tr');
-    var kode = row.find('td:eq(1)').text();
-    var nama = row.find('td:eq(2)').text();
+  // Update Button Click
+  $('#updateBtn').on('click', function() {
+    var id = $('#edit_id').val();
+    var formData = new FormData($('#editForm')[0]);
+    
+    $.ajax({
+      url: '{{ route("proyek.update", ":id") }}'.replace(':id', id),
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+        if(response.success) {
+          toastr.success(response.message);
+          $('#editModal').modal('hide');
+          table.ajax.reload();
+          clearValidation('#editForm');
+        }
+      },
+      error: function(xhr) {
+        if(xhr.status === 422) {
+          var errors = xhr.responseJSON.errors;
+          displayValidationErrors(errors, '#editForm');
+        } else {
+          toastr.error('Terjadi kesalahan saat mengupdate data');
+        }
+      }
+    });
+  });
+
+  // Delete Button Click
+  $(document).on('click', '.delete-btn', function() {
+    var id = $(this).data('id');
+    var kode = $(this).data('kode');
+    var nama = $(this).data('nama');
     
     $('#delete_item_name').text(kode + ' - ' + nama);
+    $('#deleteBtn').data('id', id);
+    $('#deleteModal').modal('show');
   });
 
-  // Success notification simulation
-  $('.modal .btn-primary, .modal .btn-danger').on('click', function() {
-    var modal = $(this).closest('.modal');
-    var isEdit = modal.attr('id') === 'editModal';
+  // Delete Confirmation
+  $('#deleteBtn').on('click', function() {
+    var id = $(this).data('id');
     
-    setTimeout(function() {
-      modal.modal('hide');
-      
-      // Simulate success message
-      var message = isEdit ? 'Data berhasil diupdate!' : 'Data berhasil dihapus!';
-      var alertType = isEdit ? 'success' : 'warning';
-      
-      // You can integrate with toastr or other notification library here
-      console.log(message);
-    }, 500);
+    $.ajax({
+      url: '{{ route("proyek.destroy", ":id") }}'.replace(':id', id),
+      method: 'DELETE',
+      data: {
+        '_token': '{{ csrf_token() }}'
+      },
+      success: function(response) {
+        if(response.success) {
+          toastr.success(response.message);
+          $('#deleteModal').modal('hide');
+          table.ajax.reload();
+        }
+      },
+      error: function(xhr) {
+        var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan saat menghapus data';
+        toastr.error(errorMessage);
+      }
+    });
+  });
+
+  // Helper Functions
+  function displayValidationErrors(errors, formSelector = '') {
+    $.each(errors, function(key, value) {
+      var input = $(formSelector + ' [name="' + key + '"]');
+      input.addClass('is-invalid');
+      input.next('.invalid-feedback').text(value[0]);
+    });
+  }
+
+  function clearValidation(formSelector = '') {
+    $(formSelector + ' .is-invalid').removeClass('is-invalid');
+    $(formSelector + ' .invalid-feedback').text('');
+  }
+
+  // Clear validation on input change
+  $('input, select').on('change', function() {
+    $(this).removeClass('is-invalid');
+    $(this).next('.invalid-feedback').text('');
   });
 });
 </script>

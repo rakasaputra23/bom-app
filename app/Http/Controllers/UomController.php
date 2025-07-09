@@ -14,24 +14,33 @@ class UomController extends Controller
     }
 
     public function getData(Request $request)
-    {
-        $query = Uom::query();
+{
+    $query = Uom::query();
 
-        return DataTables::of($query)
-            ->addIndexColumn()
-            ->addColumn('action', function ($row) {
-                return '
-                    <button class="btn btn-sm btn-warning edit-btn" data-id="' . $row->id . '" data-satuan="' . $row->satuan . '" data-qty="' . $row->qty . '">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger delete-btn" data-id="' . $row->id . '" data-satuan="' . $row->satuan . '" data-qty="' . $row->qty . '">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                ';
-            })
-            ->rawColumns(['action'])
-            ->make(true);
-    }
+    return DataTables::of($query)
+        ->filter(function ($query) use ($request) {
+            if ($request->has('search_satuan') && $request->search_satuan != '') {
+                $query->where('satuan', 'like', '%' . $request->search_satuan . '%');
+            }
+            if ($request->has('search_qty') && $request->search_qty != '') {
+                $query->where('qty', 'like', '%' . $request->search_qty . '%');
+            }
+        })
+        ->addIndexColumn()
+        ->addColumn('action', function ($row) {
+            return '
+                <button class="btn btn-sm btn-warning edit-btn" data-id="' . $row->id . '" data-satuan="' . $row->satuan . '" data-qty="' . $row->qty . '">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger delete-btn" data-id="' . $row->id . '" data-satuan="' . $row->satuan . '" data-qty="' . $row->qty . '">
+                    <i class="fas fa-trash"></i>
+                </button>
+            ';
+        })
+        ->rawColumns(['action'])
+        ->make(true);
+}
+
 
     public function store(Request $request)
     {

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\KodeMaterialController;
 use App\Http\Controllers\UomController;
+use App\Http\Controllers\ProyekController;
+use App\Http\Controllers\RevisiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +54,8 @@ Route::get('/profile/edit', function () {
 })->name('profile.edit');
 
 Route::prefix('master')->group(function () {
+
+    // Kode Material
     Route::prefix('kode-material')->group(function () {
         Route::get('/', [KodeMaterialController::class, 'index'])->name('kode-material.index');
         Route::get('/data', [KodeMaterialController::class, 'getData'])->name('kode-material.getData');
@@ -61,19 +65,35 @@ Route::prefix('master')->group(function () {
         Route::delete('/{kodeMaterial}', [KodeMaterialController::class, 'destroy'])->name('kode-material.destroy');
     });
 
-Route::prefix('master/uom')->group(function () {
-    Route::get('/', [UomController::class, 'index'])->name('uom.index');
-    Route::get('/data', [UomController::class, 'getData'])->name('uom.getData');
-    Route::post('/', [UomController::class, 'store'])->name('uom.store');
-    Route::get('/{uom}', [UomController::class, 'show'])->name('uom.show');
-    Route::put('/{uom}', [UomController::class, 'update'])->name('uom.update');
-    Route::delete('/{uom}', [UomController::class, 'destroy'])->name('uom.destroy');
-});
+    // UOM
+    Route::prefix('uom')->group(function () {
+        Route::get('/', [UomController::class, 'index'])->name('uom.index');
+        Route::get('/data', [UomController::class, 'getData'])->name('uom.getData');
+        Route::post('/', [UomController::class, 'store'])->name('uom.store');
+        Route::get('/{uom}', [UomController::class, 'show'])->name('uom.show');
+        Route::put('/{uom}', [UomController::class, 'update'])->name('uom.update');
+        Route::delete('/{uom}', [UomController::class, 'destroy'])->name('uom.destroy');
+    });
+
+    // Proyek
+    Route::prefix('proyek')->group(function () {
+        Route::get('/', [ProyekController::class, 'index'])->name('proyek.index');
+        Route::get('/data', [ProyekController::class, 'getData'])->name('proyek.getData');
+        Route::post('/', [ProyekController::class, 'store'])->name('proyek.store');
+        Route::get('/{proyek}', [ProyekController::class, 'show'])->name('proyek.show');
+        Route::put('/{proyek}', [ProyekController::class, 'update'])->name('proyek.update');
+        Route::delete('/{proyek}', [ProyekController::class, 'destroy'])->name('proyek.destroy');
+    });
 
 
-    // Other master routes
-    Route::view('/revisi', 'master.revisi')->name('revisi');
-    Route::view('/proyek', 'master.proyek')->name('proyek');
+    Route::prefix('revisi')->group(function () {
+        Route::get('/', [RevisiController::class, 'index'])->name('revisi.index');
+        Route::get('/data', [RevisiController::class, 'getData'])->name('revisi.getData');
+        Route::post('/', [RevisiController::class, 'store'])->name('revisi.store');
+        Route::put('/{revisi}', [RevisiController::class, 'update'])->name('revisi.update');
+        Route::delete('/{revisi}', [RevisiController::class, 'destroy'])->name('revisi.destroy');
+    });
+
 });
 
 // User Routes

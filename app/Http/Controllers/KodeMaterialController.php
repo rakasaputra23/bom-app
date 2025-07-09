@@ -21,7 +21,7 @@ class KodeMaterialController extends Controller
         $request->validate([
             'kode_material' => 'required|unique:kode_material|max:20',
             'nama_material' => 'required|max:100',
-            'spesifikasi' => 'nullable|max:100',
+            'spesifikasi' => 'required|max:100',
             'uom_id' => 'required|exists:uom,id'
         ]);
 
@@ -57,7 +57,7 @@ class KodeMaterialController extends Controller
         $request->validate([
             'kode_material' => 'required|max:20|unique:kode_material,kode_material,' . $kodeMaterial->id,
             'nama_material' => 'required|max:100',
-            'spesifikasi' => 'nullable|max:100',
+            'spesifikasi' => 'required|max:100',
             'uom_id' => 'required|exists:uom,id'
         ]);
 
