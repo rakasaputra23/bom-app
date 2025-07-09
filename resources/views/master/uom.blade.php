@@ -32,13 +32,13 @@
       @csrf
       <div class="row">
         <div class="form-group col-md-6">
-          <label for="qty">Qty <span class="text-red">*</span></label>
-<input type="number" class="form-control" id="qty" name="qty" placeholder="Jumlah" required>
+          <label for="satuan">Satuan <span class="text-red">*</span></label>
+<input type="text" class="form-control" id="satuan" name="satuan" placeholder="Contoh: Kg, Pcs" required>
           <div class="invalid-feedback"></div>
         </div>
         <div class="form-group col-md-6">
-          <label for="satuan">Satuan <span class="text-red">*</span></label>
-<input type="text" class="form-control" id="satuan" name="satuan" placeholder="Contoh: Kg, Pcs" required>
+          <label for="qty">Qty <span class="text-red">*</span></label>
+<input type="number" class="form-control" id="qty" name="qty" placeholder="Jumlah" required>
           <div class="invalid-feedback"></div>
         </div>
       </div>
@@ -89,7 +89,7 @@
           <tr>
             <th style="width: 10%;">No</th>
             <th style="width: 35%;">Satuan</th>
-            <th style="width: 35%;">Jenis</th>
+            <th style="width: 35%;">Qty</th>
             <th style="width: 20%;">Aksi</th>
           </tr>
         </thead>
@@ -122,7 +122,7 @@
             <div class="invalid-feedback"></div>
           </div>
           <div class="form-group">
-            <label for="edit_qty">Jenis <span class="text-red">*</span></label>
+            <label for="edit_qty">Qty <span class="text-red">*</span></label>
             <input type="text" class="form-control" id="edit_qty" name="qty" required>
             <div class="invalid-feedback"></div>
           </div>
