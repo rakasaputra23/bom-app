@@ -28,20 +28,23 @@
     </div>
   </div>
   <div class="card-body">
-    <form>
+    <form id="addForm">
+      @csrf
       <div class="row">
         <div class="form-group col-md-6">
-          <label for="satuan">Satuan</label>
-          <input type="text" class="form-control" id="satuan" placeholder="Satuan">
+          <label for="qty">Qty <span class="text-red">*</span></label>
+<input type="number" class="form-control" id="qty" name="qty" placeholder="Jumlah" required>
+          <div class="invalid-feedback"></div>
         </div>
         <div class="form-group col-md-6">
-          <label for="jenis">Jenis</label>
-          <input type="text" class="form-control" id="jenis" placeholder="Jenis">
+          <label for="satuan">Satuan <span class="text-red">*</span></label>
+<input type="text" class="form-control" id="satuan" name="satuan" placeholder="Contoh: Kg, Pcs" required>
+          <div class="invalid-feedback"></div>
         </div>
       </div>
       <div class="row">
         <div class="col-md-12">
-          <button type="button" class="btn btn-primary">
+          <button type="submit" class="btn btn-primary">
             <i class="fas fa-save"></i> Simpan
           </button>
           <button type="reset" class="btn btn-secondary">
@@ -64,7 +67,7 @@
   <div class="col-md-6">
     <div class="form-group">
       <label>Cari Jenis</label>
-      <input type="text" class="form-control" id="search_jenis" placeholder="Cari berdasarkan jenis...">
+      <input type="text" class="form-control" id="search_qty" placeholder="Cari berdasarkan jenis...">
     </div>
   </div>
 </div>
@@ -91,110 +94,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>Kilogram</td>
-            <td>Berat</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Meter</td>
-            <td>Panjang</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>Pieces</td>
-            <td>Satuan</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>Liter</td>
-            <td>Volume</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>5</td>
-            <td>Batang</td>
-            <td>Satuan</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>6</td>
-            <td>Meter Persegi</td>
-            <td>Luas</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>7</td>
-            <td>Meter Kubik</td>
-            <td>Volume</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>8</td>
-            <td>Gram</td>
-            <td>Berat</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
+          <!-- Data will be loaded via AJAX -->
         </tbody>
       </table>
     </div>
@@ -212,20 +112,25 @@
         </button>
       </div>
       <div class="modal-body">
-        <form>
+        <form id="editForm">
+          @csrf
+          @method('PUT')
+          <input type="hidden" id="edit_id" name="id">
           <div class="form-group">
-            <label for="edit_satuan">Satuan</label>
-            <input type="text" class="form-control" id="edit_satuan" readonly>
+            <label for="edit_satuan">Satuan <span class="text-red">*</span></label>
+            <input type="text" class="form-control" id="edit_satuan" name="satuan" required>
+            <div class="invalid-feedback"></div>
           </div>
           <div class="form-group">
-            <label for="edit_jenis">Jenis</label>
-            <input type="text" class="form-control" id="edit_jenis">
+            <label for="edit_qty">Jenis <span class="text-red">*</span></label>
+            <input type="text" class="form-control" id="edit_qty" name="qty" required>
+            <div class="invalid-feedback"></div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="button" class="btn btn-primary">Simpan Perubahan</button>
+        <button type="button" class="btn btn-primary" id="updateBtn">Simpan Perubahan</button>
       </div>
     </div>
   </div>
@@ -250,7 +155,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="button" class="btn btn-danger">Hapus</button>
+        <button type="button" class="btn btn-danger" id="deleteBtn">Hapus</button>
       </div>
     </div>
   </div>
@@ -262,6 +167,8 @@
 <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+<!-- Toastr -->
+<link rel="stylesheet" href="{{ asset('plugins/toastr/toastr.min.css') }}">
 @endpush
 
 @push('scripts')
@@ -278,14 +185,30 @@
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+<!-- Toastr -->
+<script src="{{ asset('plugins/toastr/toastr.min.js') }}"></script>
 
 <script>
 $(document).ready(function() {
   // Initialize DataTable
   var table = $('#yuomTable').DataTable({
+    processing: true,
+    serverSide: true,
+    ajax: {
+      url: '{{ route("uom.getData") }}',
+      data: function(d) {
+        d.search_satuan = $('#search_satuan').val();
+        d.search_qty = $('#search_qty').val();
+      }
+    },
+    columns: [
+      { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+      { data: 'satuan', name: 'satuan' },
+      { data: 'qty', name: 'qty' },
+      { data: 'action', name: 'action', orderable: false, searchable: false }
+    ],
     responsive: true,
     autoWidth: false,
-    processing: true,
     dom: '<"row"<"col-md-6"B><"col-md-6"f>>' +
          '<"row"<"col-md-12"tr>>' +
          '<"row"<"col-md-5"i><"col-md-7"p>>',
@@ -332,69 +255,137 @@ $(document).ready(function() {
     },
     pageLength: 10,
     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-    order: [[1, 'asc']],
-    columnDefs: [
-      { 
-        targets: [0, 3], 
-        orderable: false 
-      }
-    ]
+    order: [[1, 'asc']]
   });
 
   // Custom search filters
-  function applyFilters() {
-    var searchSatuan = $('#search_satuan').val();
-    var searchJenis = $('#search_jenis').val();
+  $('#search_satuan, #search_qty').on('keyup', function() {
+    table.ajax.reload();
+  });
 
-    // Apply individual column filters
-    table.column(1).search(searchSatuan, true, false);
-    table.column(2).search(searchJenis, true, false);
+  // Add Form Submit
+  $('#addForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    var formData = $(this).serialize();
+    
+    $.ajax({
+      url: '{{ route("uom.store") }}',
+      method: 'POST',
+      data: formData,
+      dataType: 'json',
+      success: function(response) {
+        if(response.success) {
+          toastr.success(response.message);
+          $('#addForm')[0].reset();
+          table.ajax.reload();
+          clearValidation();
+        }
+      },
+      error: function(xhr) {
+        if(xhr.status === 422) {
+          var errors = xhr.responseJSON.errors;
+          displayValidationErrors(errors);
+        } else {
+          toastr.error('Terjadi kesalahan: ' + (xhr.responseJSON?.message || 'Server error'));
+        }
+        console.error('Error:', xhr.responseJSON);
+      }
+    });
+  });
 
-    table.draw();
+  // Edit Button Click
+  $(document).on('click', '.edit-btn', function() {
+    var id = $(this).data('id');
+    var satuan = $(this).data('satuan');
+    var qty = $(this).data('qty');
+    
+    $('#edit_id').val(id);
+    $('#edit_satuan').val(satuan);
+    $('#edit_qty').val(qty);
+    $('#editModal').modal('show');
+    clearValidation('#editForm');
+  });
+
+  // Update Button Click
+  $('#updateBtn').on('click', function() {
+    var id = $('#edit_id').val();
+    var formData = $('#editForm').serialize();
+    
+    $.ajax({
+      url: '{{ route("uom.update", ":id") }}'.replace(':id', id),
+      method: 'POST',
+      data: formData,
+      dataType: 'json',
+      success: function(response) {
+        if(response.success) {
+          toastr.success(response.message);
+          $('#editModal').modal('hide');
+          table.ajax.reload();
+        }
+      },
+      error: function(xhr) {
+        if(xhr.status === 422) {
+          displayValidationErrors(xhr.responseJSON.errors, '#editForm');
+        } else {
+          toastr.error('Terjadi kesalahan: ' + (xhr.responseJSON?.message || 'Server error'));
+        }
+      }
+    });
+  });
+
+  // Delete Button Click
+  $(document).on('click', '.delete-btn', function() {
+    var id = $(this).data('id');
+    var satuan = $(this).data('satuan');
+    var qty = $(this).data('qty');
+    
+    $('#delete_item_name').text(satuan + ' - ' + qty);
+    $('#deleteBtn').data('id', id);
+    $('#deleteModal').modal('show');
+  });
+
+  // Delete Confirmation
+  $('#deleteBtn').on('click', function() {
+    var id = $(this).data('id');
+    
+    $.ajax({
+      url: '{{ route("uom.destroy", ":id") }}'.replace(':id', id),
+      method: 'DELETE',
+      data: {
+        '_token': '{{ csrf_token() }}'
+      },
+      success: function(response) {
+        if(response.success) {
+          toastr.success(response.message);
+          $('#deleteModal').modal('hide');
+          table.ajax.reload();
+        }
+      },
+      error: function(xhr) {
+        toastr.error('Terjadi kesalahan: ' + (xhr.responseJSON?.message || 'Server error'));
+      }
+    });
+  });
+
+  // Helper Functions
+  function displayValidationErrors(errors, formSelector = '') {
+    $.each(errors, function(key, value) {
+      var input = $(formSelector + ' [name="' + key + '"]');
+      input.addClass('is-invalid');
+      input.next('.invalid-feedback').text(value[0]);
+    });
   }
 
-  // Real-time search
-  $('#search_satuan, #search_jenis').on('keyup', function() {
-    clearTimeout($(this).data('timeout'));
-    $(this).data('timeout', setTimeout(function() {
-      applyFilters();
-    }, 300));
-  });
+  function clearValidation(formSelector = '') {
+    $(formSelector + ' .is-invalid').removeClass('is-invalid');
+    $(formSelector + ' .invalid-feedback').text('');
+  }
 
-  // Edit Modal
-  $(document).on('click', '.btn-warning', function() {
-    var row = $(this).closest('tr');
-    var satuan = row.find('td:eq(1)').text();
-    var jenis = row.find('td:eq(2)').text();
-
-    $('#edit_satuan').val(satuan);
-    $('#edit_jenis').val(jenis);
-  });
-
-  // Delete Modal
-  $(document).on('click', '.btn-danger', function() {
-    var row = $(this).closest('tr');
-    var satuan = row.find('td:eq(1)').text();
-    var jenis = row.find('td:eq(2)').text();
-    
-    $('#delete_item_name').text(satuan + ' - ' + jenis);
-  });
-
-  // Success notification simulation
-  $('.modal .btn-primary, .modal .btn-danger').on('click', function() {
-    var modal = $(this).closest('.modal');
-    var isEdit = modal.attr('id') === 'editModal';
-    
-    setTimeout(function() {
-      modal.modal('hide');
-      
-      // Simulate success message
-      var message = isEdit ? 'Data berhasil diupdate!' : 'Data berhasil dihapus!';
-      var alertType = isEdit ? 'success' : 'warning';
-      
-      // You can integrate with toastr or other notification library here
-      console.log(message);
-    }, 500);
+  // Clear validation on input change
+  $('input, select').on('change', function() {
+    $(this).removeClass('is-invalid');
+    $(this).next('.invalid-feedback').text('');
   });
 });
 </script>

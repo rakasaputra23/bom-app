@@ -9,7 +9,7 @@
   </div>
   <div class="col-sm-6">
     <ol class="breadcrumb float-sm-right">
-      <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
       <li class="breadcrumb-item active">Kode Material</li>
     </ol>
   </div>
@@ -28,37 +28,40 @@
     </div>
   </div>
   <div class="card-body">
-    <form>
+    <form id="addForm">
+      @csrf
       <div class="row">
         <div class="form-group col-md-4">
-          <label for="kode_material">Kode Material</label>
-          <input type="text" class="form-control" id="kode_material" placeholder="KM001">
+          <label for="kode_material">Kode Material <span class="text-red">*</span></label>
+          <input type="text" class="form-control" id="kode_material" name="kode_material" placeholder="KM001" required>
+          <div class="invalid-feedback"></div>
         </div>
         <div class="form-group col-md-4">
-          <label for="nama_material">Nama Material</label>
-          <input type="text" class="form-control" id="nama_material" placeholder="Nama Material">
+          <label for="nama_material">Nama Material <span class="text-red">*</span></label>
+          <input type="text" class="form-control" id="nama_material" name="nama_material" placeholder="Nama Material" required>
+          <div class="invalid-feedback"></div>
         </div>
         <div class="form-group col-md-4">
           <label for="spesifikasi">Spesifikasi</label>
-          <input type="text" class="form-control" id="spesifikasi" placeholder="Spesifikasi">
+          <input type="text" class="form-control" id="spesifikasi" name="spesifikasi" placeholder="Spesifikasi">
+          <div class="invalid-feedback"></div>
         </div>
       </div>
       <div class="row">
         <div class="form-group col-md-3">
-          <label for="satuan">Satuan</label>
-          <select class="form-control" id="satuan">
+          <label for="uom_id">Satuan <span class="text-red">*</span></label>
+          <select class="form-control" id="uom_id" name="uom_id" required>
             <option value="">Pilih Satuan</option>
-            <option value="Batang">Batang</option>
-            <option value="Kg">Kg</option>
-            <option value="Pcs">Pcs</option>
-            <option value="Meter">Meter</option>
-            <option value="Liter">Liter</option>
+            @foreach($uoms as $uom)
+              <option value="{{ $uom->id }}">{{ $uom->satuan }}</option>
+            @endforeach
           </select>
+          <div class="invalid-feedback"></div>
         </div>
         <div class="col-md-9">
           <label>&nbsp;</label>
           <div>
-            <button type="button" class="btn btn-primary">
+            <button type="submit" class="btn btn-primary">
               <i class="fas fa-save"></i> Simpan
             </button>
             <button type="reset" class="btn btn-secondary">
@@ -96,11 +99,9 @@
       <label>Filter Satuan</label>
       <select class="form-control" id="search_satuan">
         <option value="">Semua Satuan</option>
-        <option value="Batang">Batang</option>
-        <option value="Kg">Kg</option>
-        <option value="Pcs">Pcs</option>
-        <option value="Meter">Meter</option>
-        <option value="Liter">Liter</option>
+        @foreach($uoms as $uom)
+          <option value="{{ $uom->satuan }}">{{ $uom->satuan }}</option>
+        @endforeach
       </select>
     </div>
   </div>
@@ -130,126 +131,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>KM001</td>
-            <td>Besi Hollow</td>
-            <td>2x4 galvanis</td>
-            <td>Batang</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>KM002</td>
-            <td>Cat Tembok</td>
-            <td>Vinilex 5kg</td>
-            <td>Kg</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>KM003</td>
-            <td>Paku Beton</td>
-            <td>3 inch</td>
-            <td>Pcs</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>KM004</td>
-            <td>Kabel Listrik</td>
-            <td>NYM 2.5mm</td>
-            <td>Meter</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>5</td>
-            <td>KM005</td>
-            <td>Semen Portland</td>
-            <td>40kg per sak</td>
-            <td>Kg</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>6</td>
-            <td>KM006</td>
-            <td>Thinner</td>
-            <td>Epoxy grade A</td>
-            <td>Liter</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>7</td>
-            <td>KM007</td>
-            <td>Pipa PVC</td>
-            <td>4 inch grade A</td>
-            <td>Meter</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>8</td>
-            <td>KM008</td>
-            <td>Genteng Beton</td>
-            <td>Flat minimalis</td>
-            <td>Pcs</td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
+          <!-- Data akan dimuat via AJAX -->
         </tbody>
       </table>
     </div>
@@ -267,34 +149,40 @@
         </button>
       </div>
       <div class="modal-body">
-        <form>
+        <form id="editForm">
+          @csrf
+          @method('PUT')
+          <input type="hidden" id="edit_id" name="id">
           <div class="form-group">
-            <label for="edit_kode_material">Kode Material</label>
-            <input type="text" class="form-control" id="edit_kode_material">
+            <label for="edit_kode_material">Kode Material <span class="text-red">*</span></label>
+            <input type="text" class="form-control" id="edit_kode_material" name="kode_material" required>
+            <div class="invalid-feedback"></div>
           </div>
           <div class="form-group">
-            <label for="edit_nama_material">Nama Material</label>
-            <input type="text" class="form-control" id="edit_nama_material">
+            <label for="edit_nama_material">Nama Material <span class="text-red">*</span></label>
+            <input type="text" class="form-control" id="edit_nama_material" name="nama_material" required>
+            <div class="invalid-feedback"></div>
           </div>
           <div class="form-group">
             <label for="edit_spesifikasi">Spesifikasi</label>
-            <input type="text" class="form-control" id="edit_spesifikasi">
+            <input type="text" class="form-control" id="edit_spesifikasi" name="spesifikasi">
+            <div class="invalid-feedback"></div>
           </div>
           <div class="form-group">
-            <label for="edit_satuan">Satuan</label>
-            <select class="form-control" id="edit_satuan">
-              <option value="Batang">Batang</option>
-              <option value="Kg">Kg</option>
-              <option value="Pcs">Pcs</option>
-              <option value="Meter">Meter</option>
-              <option value="Liter">Liter</option>
+            <label for="edit_uom_id">Satuan <span class="text-red">*</span></label>
+            <select class="form-control" id="edit_uom_id" name="uom_id" required>
+              <option value="">Pilih Satuan</option>
+              @foreach($uoms as $uom)
+                <option value="{{ $uom->id }}">{{ $uom->satuan }}</option>
+              @endforeach
             </select>
+            <div class="invalid-feedback"></div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="button" class="btn btn-primary">Simpan Perubahan</button>
+        <button type="button" class="btn btn-primary" id="updateBtn">Simpan Perubahan</button>
       </div>
     </div>
   </div>
@@ -319,7 +207,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="button" class="btn btn-danger">Hapus</button>
+        <button type="button" class="btn btn-danger" id="deleteBtn">Hapus</button>
       </div>
     </div>
   </div>
@@ -331,6 +219,8 @@
 <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+<!-- Toastr -->
+<link rel="stylesheet" href="{{ asset('plugins/toastr/toastr.min.css') }}">
 @endpush
 
 @push('scripts')
@@ -347,14 +237,34 @@
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+<!-- Toastr -->
+<script src="{{ asset('plugins/toastr/toastr.min.js') }}"></script>
 
 <script>
 $(document).ready(function() {
   // Initialize DataTable
   var table = $('#materialTable').DataTable({
+    processing: true,
+    serverSide: true,
+    ajax: {
+      url: '{{ route("kode-material.getData") }}',
+      data: function(d) {
+        d.search_kode = $('#search_kode').val();
+        d.search_nama = $('#search_nama').val();
+        d.search_spesifikasi = $('#search_spesifikasi').val();
+        d.search_satuan = $('#search_satuan').val();
+      }
+    },
+    columns: [
+      { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+      { data: 'kode_material', name: 'kode_material' },
+      { data: 'nama_material', name: 'nama_material' },
+      { data: 'spesifikasi', name: 'spesifikasi' },
+      { data: 'satuan', name: 'satuan' },
+      { data: 'action', name: 'action', orderable: false, searchable: false }
+    ],
     responsive: true,
     autoWidth: false,
-    processing: true,
     dom: '<"row"<"col-md-6"B><"col-md-6"f>>' +
          '<"row"<"col-md-12"tr>>' +
          '<"row"<"col-md-5"i><"col-md-7"p>>',
@@ -401,81 +311,157 @@ $(document).ready(function() {
     },
     pageLength: 10,
     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-    order: [[1, 'asc']],
-    columnDefs: [
-      { 
-        targets: [0, 5], 
-        orderable: false 
-      }
-    ]
+    order: [[1, 'asc']]
   });
 
   // Custom search filters
-  function applyFilters() {
-    var searchKode = $('#search_kode').val();
-    var searchNama = $('#search_nama').val();
-    var searchSpesifikasi = $('#search_spesifikasi').val();
-    var searchSatuan = $('#search_satuan').val();
-
-    // Apply individual column filters
-    table.column(1).search(searchKode, true, false);
-    table.column(2).search(searchNama, true, false);
-    table.column(3).search(searchSpesifikasi, true, false);
-    table.column(4).search(searchSatuan, true, false);
-
-    table.draw();
-  }
-
-  // Real-time search
   $('#search_kode, #search_nama, #search_spesifikasi').on('keyup', function() {
-    clearTimeout($(this).data('timeout'));
-    $(this).data('timeout', setTimeout(function() {
-      applyFilters();
-    }, 300));
+    table.ajax.reload();
   });
 
   $('#search_satuan').on('change', function() {
-    applyFilters();
+    table.ajax.reload();
   });
 
-  // Edit Modal
-  $(document).on('click', '.btn-warning', function() {
-    var row = $(this).closest('tr');
-    var kode = row.find('td:eq(1)').text();
-    var nama = row.find('td:eq(2)').text();
-    var spesifikasi = row.find('td:eq(3)').text();
-    var satuan = row.find('td:eq(4)').text();
-
-    $('#edit_kode_material').val(kode);
-    $('#edit_nama_material').val(nama);
-    $('#edit_spesifikasi').val(spesifikasi);
-    $('#edit_satuan').val(satuan);
+  // Add Form Submit
+  $('#addForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    var formData = new FormData(this);
+    
+    $.ajax({
+      url: '{{ route("kode-material.store") }}',
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+        if(response.success) {
+          toastr.success(response.message);
+          $('#addForm')[0].reset();
+          table.ajax.reload();
+          clearValidation();
+        }
+      },
+      error: function(xhr) {
+        if(xhr.status === 422) {
+          var errors = xhr.responseJSON.errors;
+          displayValidationErrors(errors);
+        } else {
+          toastr.error('Terjadi kesalahan saat menyimpan data');
+        }
+      }
+    });
   });
 
-  // Delete Modal
-  $(document).on('click', '.btn-danger', function() {
-    var row = $(this).closest('tr');
-    var kode = row.find('td:eq(1)').text();
-    var nama = row.find('td:eq(2)').text();
+  // Edit Button Click
+  $(document).on('click', '.edit-btn', function() {
+    var id = $(this).data('id');
+    
+    $.ajax({
+      url: '{{ route("kode-material.show", ":id") }}'.replace(':id', id),
+      method: 'GET',
+      success: function(response) {
+        if(response.success) {
+          var data = response.data;
+          $('#edit_id').val(data.id);
+          $('#edit_kode_material').val(data.kode_material);
+          $('#edit_nama_material').val(data.nama_material);
+          $('#edit_spesifikasi').val(data.spesifikasi);
+          $('#edit_uom_id').val(data.uom_id);
+          $('#editModal').modal('show');
+          clearValidation('#editForm');
+        }
+      },
+      error: function() {
+        toastr.error('Gagal memuat data');
+      }
+    });
+  });
+
+  // Update Button Click
+  $('#updateBtn').on('click', function() {
+    var id = $('#edit_id').val();
+    var formData = new FormData($('#editForm')[0]);
+    
+    $.ajax({
+      url: '{{ route("kode-material.update", ":id") }}'.replace(':id', id),
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+        if(response.success) {
+          toastr.success(response.message);
+          $('#editModal').modal('hide');
+          table.ajax.reload();
+          clearValidation('#editForm');
+        }
+      },
+      error: function(xhr) {
+        if(xhr.status === 422) {
+          var errors = xhr.responseJSON.errors;
+          displayValidationErrors(errors, '#editForm');
+        } else {
+          toastr.error('Terjadi kesalahan saat mengupdate data');
+        }
+      }
+    });
+  });
+
+  // Delete Button Click
+  $(document).on('click', '.delete-btn', function() {
+    var id = $(this).data('id');
+    var kode = $(this).data('kode');
+    var nama = $(this).data('nama');
     
     $('#delete_item_name').text(kode + ' - ' + nama);
+    $('#deleteBtn').data('id', id);
+    $('#deleteModal').modal('show');
   });
 
-  // Success notification simulation
-  $('.modal .btn-primary, .modal .btn-danger').on('click', function() {
-    var modal = $(this).closest('.modal');
-    var isEdit = modal.attr('id') === 'editModal';
+  // Delete Confirmation
+  $('#deleteBtn').on('click', function() {
+    var id = $(this).data('id');
     
-    setTimeout(function() {
-      modal.modal('hide');
-      
-      // Simulate success message
-      var message = isEdit ? 'Data berhasil diupdate!' : 'Data berhasil dihapus!';
-      var alertType = isEdit ? 'success' : 'warning';
-      
-      // You can integrate with toastr or other notification library here
-      console.log(message);
-    }, 500);
+    $.ajax({
+      url: '{{ route("kode-material.destroy", ":id") }}'.replace(':id', id),
+      method: 'DELETE',
+      data: {
+        '_token': '{{ csrf_token() }}'
+      },
+      success: function(response) {
+        if(response.success) {
+          toastr.success(response.message);
+          $('#deleteModal').modal('hide');
+          table.ajax.reload();
+        }
+      },
+      error: function(xhr) {
+        var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan saat menghapus data';
+        toastr.error(errorMessage);
+      }
+    });
+  });
+
+  // Helper Functions
+  function displayValidationErrors(errors, formSelector = '') {
+    $.each(errors, function(key, value) {
+      var input = $(formSelector + ' [name="' + key + '"]');
+      input.addClass('is-invalid');
+      input.next('.invalid-feedback').text(value[0]);
+    });
+  }
+
+  function clearValidation(formSelector = '') {
+    $(formSelector + ' .is-invalid').removeClass('is-invalid');
+    $(formSelector + ' .invalid-feedback').text('');
+  }
+
+  // Clear validation on input change
+  $('input, select').on('change', function() {
+    $(this).removeClass('is-invalid');
+    $(this).next('.invalid-feedback').text('');
   });
 });
 </script>
