@@ -37,8 +37,20 @@ class UomController extends Controller
     {
         $request->validate([
             'qty' => 'required|integer|min:1',
-            'satuan' => 'required|string|max:50|unique:uom,satuan'
+            'satuan' => 'required|string|max:50',
         ]);
+
+        // Cek apakah kombinasi qty + satuan sudah ada
+        $exists = Uom::where('qty', $request->qty)
+                    ->where('satuan', $request->satuan)
+                    ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kombinasi qty dan satuan sudah ada.'
+            ], 422);
+        }
 
         try {
             Uom::create([
@@ -70,8 +82,21 @@ class UomController extends Controller
     {
         $request->validate([
             'qty' => 'required|integer|min:1',
-            'satuan' => 'required|string|max:50|unique:uom,satuan,' . $uom->id
+            'satuan' => 'required|string|max:50',
         ]);
+
+        // Cek apakah kombinasi baru (qty + satuan) sudah ada, selain data sekarang
+        $exists = Uom::where('qty', $request->qty)
+                    ->where('satuan', $request->satuan)
+                    ->where('id', '!=', $uom->id)
+                    ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kombinasi qty dan satuan sudah ada.'
+            ], 422);
+        }
 
         try {
             $uom->update([
