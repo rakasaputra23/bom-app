@@ -1,3 +1,4 @@
+{{-- resources/views/bom/create.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Buat BOM Baru')
@@ -32,8 +33,8 @@
     <form>
       <div class="row">
         <div class="form-group col-md-4">
-          <label for="kode_bom">Kode BOM</label>
-          <input type="text" class="form-control" id="kode_bom" placeholder="Kode BOM" value="BOM-006" readonly>
+          <label for="kode_bom">Nomor BOM</label>
+          <input type="text" class="form-control" id="kode_bom" placeholder="Nomor BOM" value="BOM-{{ rand(100, 999) }}" readonly>
         </div>
         <div class="form-group col-md-4">
           <label for="proyek">Proyek</label>
@@ -56,24 +57,9 @@
           </select>
         </div>
       </div>
-      <div class="row">
-        <div class="form-group col-md-6">
-          <label for="tanggal">Tanggal</label>
-          <input type="date" class="form-control" id="tanggal" value="{{ date('Y-m-d') }}">
-        </div>
-        <div class="form-group col-md-6">
-          <label for="status">Status</label>
-          <select class="form-control" id="status">
-            <option value="draft">Draft</option>
-            <option value="submitted">Submitted</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        </div>
-      </div>
       <div class="form-group">
-        <label for="deskripsi">Deskripsi</label>
-        <textarea class="form-control" id="deskripsi" rows="3" placeholder="Deskripsi BOM"></textarea>
+        <label for="tanggal">Tanggal</label>
+        <input type="date" class="form-control" id="tanggal" value="{{ date('Y-m-d') }}">
       </div>
       
       <hr>
@@ -84,10 +70,11 @@
           <thead>
             <tr>
               <th style="width: 5%;">No</th>
-              <th style="width: 30%;">Material</th>
-              <th style="width: 15%;">Kuantitas</th>
-              <th style="width: 15%;">Satuan</th>
-              <th style="width: 25%;">Keterangan</th>
+              <th style="width: 15%;">Kode Material</th>
+              <th style="width: 30%;">Deskripsi</th>
+              <th style="width: 10%;">Qty</th>
+              <th style="width: 10%;">Satuan</th>
+              <th style="width: 20%;">Keterangan</th>
               <th style="width: 10%;">Aksi</th>
             </tr>
           </thead>
@@ -96,24 +83,17 @@
               <td>1</td>
               <td>
                 <select class="form-control material-select">
-                  <option value="">Pilih Material</option>
-                  <option value="1">Besi Beton 10mm</option>
-                  <option value="2">Besi Beton 12mm</option>
-                  <option value="3">Semen Portland</option>
-                  <option value="4">Pasir Beton</option>
-                  <option value="5">Batu Split</option>
+                  <option value="">Pilih Kode</option>
+                  <option value="MTL-001" data-desc="Besi Beton 10mm" data-uom="Batang" data-qty="100">MTL-001</option>
+                  <option value="MTL-002" data-desc="Besi Beton 12mm" data-uom="Batang" data-qty="100">MTL-002</option>
+                  <option value="MTL-003" data-desc="Semen Portland" data-uom="Sak" data-qty="50">MTL-003</option>
+                  <option value="MTL-004" data-desc="Pasir Beton" data-uom="m³" data-qty="30">MTL-004</option>
+                  <option value="MTL-005" data-desc="Batu Split" data-uom="m³" data-qty="25">MTL-005</option>
                 </select>
               </td>
-              <td><input type="number" class="form-control" step="0.01" min="0" value="0"></td>
-              <td>
-                <select class="form-control uom-select" disabled>
-                  <option value="">-</option>
-                  <option value="1">Batang</option>
-                  <option value="2">Sak</option>
-                  <option value="3">m³</option>
-                  <option value="4">kg</option>
-                </select>
-              </td>
+              <td><input type="text" class="form-control desc" readonly></td>
+              <td><input type="number" class="form-control qty-input" step="0.01" min="0" value="0"></td>
+              <td><input type="text" class="form-control uom" readonly></td>
               <td><input type="text" class="form-control" placeholder="Keterangan"></td>
               <td>
                 <button type="button" class="btn btn-danger btn-sm remove-item">
@@ -164,33 +144,22 @@ $(document).ready(function() {
   // Initialize Select2
   $('.material-select').select2({
     theme: 'bootstrap4',
-    placeholder: 'Pilih Material'
+    placeholder: 'Pilih Kode Material'
   });
   
   // Material change event
   $(document).on('change', '.material-select', function() {
     var row = $(this).closest('tr');
-    var materialId = $(this).val();
+    var selectedOption = $(this).find('option:selected');
     
-    // In a real app, you would fetch UOM from server based on materialId
-    var uom = '';
-    switch(materialId) {
-      case '1':
-      case '2':
-        uom = 'Batang';
-        break;
-      case '3':
-        uom = 'Sak';
-        break;
-      case '4':
-      case '5':
-        uom = 'm³';
-        break;
-      default:
-        uom = '';
-    }
+    // Auto-fill description, quantity, and unit
+    var description = selectedOption.data('desc') || '';
+    var quantity = selectedOption.data('qty') || 0;
+    var unit = selectedOption.data('uom') || '';
     
-    row.find('.uom-select').val(uom || '');
+    row.find('.desc').val(description);
+    row.find('.qty-input').val(quantity);
+    row.find('.uom').val(unit);
   });
   
   // Add new item
@@ -201,24 +170,17 @@ $(document).ready(function() {
         <td>${rowCount}</td>
         <td>
           <select class="form-control material-select">
-            <option value="">Pilih Material</option>
-            <option value="1">Besi Beton 10mm</option>
-            <option value="2">Besi Beton 12mm</option>
-            <option value="3">Semen Portland</option>
-            <option value="4">Pasir Beton</option>
-            <option value="5">Batu Split</option>
+            <option value="">Pilih Kode</option>
+            <option value="MTL-001" data-desc="Besi Beton 10mm" data-uom="Batang" data-qty="100">MTL-001</option>
+            <option value="MTL-002" data-desc="Besi Beton 12mm" data-uom="Batang" data-qty="100">MTL-002</option>
+            <option value="MTL-003" data-desc="Semen Portland" data-uom="Sak" data-qty="50">MTL-003</option>
+            <option value="MTL-004" data-desc="Pasir Beton" data-uom="m³" data-qty="30">MTL-004</option>
+            <option value="MTL-005" data-desc="Batu Split" data-uom="m³" data-qty="25">MTL-005</option>
           </select>
         </td>
-        <td><input type="number" class="form-control" step="0.01" min="0" value="0"></td>
-        <td>
-          <select class="form-control uom-select" disabled>
-            <option value="">-</option>
-            <option value="1">Batang</option>
-            <option value="2">Sak</option>
-            <option value="3">m³</option>
-            <option value="4">kg</option>
-          </select>
-        </td>
+        <td><input type="text" class="form-control desc" readonly></td>
+        <td><input type="number" class="form-control qty-input" step="0.01" min="0" value="0"></td>
+        <td><input type="text" class="form-control uom" readonly></td>
         <td><input type="text" class="form-control" placeholder="Keterangan"></td>
         <td>
           <button type="button" class="btn btn-danger btn-sm remove-item">
@@ -231,7 +193,7 @@ $(document).ready(function() {
     $('#itemTable tbody').append(newRow);
     $('#itemTable tbody tr:last .material-select').select2({
       theme: 'bootstrap4',
-      placeholder: 'Pilih Material'
+      placeholder: 'Pilih Kode Material'
     });
   });
   
@@ -252,7 +214,7 @@ $(document).ready(function() {
   $('.btn-primary').click(function() {
     // In a real app, you would submit the form here
     console.log('BOM berhasil disimpan!');
-    // Redirect to index page
+    // Redirect to index page   
     window.location.href = "{{ route('bom.index') }}";
   });
 });
