@@ -53,7 +53,9 @@
           <select class="form-control" id="uom_id" name="uom_id" required>
             <option value="">Pilih Satuan</option>
             @foreach($uoms as $uom)
-              <option value="{{ $uom->id }}">{{ $uom->satuan }}</option>
+              <option value="{{ $uom->id }}">
+                {{ $uom->full_format }}
+              </option>
             @endforeach
           </select>
           <div class="invalid-feedback"></div>
@@ -100,7 +102,9 @@
       <select class="form-control" id="search_satuan">
         <option value="">Semua Satuan</option>
         @foreach($uoms as $uom)
-          <option value="{{ $uom->satuan }}">{{ $uom->satuan }}</option>
+          <option value="{{ $uom->satuan }}">
+            {{ $uom->full_format }}
+          </option>
         @endforeach
       </select>
     </div>
@@ -173,7 +177,9 @@
             <select class="form-control" id="edit_uom_id" name="uom_id" required>
               <option value="">Pilih Satuan</option>
               @foreach($uoms as $uom)
-                <option value="{{ $uom->id }}">{{ $uom->satuan }}</option>
+                <option value="{{ $uom->id }}">
+                  {{ $uom->full_format }}
+                </option>
               @endforeach
             </select>
             <div class="invalid-feedback"></div>

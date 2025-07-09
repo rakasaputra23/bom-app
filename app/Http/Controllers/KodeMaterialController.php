@@ -12,7 +12,7 @@ class KodeMaterialController extends Controller
 {
     public function index()
     {
-        $uoms = Uom::all();
+        $uoms = Uom::select('id', 'qty', 'satuan')->get();
         return view('master.kode_material', compact('uoms'));
     }
 
@@ -42,7 +42,10 @@ class KodeMaterialController extends Controller
 
     public function show(KodeMaterial $kodeMaterial)
     {
-        $kodeMaterial->load('uom');
+        $kodeMaterial->load(['uom' => function($query) {
+            $query->select('id', 'qty', 'satuan');
+        }]);
+        
         return response()->json([
             'success' => true,
             'data' => $kodeMaterial
@@ -103,7 +106,9 @@ class KodeMaterialController extends Controller
 
     public function getData(Request $request)
     {
-        $query = KodeMaterial::with('uom')->select('kode_material.*');
+        $query = KodeMaterial::with(['uom' => function($query) {
+            $query->select('id', 'qty', 'satuan');
+        }])->select('kode_material.*');
 
         return DataTables::of($query)
             ->addIndexColumn()
@@ -116,7 +121,7 @@ class KodeMaterialController extends Controller
                 </button>';
             })
             ->addColumn('satuan', function($row) {
-                return $row->uom ? $row->uom->satuan : '-';
+                return optional($row->uom)->full_format;
             })
             ->filter(function ($query) use ($request) {
                 if ($request->has('search_kode') && $request->search_kode != '') {

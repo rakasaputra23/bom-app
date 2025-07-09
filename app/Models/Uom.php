@@ -15,7 +15,6 @@ class Uom extends Model
 
     protected $fillable = ['qty', 'satuan'];
 
-
     // Relationship with KodeMaterial
     public function kodeMaterials()
     {
@@ -25,6 +24,6 @@ class Uom extends Model
     // Accessor for full format
     public function getFullFormatAttribute()
     {
-        return $this->qty . ' ' . $this->satuan;
+        return $this->qty == 1 ? $this->satuan : $this->qty.' - '.$this->satuan;
     }
 }

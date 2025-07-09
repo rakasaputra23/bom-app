@@ -35,6 +35,6 @@ class KodeMaterial extends Model
     // Accessor untuk mendapatkan satuan dari UOM
     public function getSatuanAttribute()
     {
-        return $this->uom ? $this->uom->satuan : null;
+        return optional($this->uom)->full_format;
     }
 }
