@@ -5,7 +5,7 @@ use App\Http\Controllers\KodeMaterialController;
 use App\Http\Controllers\UomController;
 use App\Http\Controllers\ProyekController;
 use App\Http\Controllers\RevisiController;
-
+use App\Http\Controllers\BillOfMaterialController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -96,18 +96,21 @@ Route::prefix('master')->group(function () {
 
 });
 
+// Route untuk Bill of Material
+//Route::middleware(['auth'])->group(function () {
+    // Bill of Materials Routes
+    Route::prefix('bom')->group(function () {
+        Route::get('/', [BillOfMaterialController::class, 'index'])->name('bom.index');
+        Route::get('/create', [BillOfMaterialController::class, 'create'])->name('bom.create');
+        Route::post('/', [BillOfMaterialController::class, 'store'])->name('bom.store');
+        Route::get('/{id}', [BillOfMaterialController::class, 'show'])->name('bom.show');
+        Route::get('/{id}/edit', [BillOfMaterialController::class, 'edit'])->name('bom.edit');
+        Route::put('/{id}', [BillOfMaterialController::class, 'update'])->name('bom.update');
+        Route::delete('/{id}', [BillOfMaterialController::class, 'destroy'])->name('bom.destroy');
+    });
+//});
+
 // User Routes
 Route::view('/user', 'user.user')->name('user');
 Route::view('/user-group', 'user.user-group')->name('user.group');
 
-
-// BOM Routes
-Route::prefix('bom')->group(function () {
-    Route::get('/', function () {
-        return view('bom.index');
-    })->name('bom.index');
-    
-    Route::get('/create', function () {
-        return view('bom.create');
-    })->name('bom.create');
-});

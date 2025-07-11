@@ -18,7 +18,11 @@ class Proyek extends Model
         'nama_proyek'
     ];
 
-    protected $appends = ['display_name']; // ← ini yang penting
+    public function billOfMaterial()
+    {
+        return $this->hasMany(BillOfMaterial::class, 'proyek_id');
+    }
+
 
     public function getDisplayNameAttribute()
     {

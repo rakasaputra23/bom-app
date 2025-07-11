@@ -22,4 +22,13 @@ class Revisi extends Model
         'jenis_revisi' => 'string',
         'keterangan' => 'string'
     ];
+
+    public function getNamaRevisiAttribute()
+    {
+        return $this->jenis_revisi . (!empty($this->keterangan) ? ' - ' . $this->keterangan : '');
+    }
+    public function billOfMaterial()
+    {
+        return $this->hasMany(BillOfMaterial::class, 'revisi_id');
+    }
 }
