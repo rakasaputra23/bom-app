@@ -79,29 +79,37 @@ class BillOfMaterialController extends Controller
     {
         // Validasi input
         $validator = Validator::make($request->all(), [
-            'nomor_bom' => 'required|string|max:50|unique:bill_of_material,nomor_bom',
-            'kategori' => 'required|in:JIG, TOOL DAN MAL,TOOLS,CONSUMABLE TOOLS,SPECIAL PROCESS',
-            'proyek_id' => 'required|exists:proyek,id',
-            'revisi_id' => 'required|exists:revisi,id',
-            'tanggal' => 'required|date',
-            'items' => 'required|array|min:1',
-            'items.*.material_id' => 'required|exists:kode_material,id',
-            'items.*.keterangan' => 'nullable|string|max:255'
-        ], [
-            'nomor_bom.required' => 'Nomor BOM harus diisi',
-            'nomor_bom.unique' => 'Nomor BOM sudah ada',
-            'kategori.required' => 'Kategori harus dipilih',
-            'kategori.in' => 'Kategori tidak valid',
-            'proyek_id.required' => 'Proyek harus dipilih',
-            'proyek_id.exists' => 'Proyek tidak valid',
-            'revisi_id.required' => 'Revisi harus dipilih',
-            'revisi_id.exists' => 'Revisi tidak valid',
-            'tanggal.required' => 'Tanggal harus diisi',
-            'items.required' => 'Item BOM harus diisi',
-            'items.min' => 'Minimal harus ada 1 item',
-            'items.*.material_id.required' => 'Material harus dipilih',
-            'items.*.material_id.exists' => 'Material tidak valid'
-        ]);
+        'nomor_bom' => 'required|string|max:50|unique:bill_of_material,nomor_bom',
+        'kategori' => 'required|in:JIG, TOOL DAN MAL,TOOLS,CONSUMABLE TOOLS,SPECIAL PROCESS',
+        'proyek_id' => 'required|exists:proyek,id',
+        'revisi_id' => 'required|exists:revisi,id',
+        'tanggal' => 'required|date',
+        'items' => 'required|array|min:1',
+        'items.*.material_id' => 'required|exists:kode_material,id',
+        'items.*.qty' => 'required|numeric|min:0.01', // Validasi qty terpisah
+        'items.*.satuan' => 'required|string|max:20', // Validasi satuan terpisah
+        'items.*.keterangan' => 'nullable|string|max:255'
+    ], [
+        'nomor_bom.required' => 'Nomor BOM harus diisi',
+        'nomor_bom.unique' => 'Nomor BOM sudah ada',
+        'kategori.required' => 'Kategori harus dipilih',
+        'kategori.in' => 'Kategori tidak valid',
+        'proyek_id.required' => 'Proyek harus dipilih',
+        'proyek_id.exists' => 'Proyek tidak valid',
+        'revisi_id.required' => 'Revisi harus dipilih',
+        'revisi_id.exists' => 'Revisi tidak valid',
+        'tanggal.required' => 'Tanggal harus diisi',
+        'items.required' => 'Item BOM harus diisi',
+        'items.min' => 'Minimal harus ada 1 item',
+        'items.*.material_id.required' => 'Material harus dipilih',
+        'items.*.material_id.exists' => 'Material tidak valid',
+        'items.*.qty.required' => 'Quantity harus diisi',
+        'items.*.qty.numeric' => 'Quantity harus berupa angka',
+        'items.*.qty.min' => 'Quantity minimal 0.01',
+        'items.*.satuan.required' => 'Satuan harus dipilih',
+        'items.*.satuan.string' => 'Satuan harus berupa teks',
+        'items.*.satuan.max' => 'Satuan maksimal 20 karakter'
+    ]);
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -151,21 +159,28 @@ class BillOfMaterialController extends Controller
      * Display the specified resource.
      */
     public function show($id)
-    {
-        try {
-            $bom = BillOfMaterial::with(['proyek', 'revisi', 'itemBom.kodeMaterial.uom'])->findOrFail($id);
-            
-            // Format tanggal untuk response
-            $bom->tanggal_formatted = date('d/m/Y', strtotime($bom->tanggal));
-            
-            return response()->json($bom);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Data tidak ditemukan'
-            ], 404);
-        }
+{
+    try {
+        $bom = BillOfMaterial::with(['proyek', 'revisi', 'itemBom.kodeMaterial.uom'])->findOrFail($id);
+        
+        // Format UOM untuk response
+        $bom->itemBom->each(function ($item) {
+            if ($item->kodeMaterial && $item->kodeMaterial->uom) {
+                $item->qty = $item->kodeMaterial->uom->qty;
+                $item->satuan = $item->kodeMaterial->uom->satuan;
+            }
+        });
+        
+        $bom->tanggal_formatted = date('d/m/Y', strtotime($bom->tanggal));
+        
+        return response()->json($bom);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => true,
+            'message' => 'Data tidak ditemukan'
+        ], 404);
     }
+}
 
     /**
      * Show the form for editing the specified resource.
@@ -222,55 +237,68 @@ class BillOfMaterialController extends Controller
             'tanggal' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.material_id' => 'required|exists:kode_material,id',
+            'items.*.qty' => 'required|numeric|min:0.01',
+            'items.*.satuan' => 'required|string|max:20',
             'items.*.keterangan' => 'nullable|string|max:255'
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        DB::beginTransaction();
-
-        try {
-            // Update Bill of Material
-            $billOfMaterial->update([
-                'nomor_bom' => $request->nomor_bom,
-                'kategori' => $request->kategori,
-                'proyek_id' => $request->proyek_id,
-                'revisi_id' => $request->revisi_id,
-                'tanggal' => $request->tanggal
-            ]);
-
-            // Hapus item BOM yang lama
-            ItemBom::where('bill_of_material_id', $billOfMaterial->id)->delete();
-
-            // Simpan item BOM yang baru
-            foreach ($request->items as $item) {
-                if (!empty($item['material_id'])) {
-                    ItemBom::create([
-                        'bill_of_material_id' => $billOfMaterial->id,
-                        'kode_material_id' => $item['material_id'],
-                        'keterangan' => $item['keterangan'] ?? null,
-                        'qty' => $item['qty'] ?? 0,
-                        'satuan' => $item['satuan'] ?? ''
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            return redirect()->route('bom.index')
-                ->with('success', 'Bill of Material berhasil diperbarui');
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
-                ->withInput();
-        }
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
     }
+
+    DB::beginTransaction();
+
+    try {
+        // Update Bill of Material
+        $billOfMaterial->update([
+            'nomor_bom' => $request->nomor_bom,
+            'kategori' => $request->kategori,
+            'proyek_id' => $request->proyek_id,
+            'revisi_id' => $request->revisi_id,
+            'tanggal' => $request->tanggal
+        ]);
+
+        // Simpan item BOM yang baru TANPA menghapus yang lama
+        foreach ($request->items as $item) {
+            // Cek apakah item sudah ada
+            $existingItem = ItemBom::where([
+                'bill_of_material_id' => $billOfMaterial->id,
+                'kode_material_id' => $item['material_id']
+            ])->first();
+
+            if ($existingItem) {
+                // Update item yang sudah ada
+                $existingItem->update([
+                    'qty' => $item['qty'],
+                    'satuan' => $item['satuan'],
+                    'keterangan' => $item['keterangan'] ?? null
+                ]);
+            } else {
+                // Tambahkan item baru
+                ItemBom::create([
+                    'bill_of_material_id' => $billOfMaterial->id,
+                    'kode_material_id' => $item['material_id'],
+                    'keterangan' => $item['keterangan'] ?? null,
+                    'qty' => $item['qty'],
+                    'satuan' => $item['satuan']
+                ]);
+            }
+        }
+
+        DB::commit();
+
+        return redirect()->route('bom.index')
+            ->with('success', 'Bill of Material berhasil diperbarui');
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        return redirect()->back()
+            ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
+            ->withInput();
+    }
+}
 
     /**
      * Remove the specified resource from storage.
