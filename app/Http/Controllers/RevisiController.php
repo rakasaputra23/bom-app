@@ -109,19 +109,8 @@ class RevisiController extends Controller
     public function destroy(Revisi $revisi)
     {
         try {
-            $isUsed = DB::table('item_bom')
-                ->where('revisi_id', $revisi->id)
-                ->exists();
-            
-            if ($isUsed) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Data tidak dapat dihapus karena sudah digunakan di BOM!'
-                ], 400);
-            }
-            
             $revisi->delete();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Data berhasil dihapus!'

@@ -105,23 +105,11 @@ class ProyekController extends Controller
             ], 500);
         }
     }
-
     public function destroy(Proyek $proyek)
     {
         try {
-            $isUsed = DB::table('item_bom')
-                ->where('proyek_id', $proyek->id)
-                ->exists();
-            
-            if ($isUsed) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Data tidak dapat dihapus karena sudah digunakan di BOM!'
-                ], 400);
-            }
-            
             $proyek->delete();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Data berhasil dihapus!'
