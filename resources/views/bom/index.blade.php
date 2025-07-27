@@ -44,9 +44,6 @@
   <div class="card-header">
     <h3 class="card-title">Daftar BOM</h3>
     <div class="card-tools">
-      <a href="{{ route('bom.create') }}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Buat BOM Baru
-      </a>
       <button type="button" class="btn btn-tool" data-card-widget="collapse">
         <i class="fas fa-minus"></i>
       </button>

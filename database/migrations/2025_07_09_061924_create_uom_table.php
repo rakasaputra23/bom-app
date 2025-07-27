@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('uom', function (Blueprint $table) {
-            $table->id();
-            $table->integer('qty')->default(1);
-            $table->string('satuan', 50);
-            $table->timestamps();
+       //Schema::create('uom', function (Blueprint $table) {\\
+           // $table->id();
+          //  $table->integer('qty')->default(1);
+          //  $table->string('satuan', 50);
+          //  $table->timestamps();
             
             // Tambahkan unique constraint untuk kombinasi qty dan satuan
-            $table->unique(['qty', 'satuan']);
-        });
+          //  $table->unique(['qty', 'satuan']);
+        //});
     }
 
     public function down()
