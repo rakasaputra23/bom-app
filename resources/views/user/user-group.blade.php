@@ -14,6 +14,12 @@
   </div>
 @endsection
 
+@push('styles')
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
+@endpush
+
 @section('content')
 <div class="row">
     <div class="col-12">
@@ -29,19 +35,18 @@
                     </button>
                 </div>
             </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="userGroupTable" class="table table-striped table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Nama Group</th>
-                                    <th>Jumlah User</th>
-                                    <th>Tanggal Dibuat</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="userGroupTable" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Nama Group</th>
+                                <th>Jumlah User</th>
+                                <th>Tanggal Dibuat</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                    </table>
                 </div>
             </div>
         </div>
@@ -169,12 +174,6 @@
 </div>
 @endsection
 
-@push('styles')
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
-@endpush
-
 @push('scripts')
 <!-- DataTables JS -->
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
@@ -185,10 +184,16 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
-    // Initialize DataTable
+    // Pastikan DataTables sudah dimuat
+    if (typeof $.fn.DataTable === 'undefined') {
+        console.error('DataTables tidak dimuat dengan benar');
+        return;
+    }
+
+    // Initialize DataTable - SAMA SEPERTI USER MANAGEMENT
     let table = $('#userGroupTable').DataTable({
         processing: true,
-        serverSide: true,
+        serverSide: false,  // UBAH DARI true KE false SAMA SEPERTI USER
         ajax: {
             url: '{{ route("user.group.getData") }}',
             type: 'GET'
