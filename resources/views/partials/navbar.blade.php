@@ -8,4 +8,17 @@
       <a href="#" class="nav-link">Home</a>
     </li>
   </ul>
+
+  <!-- Right navbar links -->
+  <ul class="navbar-nav ml-auto">
+    <!-- Logout -->
+    <li class="nav-item">
+      <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+        @csrf
+        <button type="submit" class="btn btn-danger btn-sm">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </form>
+    </li>
+  </ul>
 </nav>

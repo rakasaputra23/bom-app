@@ -16,6 +16,7 @@ class User extends Authenticatable
         'nama',
         'posisi',
         'user_group_id',
+        'email',
         'password',
     ];
 
@@ -38,5 +39,17 @@ class User extends Authenticatable
     public function group()
     {
         return $this->belongsTo(UserGroup::class, 'user_group_id');
+    }
+
+    // Helper method untuk cek permission
+    public function hasPermission($routeName)
+    {
+        return $this->group && $this->group->hasPermission($routeName);
+    }
+
+    // Helper method untuk cek apakah user adalah superadmin
+    public function isSuperAdmin()
+    {
+        return $this->group && strtolower($this->group->nama) === 'superadmin';
     }
 }

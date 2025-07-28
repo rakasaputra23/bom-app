@@ -1,435 +1,363 @@
 @extends('layouts.app')
 
-@section('title', 'User Management')
-
 @section('header')
-<div class="row mb-2">
-  <div class="col-sm-6">
-    <h1 class="m-0">User Management</h1>
-  </div>
-  <div class="col-sm-6">
-    <ol class="breadcrumb float-sm-right">
-      <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-      <li class="breadcrumb-item active">User</li>
-    </ol>
-  </div>
-</div>
-@endsection
-
-@section('content')
-<!-- Form Tambah -->
-<div class="card card-primary">
-  <div class="card-header">
-    <h3 class="card-title">Tambah User</h3>
-    <div class="card-tools">
-      <button type="button" class="btn btn-tool" data-card-widget="collapse">
-        <i class="fas fa-minus"></i>
-      </button>
+  <div class="row mb-2">
+    <div class="col-sm-6">
+      <h1 class="m-0">User Management</h1>
+    </div>
+    <div class="col-sm-6">
+      <ol class="breadcrumb float-sm-right">
+        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Home</a></li>
+        <li class="breadcrumb-item active">User Management</li>
+      </ol>
     </div>
   </div>
-  <div class="card-body">
-    <form>
-      <div class="row">
-        <div class="form-group col-md-6">
-          <label for="nama">Nama Lengkap</label>
-          <input type="text" class="form-control" id="nama" placeholder="Nama Lengkap">
-        </div>
-        <div class="form-group col-md-6">
-          <label for="username">Username</label>
-          <input type="text" class="form-control" id="username" placeholder="Username">
-        </div>
-      </div>
-      <div class="row">
-        <div class="form-group col-md-6">
-          <label for="email">Email</label>
-          <input type="email" class="form-control" id="email" placeholder="Email">
-        </div>
-        <div class="form-group col-md-6">
-          <label for="user_group">User Group</label>
-          <select class="form-control" id="user_group">
-            <option value="">Pilih User Group</option>
-            <option value="1">Administrator</option>
-            <option value="2">Manager</option>
-            <option value="3">Staff</option>
-            <option value="4">Viewer</option>
-          </select>
-        </div>
-      </div>
-      <div class="row">
-        <div class="form-group col-md-6">
-          <label for="password">Password</label>
-          <input type="password" class="form-control" id="password" placeholder="Password">
-        </div>
-        <div class="form-group col-md-6">
-          <label for="confirm_password">Konfirmasi Password</label>
-          <input type="password" class="form-control" id="confirm_password" placeholder="Konfirmasi Password">
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-12">
-          <button type="button" class="btn btn-primary">
-            <i class="fas fa-save"></i> Simpan
-          </button>
-          <button type="reset" class="btn btn-secondary">
-            <i class="fas fa-undo"></i> Reset
-          </button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Filter Pencarian -->
-<div class="row">
-  <div class="col-md-4">
-    <div class="form-group">
-      <label>Cari Nama</label>
-      <input type="text" class="form-control" id="search_nama" placeholder="Cari berdasarkan nama...">
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="form-group">
-      <label>Cari Username</label>
-      <input type="text" class="form-control" id="search_username" placeholder="Cari berdasarkan username...">
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="form-group">
-      <label>Cari User Group</label>
-      <select class="form-control" id="search_user_group">
-        <option value="">Semua User Group</option>
-        <option value="1">Administrator</option>
-        <option value="2">Manager</option>
-        <option value="3">Staff</option>
-        <option value="4">Viewer</option>
-      </select>
-    </div>
-  </div>
-</div>
-
-<!-- DataTable -->
-<div class="card">
-  <div class="card-header">
-    <h3 class="card-title">Daftar User</h3>
-    <div class="card-tools">
-      <button type="button" class="btn btn-tool" data-card-widget="collapse">
-        <i class="fas fa-minus"></i>
-      </button>
-    </div>
-  </div>
-  <div class="card-body">
-    <div class="table-responsive">
-      <table id="userTable" class="table table-bordered table-striped table-hover">
-        <thead>
-          <tr>
-            <th style="width: 5%;">No</th>
-            <th style="width: 20%;">Nama</th>
-            <th style="width: 15%;">Username</th>
-            <th style="width: 20%;">Email</th>
-            <th style="width: 15%;">User Group</th>
-            <th style="width: 15%;">Status</th>
-            <th style="width: 10%;">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>Admin Sistem</td>
-            <td>admin</td>
-            <td>admin@example.com</td>
-            <td>Administrator</td>
-            <td><span class="badge bg-success">Aktif</span></td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Manager Proyek</td>
-            <td>manager</td>
-            <td>manager@example.com</td>
-            <td>Manager</td>
-            <td><span class="badge bg-success">Aktif</span></td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>Staff IT</td>
-            <td>staff</td>
-            <td>staff@example.com</td>
-            <td>Staff</td>
-            <td><span class="badge bg-success">Aktif</span></td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>Viewer Only</td>
-            <td>viewer</td>
-            <td>viewer@example.com</td>
-            <td>Viewer</td>
-            <td><span class="badge bg-danger">Nonaktif</span></td>
-            <td>
-              <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editModal" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" title="Hapus">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- Edit Modal -->
-<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editModalLabel">Edit User</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form>
-          <div class="form-group">
-            <label for="edit_nama">Nama Lengkap</label>
-            <input type="text" class="form-control" id="edit_nama">
-          </div>
-          <div class="form-group">
-            <label for="edit_username">Username</label>
-            <input type="text" class="form-control" id="edit_username">
-          </div>
-          <div class="form-group">
-            <label for="edit_email">Email</label>
-            <input type="email" class="form-control" id="edit_email">
-          </div>
-          <div class="form-group">
-            <label for="edit_user_group">User Group</label>
-            <select class="form-control" id="edit_user_group">
-              <option value="1">Administrator</option>
-              <option value="2">Manager</option>
-              <option value="3">Staff</option>
-              <option value="4">Viewer</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="edit_status">Status</label>
-            <select class="form-control" id="edit_status">
-              <option value="1">Aktif</option>
-              <option value="0">Nonaktif</option>
-            </select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="button" class="btn btn-primary">Simpan Perubahan</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="deleteModalLabel">Konfirmasi Hapus</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>Apakah Anda yakin ingin menghapus user <strong id="delete_user_name"></strong>?</p>
-        <div class="alert alert-warning">
-          <i class="fas fa-exclamation-triangle"></i>
-          Data yang telah dihapus tidak dapat dikembalikan!
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="button" class="btn btn-danger">Hapus</button>
-      </div>
-    </div>
-  </div>
-</div>
 @endsection
 
 @push('styles')
-<!-- DataTables -->
-<link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-<link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
-<link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
 @endpush
 
-@push('scripts')
-<!-- DataTables & Plugins -->
-<script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
-<script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-<script src="{{ asset('plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-<script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
-<script src="{{ asset('plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
-<script src="{{ asset('plugins/datatables-buttons/js/buttons.bootstrap4.min.js') }}"></script>
-<script src="{{ asset('plugins/jszip/jszip.min.js') }}"></script>
-<script src="{{ asset('plugins/pdfmake/pdfmake.min.js') }}"></script>
-<script src="{{ asset('plugins/pdfmake/vfs_fonts.js') }}"></script>
-<script src="{{ asset('plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
-<script src="{{ asset('plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
-<script src="{{ asset('plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title">
+                    <i class="fas fa-users mr-1"></i>
+                    Data User
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#userModal">
+                        <i class="fas fa-plus"></i> Tambah User
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="userTable" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>NIP</th>
+                                <th>Nama</th>
+                                <th>Posisi</th>
+                                <th>Email</th>
+                                <th>User Group</th>
+                                <th>Tanggal Dibuat</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- Modal User -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel">Tambah User</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="userForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nip">NIP <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nip" name="nip" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nama">Nama <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nama" name="nama" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="posisi">Posisi <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="posisi" name="posisi" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="user_group_id">User Group <span class="text-danger">*</span></label>
+                                <select class="form-control" id="user_group_id" name="user_group_id" required>
+                                    <option value="">Pilih User Group</option>
+                                    @foreach($userGroups as $group)
+                                        <option value="{{ $group->id }}">{{ $group->nama }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="password">Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="password_confirmation">Konfirmasi Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detail User -->
+<div class="modal fade" id="detailUserModal" tabindex="-1" aria-labelledby="detailUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailUserModalLabel">Detail User</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="detailUserContent">
+                <!-- Content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
-  // Initialize DataTable
-  var table = $('#userTable').DataTable({
-    responsive: true,
-    autoWidth: false,
-    processing: true,
-    dom: '<"row"<"col-md-6"B><"col-md-6"f>>' +
-         '<"row"<"col-md-12"tr>>' +
-         '<"row"<"col-md-5"i><"col-md-7"p>>',
-    buttons: [
-      {
-        extend: 'excel',
-        text: '<i class="fas fa-file-excel"></i> Excel',
-        className: 'btn btn-success btn-sm',
-        exportOptions: {
-          columns: [0, 1, 2, 3, 4, 5]
+    // Pastikan DataTables sudah dimuat
+    if (typeof $.fn.DataTable === 'undefined') {
+        console.error('DataTables tidak dimuat dengan benar');
+        return;
+    }
+
+    let table = $('#userTable').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+            url: '{{ route("user.getData") }}',
+            type: 'GET'
+        },
+        columns: [
+            { data: 'nip' },
+            { data: 'nama' },
+            { data: 'posisi' },
+            { data: 'email' },
+            { data: 'group_nama' },
+            { data: 'created_at' },
+            {
+                data: 'id',
+                render: function(data, type, row) {
+                    return `
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-info" onclick="showDetail(${data})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-warning" onclick="editUser(${data})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteUser(${data})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        ],
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json'
         }
-      },
-      {
-        extend: 'pdf',
-        text: '<i class="fas fa-file-pdf"></i> PDF',
-        className: 'btn btn-danger btn-sm',
-        exportOptions: {
-          columns: [0, 1, 2, 3, 4, 5]
+    });
+
+    // Form submission
+    $('#userForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        let formData = new FormData(this);
+        let url = $('#userForm').data('action') || '{{ route("user.store") }}';
+        let method = $('#userForm').data('method') || 'POST';
+        
+        if (method === 'PUT') {
+            formData.append('_method', 'PUT');
         }
-      },
-      {
-        extend: 'print',
-        text: '<i class="fas fa-print"></i> Print',
-        className: 'btn btn-info btn-sm',
-        exportOptions: {
-          columns: [0, 1, 2, 3, 4, 5]
-        }
-      }
-    ],
-    language: {
-      search: "Cari:",
-      lengthMenu: "Tampilkan _MENU_ data per halaman",
-      zeroRecords: "Data tidak ditemukan",
-      info: "Menampilkan halaman _PAGE_ dari _PAGES_",
-      infoEmpty: "Data tidak tersedia",
-      infoFiltered: "(difilter dari _MAX_ total data)",
-      paginate: {
-        first: "Pertama",
-        last: "Terakhir",
-        next: "Selanjutnya",
-        previous: "Sebelumnya"
-      },
-      processing: "Sedang memproses..."
-    },
-    pageLength: 10,
-    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-    order: [[1, 'asc']],
-    columnDefs: [
-      { 
-        targets: [0, 6], 
-        orderable: false 
-      }
-    ]
-  });
 
-  // Custom search filters
-  function applyFilters() {
-    var searchNama = $('#search_nama').val();
-    var searchUsername = $('#search_username').val();
-    var searchUserGroup = $('#search_user_group').val();
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#userModal').modal('hide');
+                    table.ajax.reload();
+                    Swal.fire('Berhasil!', response.message, 'success');
+                    resetForm();
+                }
+            },
+            error: function(xhr) {
+                if (xhr.status === 422) {
+                    let errors = xhr.responseJSON.errors;
+                    $('.form-control').removeClass('is-invalid');
+                    $('.invalid-feedback').text('');
+                    
+                    $.each(errors, function(key, value) {
+                        $(`[name="${key}"]`).addClass('is-invalid');
+                        $(`[name="${key}"]`).siblings('.invalid-feedback').text(value[0]);
+                    });
+                } else {
+                    Swal.fire('Error!', 'Terjadi kesalahan pada server', 'error');
+                }
+            }
+        });
+    });
 
-    // Apply individual column filters
-    table.column(1).search(searchNama, true, false);
-    table.column(2).search(searchUsername, true, false);
-    table.column(4).search(searchUserGroup, true, false);
-
-    table.draw();
-  }
-
-  // Real-time search
-  $('#search_nama, #search_username').on('keyup', function() {
-    clearTimeout($(this).data('timeout'));
-    $(this).data('timeout', setTimeout(function() {
-      applyFilters();
-    }, 300));
-  });
-
-  // User group select filter
-  $('#search_user_group').on('change', function() {
-    applyFilters();
-  });
-
-  // Edit Modal
-  $(document).on('click', '.btn-warning', function() {
-    var row = $(this).closest('tr');
-    var nama = row.find('td:eq(1)').text();
-    var username = row.find('td:eq(2)').text();
-    var email = row.find('td:eq(3)').text();
-    var userGroup = row.find('td:eq(4)').text();
-    var status = row.find('td:eq(5)').find('.badge').text();
-
-    $('#edit_nama').val(nama);
-    $('#edit_username').val(username);
-    $('#edit_email').val(email);
-    $('#edit_user_group').val(userGroup);
-    $('#edit_status').val(status === 'Aktif' ? '1' : '0');
-  });
-
-  // Delete Modal
-  $(document).on('click', '.btn-danger', function() {
-    var row = $(this).closest('tr');
-    var nama = row.find('td:eq(1)').text();
-    var username = row.find('td:eq(2)').text();
-    
-    $('#delete_user_name').text(nama + ' (' + username + ')');
-  });
-
-  // Success notification simulation
-  $('.modal .btn-primary, .modal .btn-danger').on('click', function() {
-    var modal = $(this).closest('.modal');
-    var isEdit = modal.attr('id') === 'editModal';
-    
-    setTimeout(function() {
-      modal.modal('hide');
-      
-      // Simulate success message
-      var message = isEdit ? 'Data user berhasil diupdate!' : 'Data user berhasil dihapus!';
-      var alertType = isEdit ? 'success' : 'warning';
-      
-      // You can integrate with toastr or other notification library here
-      console.log(message);
-    }, 500);
-  });
+    // Reset modal when closed
+    $('#userModal').on('hidden.bs.modal', function() {
+        resetForm();
+    });
 });
+
+function resetForm() {
+    $('#userForm')[0].reset();
+    $('#userModalLabel').text('Tambah User');
+    $('#userForm').removeData('action').removeData('method');
+    $('.form-control').removeClass('is-invalid');
+    $('.invalid-feedback').text('');
+    $('#password').prop('required', true);
+    $('#password_confirmation').prop('required', true);
+}
+
+function editUser(id) {
+    $.get(`{{ url('user') }}/${id}`, function(data) {
+        $('#userModalLabel').text('Edit User');
+        $('#userForm').data('action', `{{ url('user') }}/${id}`).data('method', 'PUT');
+        
+        $('#nip').val(data.nip);
+        $('#nama').val(data.nama);
+        $('#posisi').val(data.posisi);
+        $('#user_group_id').val(data.user_group_id);
+        $('#email').val(data.email);
+        
+        // Password tidak required saat edit
+        $('#password').prop('required', false);
+        $('#password_confirmation').prop('required', false);
+        
+        $('#userModal').modal('show');
+    });
+}
+
+function showDetail(id) {
+    $.get(`{{ url('user') }}/${id}`, function(data) {
+        let content = `
+            <table class="table table-borderless">
+                <tr>
+                    <td><strong>NIP:</strong></td>
+                    <td>${data.nip}</td>
+                </tr>
+                <tr>
+                    <td><strong>Nama:</strong></td>
+                    <td>${data.nama}</td>
+                </tr>
+                <tr>
+                    <td><strong>Posisi:</strong></td>
+                    <td>${data.posisi}</td>
+                </tr>
+                <tr>
+                    <td><strong>Email:</strong></td>
+                    <td>${data.email}</td>
+                </tr>
+                <tr>
+                    <td><strong>User Group:</strong></td>
+                    <td>${data.group ? data.group.nama : '-'}</td>
+                </tr>
+                <tr>
+                    <td><strong>Dibuat:</strong></td>
+                    <td>${new Date(data.created_at).toLocaleDateString('id-ID')}</td>
+                </tr>
+            </table>
+        `;
+        $('#detailUserContent').html(content);
+        $('#detailUserModal').modal('show');
+    });
+}
+
+function deleteUser(id) {
+    Swal.fire({
+        title: 'Apakah Anda yakin?',
+        text: "Data user akan dihapus permanen!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `{{ url('user') }}/${id}`,
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#userTable').DataTable().ajax.reload();
+                        Swal.fire('Berhasil!', response.message, 'success');
+                    }
+                },
+                error: function(xhr) {
+                    let message = xhr.responseJSON?.message || 'Terjadi kesalahan pada server';
+                    Swal.fire('Error!', message, 'error');
+                }
+            });
+        }
+    });
+}
 </script>
 @endpush

@@ -13,10 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('user_groups', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+    //    Schema::create('user_groups', function (Blueprint $table) {
+    //        $table->id();
+    //        $table->timestamps();
+    //    });
     }
 
     /**
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('user_groups');
+   //     Schema::dropIfExists('user_groups');
     }
 };
