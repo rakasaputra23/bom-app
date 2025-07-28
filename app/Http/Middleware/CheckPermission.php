@@ -10,28 +10,29 @@ class CheckPermission
 {
     /**
      * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @param  string  $permission
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
-    public function handle(Request $request, Closure $next, $permission)
+    public function handle(Request $request, Closure $next)
     {
         if (!Auth::check()) {
             return redirect()->route('login');
         }
 
         $user = Auth::user();
-        
-        // Superadmin has access to everything
+        $routeName = $request->route()->getName();
+
+        // Superadmin selalu lolos
         if ($user->isSuperAdmin()) {
             return $next($request);
         }
 
-        // Check if user has the required permission
-        if (!$user->hasPermission($permission)) {
-            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        // Pastikan user punya grup
+        if (!$user->group) {
+            abort(403, 'Akun Anda belum memiliki grup user.');
+        }
+
+        // Cek apakah grup punya izin akses route ini
+        if (!$user->hasPermission($routeName)) {
+            abort(403, 'Anda tidak memiliki izin untuk mengakses halaman ini.');
         }
 
         return $next($request);

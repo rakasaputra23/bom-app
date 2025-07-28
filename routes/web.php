@@ -28,7 +28,7 @@ Route::post('/password/reset', [AuthController::class, 'resetPassword'])->name('
 // ==========================
 // 🔒 PROTECTED ROUTES
 // ==========================
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'permission'])->group(function () {
 
     // ==========================
     // 🏠 DASHBOARD & PROFILE
@@ -41,7 +41,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ==========================
-    // 📦 MASTER DATA ROUTES
+    // 🛆 MASTER DATA ROUTES
     // ==========================
     Route::prefix('master')->group(function () {
 
@@ -96,23 +96,20 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ==========================
-    // 👥 USER MANAGEMENT (Updated dengan Controller)
+    // 👥 USER MANAGEMENT
     // ==========================
-    
-    // User Management - menggunakan controller sekarang
     Route::get('/user', [UserController::class, 'index'])->name('user');
     Route::prefix('user')->name('user.')->group(function () {
-        Route::get('/data', [UserController::class, 'getData'])->name('getData'); // untuk DataTables
+        Route::get('/data', [UserController::class, 'getData'])->name('getData');
         Route::post('/', [UserController::class, 'store'])->name('store');
         Route::get('/{id}', [UserController::class, 'show'])->name('show');
         Route::put('/{id}', [UserController::class, 'update'])->name('update');
         Route::delete('/{id}', [UserController::class, 'destroy'])->name('destroy');
     });
 
-    // User Group Management - menggunakan controller sekarang
     Route::get('/user-group', [UserGroupController::class, 'index'])->name('user.group');
     Route::prefix('user-group')->name('user.group.')->group(function () {
-        Route::get('/data', [UserGroupController::class, 'getData'])->name('getData'); // untuk DataTables
+        Route::get('/data', [UserGroupController::class, 'getData'])->name('getData');
         Route::post('/', [UserGroupController::class, 'store'])->name('store');
         Route::get('/{id}', [UserGroupController::class, 'show'])->name('show');
         Route::put('/{id}', [UserGroupController::class, 'update'])->name('update');
@@ -120,7 +117,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/permissions', [UserGroupController::class, 'getPermissions'])->name('permissions');
     });
 
-    // Permission Management (opsional, untuk admin mengelola permission)
     Route::prefix('permissions')->name('permissions.')->group(function () {
         Route::get('/', [PermissionController::class, 'index'])->name('index');
         Route::get('/data', [PermissionController::class, 'getData'])->name('getData');
@@ -136,5 +132,8 @@ Route::middleware(['auth'])->group(function () {
 // 🔄 REDIRECTS
 // ==========================
 Route::get('/', function () {
+    return redirect('/dashboard');
+});
+Route::get('/home', function () {
     return redirect('/dashboard');
 });
