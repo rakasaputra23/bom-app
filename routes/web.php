@@ -103,7 +103,7 @@ Route::prefix('master')->group(function () {
         Route::get('/', [BillOfMaterialController::class, 'index'])->name('bom.index');
         Route::get('/create', [BillOfMaterialController::class, 'create'])->name('bom.create');
         Route::post('/', [BillOfMaterialController::class, 'store'])->name('bom.store');
-        Route::get('/{id}', [BillOfMaterialController::class, 'sh   ow'])->name('bom.show');
+        Route::get('/{id}', [BillOfMaterialController::class, 'show'])->name('bom.show');
         Route::get('/{id}/edit', [BillOfMaterialController::class, 'edit'])->name('bom.edit');
         Route::put('/{id}', [BillOfMaterialController::class, 'update'])->name('bom.update');
         Route::delete('/{id}', [BillOfMaterialController::class, 'destroy'])->name('bom.destroy');

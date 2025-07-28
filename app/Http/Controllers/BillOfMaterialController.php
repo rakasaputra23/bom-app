@@ -225,35 +225,65 @@ class BillOfMaterialController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, $id)
-{
-    // Ambil data BOM lama
-    $oldBom = BillOfMaterial::findOrFail($id);
+    {
+        // Validasi input
+        $validator = Validator::make($request->all(), [
+            'nomor_bom' => 'required|string|max:50',
+            'kategori' => 'required|in:JIG,TOOL DAN MAL,TOOLS,CONSUMABLE TOOLS,SPECIAL PROCESS',
+            'proyek_id' => 'required|exists:proyek,id',
+            'revisi_id' => 'required|exists:revisi,id',
+            'tanggal' => 'required|date',
+            'items' => 'required|array|min:1',
+            'items.*.material_id' => 'required|exists:kode_material,id',
+            'items.*.qty' => 'required|numeric|min:0.01',
+            'items.*.satuan' => 'required|string|max:20',
+            'items.*.keterangan' => 'nullable|string|max:255'
+        ]);
 
-    // Buat entri BOM baru sebagai hasil revisi
-    $newBom = BillOfMaterial::create([
-        'nomor_bom' => $oldBom->nomor_bom, // tetap pakai nomor lama
-        'kategori' => $request->kategori,
-        'proyek_id' => $request->proyek_id,
-        'revisi_id' => $request->revisi_id,
-        'tanggal' => $request->tanggal,
-    ]);
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
-    // Simpan item BOM baru
-    $kode_materials = $request->input('kode_material');
-    $qtys = $request->input('qty');
+        DB::beginTransaction();
 
-    if ($kode_materials && $qtys) {
-        for ($i = 0; $i < count($kode_materials); $i++) {
-            ItemBOM::create([
-                'bill_of_material_id' => $newBom->id,
-                'kode_material' => $kode_materials[$i],
-                'qty' => $qtys[$i],
+        try {
+            // Ambil data BOM lama
+            $oldBom = BillOfMaterial::findOrFail($id);
+
+            // Buat entri BOM baru sebagai hasil revisi
+            $newBom = BillOfMaterial::create([
+                'nomor_bom' => $oldBom->nomor_bom,
+                'kategori' => $request->kategori,
+                'proyek_id' => $request->proyek_id,
+                'revisi_id' => $request->revisi_id,
+                'tanggal' => $request->tanggal
             ]);
+
+            // Simpan Item BOM baru
+            foreach ($request->items as $item) {
+                ItemBom::create([
+                    'bill_of_material_id' => $newBom->id,
+                    'kode_material_id' => $item['material_id'],
+                    'qty' => $item['qty'],
+                    'satuan' => $item['satuan'],
+                    'keterangan' => $item['keterangan'] ?? null
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('bom.index')
+                ->with('success', 'Revisi BOM berhasil disimpan.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
+                ->withInput();
         }
     }
-
-    return redirect()->route('bom.index')->with('success', 'Revisi BOM berhasil disimpan.');
-}
 
 
     /**

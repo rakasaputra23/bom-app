@@ -103,7 +103,6 @@
         <table class="table table-bordered" id="itemTable">
           <thead>
             <tr>
-              <th style="width: 5%;">Rev No</th>
               <th style="width: 15%;">Kode Material</th>
               <th style="width: 25%;">Deskripsi</th>
               <th style="width: 10%;">Qty</th>
@@ -116,34 +115,30 @@
           <tbody>
             <tr>
               <td>
-                <input type="text" class="form-control" name="items[0][rev_no]" value="0" placeholder="Rev No">
-              </td>
-              <td>
                 <select class="form-control material-select" name="items[0][material_id]" required>
                   <option value="">Pilih Kode</option>
                   @foreach($materials as $material)
                     <option value="{{ $material->id }}" 
                             data-desc="{{ $material->nama_material }}" 
                             data-spec="{{ $material->spesifikasi }}"
-                            data-uom="{{ $material->satuan }}" 
-                            data-qty="{{ $material->qty_uom }}"
-                            data-code="{{ $material->kode_material }}">
+                            data-uom="{{ $material->uom ? $material->uom->satuan : '' }}" 
+                            data-qty="{{ $material->uom ? $material->uom->qty : 1 }}">
                       {{ $material->kode_material }}
                     </option>
                   @endforeach
                 </select>
               </td>
               <td>
-                <input type="text" class="form-control desc" name="items[0][deskripsi]" readonly>
+                <input type="text" class="form-control desc" readonly>
               </td>
               <td>
-                <input type="number" class="form-control qty-input" name="items[0][qty]" step="0.01" min="0" readonly>
+                <input type="number" class="form-control qty-input" name="items[0][qty]" step="0.01" min="0.01" readonly>
               </td>
               <td>
                 <input type="text" class="form-control uom" name="items[0][satuan]" readonly>
               </td>
               <td>
-                <input type="text" class="form-control spec" name="items[0][spesifikasi]" readonly>
+                <input type="text" class="form-control spec" readonly>
               </td>
               <td>
                 <input type="text" class="form-control" name="items[0][keterangan]" placeholder="Keterangan">
@@ -194,10 +189,28 @@
 
 <script>
 $(document).ready(function() {
-  // Initialize Select2
+  // Initialize Select2 for existing selects
   $('.material-select').select2({
     theme: 'bootstrap4',
     placeholder: 'Pilih Kode Material'
+  });
+
+  // Auto-fill data for existing items on page load
+  $('.material-select').each(function() {
+    var row = $(this).closest('tr');
+    var selectedOption = $(this).find('option:selected');
+    
+    if(selectedOption.length > 0 && selectedOption.val() !== '') {
+      var description = selectedOption.data('desc') || '';
+      var specification = selectedOption.data('spec') || '';
+      var unit = selectedOption.data('uom') || '';
+      var qty = selectedOption.data('qty') || 1;
+      
+      row.find('.desc').val(description);
+      row.find('.spec').val(specification);
+      row.find('.uom').val(unit);
+      row.find('.qty-input').val(qty);
+    }
   });
   
   // Material change event
@@ -205,27 +218,31 @@ $(document).ready(function() {
     var row = $(this).closest('tr');
     var selectedOption = $(this).find('option:selected');
     
-    // Auto-fill description, specification, unit, and qty
-    var description = selectedOption.data('desc') || '';
-    var specification = selectedOption.data('spec') || '';
-    var unit = selectedOption.data('uom') || '';
-    var qtyValue = selectedOption.data('qty') || 0;
-    
-    // Fill the fields
-    row.find('.desc').val(description);
-    row.find('.spec').val(specification);
-    row.find('.uom').val(unit);
-    row.find('.qty-input').val(qtyValue);
+    if(selectedOption.length > 0 && selectedOption.val() !== '') {
+      var description = selectedOption.data('desc') || '';
+      var specification = selectedOption.data('spec') || '';
+      var unit = selectedOption.data('uom') || '';
+      var qty = selectedOption.data('qty') || 1;
+      
+      // Auto-fill all fields
+      row.find('.desc').val(description);
+      row.find('.spec').val(specification);
+      row.find('.uom').val(unit);
+      row.find('.qty-input').val(qty);
+    } else {
+      // Clear all fields if no material selected
+      row.find('.desc').val('');
+      row.find('.spec').val('');
+      row.find('.uom').val('');
+      row.find('.qty-input').val('');
+    }
   });
-  
+
   // Add new item
   $('#addItem').click(function() {
     var rowCount = $('#itemTable tbody tr').length;
     var newRow = `
       <tr>
-        <td>
-          <input type="text" class="form-control" name="items[${rowCount}][rev_no]" value="0" placeholder="Rev No">
-        </td>
         <td>
           <select class="form-control material-select" name="items[${rowCount}][material_id]" required>
             <option value="">Pilih Kode</option>
@@ -233,25 +250,24 @@ $(document).ready(function() {
               <option value="{{ $material->id }}" 
                       data-desc="{{ $material->nama_material }}" 
                       data-spec="{{ $material->spesifikasi }}"
-                      data-uom="{{ $material->satuan }}" 
-                      data-qty="{{ $material->qty_uom }}"
-                      data-code="{{ $material->kode_material }}">
+                      data-uom="{{ $material->uom ? $material->uom->satuan : '' }}" 
+                      data-qty="{{ $material->uom ? $material->uom->qty : 1 }}">
                 {{ $material->kode_material }}
               </option>
             @endforeach
           </select>
         </td>
         <td>
-          <input type="text" class="form-control desc" name="items[${rowCount}][deskripsi]" readonly>
+          <input type="text" class="form-control desc" readonly>
         </td>
         <td>
-          <input type="number" class="form-control qty-input" name="items[${rowCount}][qty]" step="0.01" min="0" readonly>
+          <input type="number" class="form-control qty-input" name="items[${rowCount}][qty]" step="0.01" min="0.01" readonly>
         </td>
         <td>
           <input type="text" class="form-control uom" name="items[${rowCount}][satuan]" readonly>
         </td>
         <td>
-          <input type="text" class="form-control spec" name="items[${rowCount}][spesifikasi]" readonly>
+          <input type="text" class="form-control spec" readonly>
         </td>
         <td>
           <input type="text" class="form-control" name="items[${rowCount}][keterangan]" placeholder="Keterangan">
@@ -277,12 +293,9 @@ $(document).ready(function() {
       $(this).closest('tr').remove();
       // Update array indices
       $('#itemTable tbody tr').each(function(index) {
-        $(this).find('input[placeholder="Rev No"]').attr('name', `items[${index}][rev_no]`);
         $(this).find('.material-select').attr('name', `items[${index}][material_id]`);
-        $(this).find('.desc').attr('name', `items[${index}][deskripsi]`);
         $(this).find('.qty-input').attr('name', `items[${index}][qty]`);
         $(this).find('.uom').attr('name', `items[${index}][satuan]`);
-        $(this).find('.spec').attr('name', `items[${index}][spesifikasi]`);
         $(this).find('input[placeholder="Keterangan"]').attr('name', `items[${index}][keterangan]`);
       });
     } else {
