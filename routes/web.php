@@ -94,3 +94,11 @@ Route::prefix('bom')->group(function () {
 // ==========================
 Route::view('/user', 'user.user')->name('user');
 Route::view('/user-group', 'user.user-group')->name('user.group');
+<<<<<<< Updated upstream
+=======
+
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+>>>>>>> Stashed changes
