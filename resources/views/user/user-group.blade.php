@@ -120,20 +120,50 @@
 
 <!-- Modal Permissions -->
 <div class="modal fade" id="permissionsModal" tabindex="-1" aria-labelledby="permissionsModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="permissionsModalLabel">Permissions</h5>
+                <h5 class="modal-title" id="permissionsModalLabel">Manage Permissions - <span id="permissionGroupName"></span></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body" id="permissionsContent">
-                <!-- Content will be loaded here -->
+            <div class="modal-body">
+                <input type="hidden" id="permissionUserGroupId">
+                <div id="permissionsContainer"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="updatePermissionsBtn">Update Permissions</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit User Group -->
+<div class="modal fade" id="editUserGroupModal" tabindex="-1" aria-labelledby="editUserGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserGroupModalLabel">Edit User Group</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="editUserGroupForm">
+                <input type="hidden" id="editUserGroupId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="edit_nama">Nama Group</label>
+                        <input type="text" class="form-control" id="edit_nama" name="nama">
+                        <div class="invalid-feedback" id="edit_nama_error"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -155,23 +185,24 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
-    // Pastikan DataTables sudah dimuat
-    if (typeof $.fn.DataTable === 'undefined') {
-        console.error('DataTables tidak dimuat dengan benar');
-        return;
-    }
-
+    // Initialize DataTable
     let table = $('#userGroupTable').DataTable({
         processing: true,
-        serverSide: false,
+        serverSide: true,
         ajax: {
             url: '{{ route("user.group.getData") }}',
             type: 'GET'
         },
         columns: [
-            { data: 'nama' },
-            { data: 'users_count' },
-            { data: 'created_at' },
+            { data: 'nama', name: 'nama' },
+            { data: 'users_count', name: 'users_count' },
+            { 
+                data: 'created_at', 
+                name: 'created_at',
+                render: function(data) {
+                    return new Date(data).toLocaleDateString('id-ID');
+                }
+            },
             {
                 data: 'id',
                 render: function(data, type, row) {
@@ -180,7 +211,7 @@ $(document).ready(function() {
                             <button type="button" class="btn btn-sm btn-info" onclick="showDetail(${data})" title="Detail">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-secondary" onclick="showPermissions(${data})" title="Permissions">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="managePermissions(${data})" title="Permissions">
                                 <i class="fas fa-key"></i>
                             </button>
                             <button type="button" class="btn btn-sm btn-warning" onclick="editUserGroup(${data})" title="Edit">
@@ -191,7 +222,9 @@ $(document).ready(function() {
                             </button>
                         </div>
                     `;
-                }
+                },
+                orderable: false,
+                searchable: false
             }
         ],
         language: {
@@ -199,98 +232,255 @@ $(document).ready(function() {
         }
     });
 
-    // Form submission
+    // Form submission for adding user group
     $('#userGroupForm').on('submit', function(e) {
         e.preventDefault();
         
         let formData = new FormData(this);
-        let url = $('#userGroupForm').data('action') || '{{ route("user.group.store") }}';
-        let method = $('#userGroupForm').data('method') || 'POST';
-        
-        if (method === 'PUT') {
-            formData.append('_method', 'PUT');
-        }
+        storeUserGroup(formData);
+    });
 
-        $.ajax({
-            url: url,
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#userGroupModal').modal('hide');
-                    table.ajax.reload();
-                    Swal.fire('Berhasil!', response.message, 'success');
-                    resetForm();
-                }
-            },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    let errors = xhr.responseJSON.errors;
-                    $('.form-control, .form-check-input').removeClass('is-invalid');
-                    $('.invalid-feedback').text('');
-                    
-                    $.each(errors, function(key, value) {
-                        if (key === 'permissions') {
-                            $('.border.rounded').addClass('is-invalid');
-                            $('.border.rounded').siblings('.invalid-feedback').text(value[0]);
-                        } else {
-                            $(`[name="${key}"]`).addClass('is-invalid');
-                            $(`[name="${key}"]`).siblings('.invalid-feedback').text(value[0]);
-                        }
-                    });
-                } else {
-                    Swal.fire('Error!', 'Terjadi kesalahan pada server', 'error');
-                }
-            }
-        });
+    // Form submission for editing user group
+    $('#editUserGroupForm').on('submit', function(e) {
+        e.preventDefault();
+        let id = $('#editUserGroupId').val();
+        let formData = $(this).serialize();
+        updateUserGroup(id, formData);
+    });
+
+    // Button for update permissions
+    $('#updatePermissionsBtn').on('click', function() {
+        updatePermissions();
     });
 
     // Reset modal when closed
     $('#userGroupModal').on('hidden.bs.modal', function() {
-        resetForm();
+        $('#userGroupForm')[0].reset();
+        $('.form-control, .form-check-input, .border.rounded').removeClass('is-invalid');
+        $('.invalid-feedback').text('');
+    });
+
+    $('#editUserGroupModal').on('hidden.bs.modal', function() {
+        $('#editUserGroupForm')[0].reset();
+        $('.form-control').removeClass('is-invalid');
+        $('.invalid-feedback').text('');
     });
 });
 
-function resetForm() {
-    $('#userGroupForm')[0].reset();
-    $('#userGroupModalLabel').text('Tambah User Group');
-    $('#userGroupForm').removeData('action').removeData('method');
-    $('.form-control, .form-check-input, .border.rounded').removeClass('is-invalid');
-    $('.invalid-feedback').text('');
-    $('input[name="permissions[]"]').prop('checked', false);
-}
-
-function editUserGroup(id) {
-    $.get(`{{ url('user-group') }}/${id}`, function(data) {
-        $('#userGroupModalLabel').text('Edit User Group');
-        $('#userGroupForm').data('action', `{{ url('user-group') }}/${id}`).data('method', 'PUT');
-        
-        $('#nama').val(data.nama);
-        
-        // Reset all checkboxes first
-        $('input[name="permissions[]"]').prop('checked', false);
-        
-        // Check permissions that belong to this group
-        if (data.permissions && data.permissions.length > 0) {
-            data.permissions.forEach(function(permission) {
-                $(`#permission_${permission.id}`).prop('checked', true);
-            });
+// 1. STORE USER GROUP
+function storeUserGroup(formData) {
+    $.ajax({
+        url: '{{ route("user.group.store") }}',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if (response.success) {
+                $('#userGroupModal').modal('hide');
+                $('#userGroupTable').DataTable().ajax.reload();
+                Swal.fire('Berhasil!', response.message, 'success');
+            }
+        },
+        error: function(xhr) {
+            if (xhr.status === 422) {
+                let errors = xhr.responseJSON.errors;
+                $('.form-control, .form-check-input').removeClass('is-invalid');
+                $('.invalid-feedback').text('');
+                
+                $.each(errors, function(key, value) {
+                    if (key === 'permissions') {
+                        $('.border.rounded').addClass('is-invalid');
+                        $('.border.rounded').siblings('.invalid-feedback').text(value[0]);
+                    } else {
+                        $(`[name="${key}"]`).addClass('is-invalid');
+                        $(`[name="${key}"]`).siblings('.invalid-feedback').text(value[0]);
+                    }
+                });
+            } else {
+                Swal.fire('Error!', xhr.responseJSON?.message || 'Terjadi kesalahan pada server', 'error');
+            }
         }
-        
-        $('#userGroupModal').modal('show');
     });
 }
 
+// 2. EDIT USER GROUP
+function editUserGroup(id) {
+    $.ajax({
+        url: `/user-group/${id}`,
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                $('#edit_nama').val(response.userGroup.nama);
+                $('#editUserGroupId').val(id);
+                $('#editUserGroupModal').modal('show');
+            }
+        },
+        error: function(xhr) {
+            Swal.fire('Error!', 'Gagal memuat data user group', 'error');
+        }
+    });
+}
+
+// 3. UPDATE USER GROUP
+function updateUserGroup(id, formData) {
+    $.ajax({
+        url: `/user-group/${id}`,
+        method: 'POST',
+        data: formData + '&_method=PUT',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if (response.success) {
+                $('#editUserGroupModal').modal('hide');
+                $('#userGroupTable').DataTable().ajax.reload();
+                Swal.fire('Berhasil!', response.message, 'success');
+            }
+        },
+        error: function(xhr) {
+            if (xhr.status === 422) {
+                let errors = xhr.responseJSON.errors;
+                $('.form-control').removeClass('is-invalid');
+                $('.invalid-feedback').text('');
+                
+                $.each(errors, function(key, value) {
+                    $(`#edit_${key}`).addClass('is-invalid');
+                    $(`#edit_${key}_error`).text(value[0]);
+                });
+            } else {
+                Swal.fire('Error!', xhr.responseJSON?.message || 'Terjadi kesalahan pada server', 'error');
+            }
+        }
+    });
+}
+
+// 4. DELETE USER GROUP
+function deleteUserGroup(id) {
+    Swal.fire({
+        title: 'Apakah Anda yakin?',
+        text: "Data user group akan dihapus permanen!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/user-group/${id}`,
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#userGroupTable').DataTable().ajax.reload();
+                        Swal.fire('Berhasil!', response.message, 'success');
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire('Error!', xhr.responseJSON?.message || 'Terjadi kesalahan pada server', 'error');
+                }
+            });
+        }
+    });
+}
+
+// 5. MANAGE PERMISSIONS
+function managePermissions(id) {
+    $.ajax({
+        url: `/user-group/${id}/permissions`,
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                // Populate permissions modal
+                $('#permissionUserGroupId').val(id);
+                $('#permissionGroupName').text(response.userGroup.nama);
+                
+                // Clear existing checkboxes
+                $('#permissionsContainer').empty();
+                
+                // Group permissions by category
+                Object.keys(response.groupedPermissions).forEach(category => {
+                    let categoryHtml = `
+                        <div class="permission-category mb-3">
+                            <h6 class="text-primary">${category}</h6>
+                            <div class="row">
+                    `;
+                    
+                    response.groupedPermissions[category].forEach(permission => {
+                        let isChecked = response.assignedPermissions.includes(permission.id) ? 'checked' : '';
+                        categoryHtml += `
+                            <div class="col-md-6 col-lg-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="permissions[]" value="${permission.id}" 
+                                           id="perm_${permission.id}" ${isChecked}>
+                                    <label class="form-check-label" for="perm_${permission.id}">
+                                        ${permission.deskripsi}
+                                        ${permission.route_name ? `<small class="text-muted d-block">(${permission.route_name})</small>` : ''}
+                                    </label>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    categoryHtml += '</div></div>';
+                    $('#permissionsContainer').append(categoryHtml);
+                });
+                
+                $('#permissionsModal').modal('show');
+            }
+        },
+        error: function(xhr) {
+            Swal.fire('Error!', 'Gagal memuat data permissions', 'error');
+        }
+    });
+}
+
+// 6. UPDATE PERMISSIONS
+function updatePermissions() {
+    let id = $('#permissionUserGroupId').val();
+    let selectedPermissions = [];
+    
+    $('input[name="permissions[]"]:checked').each(function() {
+        selectedPermissions.push($(this).val());
+    });
+    
+    $.ajax({
+        url: `/user-group/${id}`,
+        method: 'POST',
+        data: {
+            nama: $('#permissionGroupName').text(),
+            permissions: selectedPermissions,
+            _method: 'PUT'
+        },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if (response.success) {
+                $('#permissionsModal').modal('hide');
+                Swal.fire('Berhasil!', 'Permissions berhasil diupdate', 'success');
+            }
+        },
+        error: function(xhr) {
+            Swal.fire('Error!', xhr.responseJSON?.message || 'Gagal mengupdate permissions', 'error');
+        }
+    });
+}
+
+// 7. SHOW DETAIL
 function showDetail(id) {
-    $.get(`{{ url('user-group') }}/${id}`, function(data) {
+    $.get(`/user-group/${id}`, function(data) {
         let permissionsList = '';
         if (data.permissions && data.permissions.length > 0) {
-                                    permissionsList = data.permissions.map(p => `<span class="badge bg-secondary me-1 mb-1">${p.deskripsi}</span>`).join('');
+            permissionsList = data.permissions.map(p => `<span class="badge bg-secondary me-1 mb-1">${p.deskripsi}</span>`).join('');
         } else {
             permissionsList = '<span class="text-muted">Tidak ada permissions</span>';
         }
@@ -342,64 +532,6 @@ function showDetail(id) {
         `;
         $('#detailUserGroupContent').html(content);
         $('#detailUserGroupModal').modal('show');
-    });
-}
-
-function showPermissions(id) {
-    $.get(`{{ url('user-group') }}/${id}/permissions`, function(data) {
-        let content = '';
-        if (data && data.length > 0) {
-            content = '<div class="list-group">';
-            data.forEach(function(permission) {
-                content += `
-                    <div class="list-group-item">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">${permission.deskripsi}</h6>
-                        </div>
-                        ${permission.route_name ? `<p class="mb-1 text-muted small">(${permission.route_name})</p>` : ''}
-                    </div>
-                `;
-            });
-            content += '</div>';
-        } else {
-            content = '<p class="text-muted text-center">Tidak ada permissions untuk group ini</p>';
-        }
-        
-        $('#permissionsContent').html(content);
-        $('#permissionsModal').modal('show');
-    });
-}
-
-function deleteUserGroup(id) {
-    Swal.fire({
-        title: 'Apakah Anda yakin?',
-        text: "Data user group akan dihapus permanen!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                url: `{{ url('user-group') }}/${id}`,
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    if (response.success) {
-                        $('#userGroupTable').DataTable().ajax.reload();
-                        Swal.fire('Berhasil!', response.message, 'success');
-                    }
-                },
-                error: function(xhr) {
-                    let message = xhr.responseJSON?.message || 'Terjadi kesalahan pada server';
-                    Swal.fire('Error!', message, 'error');
-                }
-            });
-        }
     });
 }
 </script>

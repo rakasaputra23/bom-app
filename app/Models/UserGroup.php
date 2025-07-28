@@ -17,14 +17,24 @@ class UserGroup extends Model
     }
 
     public function permissions()
-{
-    return $this->belongsToMany(Permission::class, 'group_permissions', 'user_group_id', 'permission_id');
-}
+    {
+        return $this->belongsToMany(Permission::class, 'group_permissions', 'user_group_id', 'permission_id');
+    }
 
+    // PERBAIKAN: Method hasPermission yang lebih efisien
+    public function hasPermission($routeName)
+    {
+        if (!$routeName) {
+            return false;
+        }
 
-public function hasPermission($routeName)
-{
-    return $this->permissions()->where('route_name', $routeName)->exists();
-}
+        // Gunakan whereHas untuk query yang lebih efisien
+        return $this->permissions()->where('route_name', $routeName)->exists();
+    }
 
+    // TAMBAHAN: Method untuk sync permissions
+    public function syncPermissions(array $permissionIds)
+    {
+        return $this->permissions()->sync($permissionIds);
+    }
 }
