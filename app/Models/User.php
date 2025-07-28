@@ -37,15 +37,15 @@ class User extends Authenticatable
 
     // Relasi ke UserGroup
     public function group()
-    {
-        return $this->belongsTo(UserGroup::class, 'user_group_id');
-    }
+{
+    return $this->belongsTo(UserGroup::class, 'user_group_id');
+}
 
-    // Helper method untuk cek permission
-    public function hasPermission($routeName)
-    {
-        return $this->group && $this->group->hasPermission($routeName);
-    }
+public function hasPermission($routeName)
+{
+    return $this->group && $this->group->hasPermission($routeName);
+}
+
 
     // Helper method untuk cek apakah user adalah superadmin
     public function isSuperAdmin()
