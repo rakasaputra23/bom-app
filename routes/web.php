@@ -1,61 +1,44 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KodeMaterialController;
 use App\Http\Controllers\UomController;
 use App\Http\Controllers\ProyekController;
 use App\Http\Controllers\RevisiController;
 use App\Http\Controllers\BillOfMaterialController;
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
 
-// Authentication Routes
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
+// ==========================
+// 🔐 AUTH ROUTES
+// ==========================
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/register', function () {
-    return view('auth.register');
-})->name('register');
+// Form Lupa Password (input NIP)
+Route::get('/password/reset', [AuthController::class, 'showForgotPassword'])->name('password.request');
 
-// Password Reset Routes (Static Views Only)
-Route::get('/password/reset', function () {
-    return view('auth.passwords.email');
-})->name('password.request');
+// Form Reset Password Manual (input NIP + password baru)
+Route::get('/password/reset/form', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
+Route::post('/password/reset', [AuthController::class, 'resetPassword'])->name('password.update');
 
-// Halaman update password statis
-Route::get('/password/update', function () {
-    return view('auth.passwords.reset', [
-        'token' => 'static-token-example',
-        'email' => 'example@email.com' // Optional: jika ingin menampilkan email contoh
-    ]);
-})->name('password.update');
+// ==========================
+// 🏠 DASHBOARD & PROFILE
+// ==========================
 
-// Dashboard & Profile
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
+Route::get('/dashboard', fn() => view('dashboard'))->name('dashboard');
 
-Route::get('/profile', function () {
-    return view('profile');
-})->name('profile');
+Route::prefix('profile')->group(function () {
+    Route::get('/', fn() => view('profile'))->name('profile');
+    Route::get('/edit', fn() => view('profile.edit'))->name('profile.edit');
+});
 
-// Tambahkan route untuk edit profile
-Route::get('/profile/edit', function () {
-    return view('profile.edit');
-})->name('profile.edit');
+// ==========================
+// 📦 MASTER DATA ROUTES
+// ==========================
 
 Route::prefix('master')->group(function () {
 
-    // Kode Material
     Route::prefix('kode-material')->group(function () {
         Route::get('/', [KodeMaterialController::class, 'index'])->name('kode-material.index');
         Route::get('/data', [KodeMaterialController::class, 'getData'])->name('kode-material.getData');
@@ -65,7 +48,6 @@ Route::prefix('master')->group(function () {
         Route::delete('/{kodeMaterial}', [KodeMaterialController::class, 'destroy'])->name('kode-material.destroy');
     });
 
-    // UOM
     Route::prefix('uom')->group(function () {
         Route::get('/', [UomController::class, 'index'])->name('uom.index');
         Route::get('/data', [UomController::class, 'getData'])->name('uom.getData');
@@ -75,7 +57,6 @@ Route::prefix('master')->group(function () {
         Route::delete('/{uom}', [UomController::class, 'destroy'])->name('uom.destroy');
     });
 
-    // Proyek
     Route::prefix('proyek')->group(function () {
         Route::get('/', [ProyekController::class, 'index'])->name('proyek.index');
         Route::get('/data', [ProyekController::class, 'getData'])->name('proyek.getData');
@@ -84,7 +65,6 @@ Route::prefix('master')->group(function () {
         Route::put('/{proyek}', [ProyekController::class, 'update'])->name('proyek.update');
         Route::delete('/{proyek}', [ProyekController::class, 'destroy'])->name('proyek.destroy');
     });
-
 
     Route::prefix('revisi')->group(function () {
         Route::get('/', [RevisiController::class, 'index'])->name('revisi.index');
@@ -96,21 +76,21 @@ Route::prefix('master')->group(function () {
 
 });
 
-// Route untuk Bill of Material
-//Route::middleware(['auth'])->group(function () {
-    // Bill of Materials Routes
-    Route::prefix('bom')->group(function () {
-        Route::get('/', [BillOfMaterialController::class, 'index'])->name('bom.index');
-        Route::get('/create', [BillOfMaterialController::class, 'create'])->name('bom.create');
-        Route::post('/', [BillOfMaterialController::class, 'store'])->name('bom.store');
-        Route::get('/{id}', [BillOfMaterialController::class, 'show'])->name('bom.show');
-        Route::get('/{id}/edit', [BillOfMaterialController::class, 'edit'])->name('bom.edit');
-        Route::put('/{id}', [BillOfMaterialController::class, 'update'])->name('bom.update');
-        Route::delete('/{id}', [BillOfMaterialController::class, 'destroy'])->name('bom.destroy');
-    });
-//});
+// ==========================
+// ⚙️ BOM
+// ==========================
+Route::prefix('bom')->group(function () {
+    Route::get('/', [BillOfMaterialController::class, 'index'])->name('bom.index');
+    Route::get('/create', [BillOfMaterialController::class, 'create'])->name('bom.create');
+    Route::post('/', [BillOfMaterialController::class, 'store'])->name('bom.store');
+    Route::get('/{id}', [BillOfMaterialController::class, 'show'])->name('bom.show');
+    Route::get('/{id}/edit', [BillOfMaterialController::class, 'edit'])->name('bom.edit');
+    Route::put('/{id}', [BillOfMaterialController::class, 'update'])->name('bom.update');
+    Route::delete('/{id}', [BillOfMaterialController::class, 'destroy'])->name('bom.destroy');
+});
 
-// User Routes
+// ==========================
+// 👥 USER
+// ==========================
 Route::view('/user', 'user.user')->name('user');
 Route::view('/user-group', 'user.user-group')->name('user.group');
-
