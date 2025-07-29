@@ -66,6 +66,14 @@ class RevisiController extends Controller
         }
     }
 
+    public function show(Revisi $revisi)
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $revisi
+        ]);
+    }
+
     public function update(Request $request, Revisi $revisi)
     {
         $request->validate([

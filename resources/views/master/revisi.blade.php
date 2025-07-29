@@ -233,10 +233,10 @@ $(document).ready(function() {
 
     // Edit form submission
     $('#editRevisiForm').on('submit', function(e) {
-        e.preventDefault();
-        const form = $(this);
-        const id = $('#edit_id').val();
-        const url = '{{ route("revisi.update", ":id") }}'.replace(':id', id);
+    e.preventDefault();
+    const form = $(this);
+    const id = $('#edit_id').val();
+    const url = '{{ route("revisi.update", ":id") }}'.replace(':id', id);
         const submitBtn = form.find('button[type="submit"]');
         const originalText = submitBtn.html();
         
@@ -291,7 +291,7 @@ $(document).ready(function() {
 
 function editRevisi(id) {
     $.ajax({
-        url: '{{ route("revisi.update", ":id") }}'.replace(':id', id),
+        url: '{{ route("revisi.show", ":id") }}'.replace(':id', id),
         method: 'GET',
         beforeSend: function() {
             Swal.fire({
