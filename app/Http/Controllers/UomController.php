@@ -80,65 +80,64 @@ class UomController extends Controller
     }
 
     public function show(Uom $uom)
-    {
+{
+    try {
         return response()->json([
             'success' => true,
+            'data' => $uom,
+            'message' => 'Data UoM berhasil dimuat'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memuat data UoM'
+        ], 500);
+    }
+}
+
+public function update(Request $request, Uom $uom)
+{
+    try {
+        $validated = $request->validate([
+            'satuan' => 'required|string|max:50',
+            'qty' => 'required|numeric'
+        ]);
+
+        $uom->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'UoM berhasil diperbarui',
             'data' => $uom
         ]);
+    } catch (\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'errors' => $e->errors(),
+            'message' => 'Validasi gagal'
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memperbarui UoM'
+        ], 500);
     }
+}
 
-    public function update(Request $request, Uom $uom)
-    {
-        $request->validate([
-            'qty' => 'required|integer|min:1',
-            'satuan' => 'required|string|max:50',
+public function destroy(Uom $uom)
+{
+    try {
+        $uom->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'UoM berhasil dihapus'
         ]);
-
-        // Cek apakah kombinasi baru (qty + satuan) sudah ada, selain data sekarang
-        $exists = Uom::where('qty', $request->qty)
-                    ->where('satuan', $request->satuan)
-                    ->where('id', '!=', $uom->id)
-                    ->exists();
-
-        if ($exists) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Kombinasi qty dan satuan sudah ada.'
-            ], 422);
-        }
-
-        try {
-            $uom->update([
-                'qty' => $request->qty,
-                'satuan' => $request->satuan
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Data berhasil diupdate!'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengupdate data: ' . $e->getMessage()
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menghapus UoM'
+        ], 500);
     }
-
-    public function destroy(Uom $uom)
-    {
-        try {
-            $uom->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Data berhasil dihapus!'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus data: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+}
 }

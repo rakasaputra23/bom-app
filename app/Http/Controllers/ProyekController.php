@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Proyek;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class ProyekController extends Controller
@@ -16,27 +15,29 @@ class ProyekController extends Controller
 
     public function getData(Request $request)
     {
-        $query = Proyek::query()->select('proyek.*');
+        $query = Proyek::query();
 
         return DataTables::of($query)
-            ->addIndexColumn()
-            ->addColumn('action', function($row) {
-                return '<button class="btn btn-sm btn-warning edit-btn" data-id="'.$row->id.'" 
-                        data-kode="'.$row->kode_proyek.'" data-nama="'.$row->nama_proyek.'">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger delete-btn" data-id="'.$row->id.'" 
-                        data-kode="'.$row->kode_proyek.'" data-nama="'.$row->nama_proyek.'">
-                        <i class="fas fa-trash"></i>
-                    </button>';
-            })
             ->filter(function ($query) use ($request) {
                 if ($request->has('search_kode') && $request->search_kode != '') {
-                    $query->where('kode_proyek', 'like', '%'.$request->search_kode.'%');
+                    $query->where('kode_proyek', 'like', '%' . $request->search_kode . '%');
                 }
                 if ($request->has('search_nama') && $request->search_nama != '') {
-                    $query->where('nama_proyek', 'like', '%'.$request->search_nama.'%');
+                    $query->where('nama_proyek', 'like', '%' . $request->search_nama . '%');
                 }
+            })
+            ->addIndexColumn()
+            ->addColumn('action', function ($row) {
+                return '
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-warning" onclick="editProyek('.$row->id.')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteProyek('.$row->id.', \''.$row->kode_proyek.'\', \''.$row->nama_proyek.'\')" title="Hapus">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                ';
             })
             ->rawColumns(['action'])
             ->make(true);
@@ -57,7 +58,7 @@ class ProyekController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data berhasil disimpan!',
+                'message' => 'Data Proyek berhasil disimpan!',
                 'data' => $proyek
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -70,6 +71,22 @@ class ProyekController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menyimpan data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function show(Proyek $proyek)
+    {
+        try {
+            return response()->json([
+                'success' => true,
+                'data' => $proyek,
+                'message' => 'Data Proyek berhasil dimuat'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat data Proyek'
             ], 500);
         }
     }
@@ -89,35 +106,36 @@ class ProyekController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data berhasil diupdate!',
+                'message' => 'Proyek berhasil diperbarui',
                 'data' => $proyek
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
+                'message' => 'Validasi gagal'
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengupdate data: ' . $e->getMessage()
+                'message' => 'Gagal memperbarui Proyek'
             ], 500);
         }
     }
+
     public function destroy(Proyek $proyek)
     {
         try {
             $proyek->delete();
-
+            
             return response()->json([
                 'success' => true,
-                'message' => 'Data berhasil dihapus!'
+                'message' => 'Proyek berhasil dihapus'
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus data: ' . $e->getMessage()
+                'message' => 'Gagal menghapus Proyek'
             ], 500);
         }
     }

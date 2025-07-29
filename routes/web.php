@@ -75,12 +75,12 @@ Route::middleware(['auth', 'permission'])->group(function () {
         });
 
         Route::prefix('revisi')->group(function () {
-            Route::get('/', [RevisiController::class, 'index'])->name('revisi.index');
-            Route::get('/data', [RevisiController::class, 'getData'])->name('revisi.getData');
-            Route::post('/', [RevisiController::class, 'store'])->name('revisi.store');
-            Route::put('/{revisi}', [RevisiController::class, 'update'])->name('revisi.update');
-            Route::delete('/{revisi}', [RevisiController::class, 'destroy'])->name('revisi.destroy');
-        });
+        Route::get('/', [RevisiController::class, 'index'])->name('revisi.index');
+        Route::get('/data', [RevisiController::class, 'getData'])->name('revisi.getData');
+        Route::post('/', [RevisiController::class, 'store'])->name('revisi.store');
+        Route::put('/{revisi}', [RevisiController::class, 'update'])->name('revisi.update');
+        Route::delete('/{revisi}', [RevisiController::class, 'destroy'])->name('revisi.destroy');
+    });
 
     });
 

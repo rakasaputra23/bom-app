@@ -17,148 +17,122 @@
 @endsection
 
 @section('content')
-<!-- Form Tambah -->
-<div class="card card-primary">
-  <div class="card-header">
-    <h3 class="card-title">Tambah Proyek</h3>
-    <div class="card-tools">
-      <button type="button" class="btn btn-tool" data-card-widget="collapse">
-        <i class="fas fa-minus"></i>
-      </button>
-    </div>
-  </div>
-  <div class="card-body">
-    <form id="addForm">
-      @csrf
-      <div class="row">
-        <div class="form-group col-md-6">
-          <label for="kode_proyek">Kode Proyek <span class="text-red">*</span></label>
-          <input type="text" class="form-control" id="kode_proyek" name="kode_proyek" placeholder="PRJ001" required>
-          <div class="invalid-feedback"></div>
-        </div>
-        <div class="form-group col-md-6">
-          <label for="nama_proyek">Nama Proyek <span class="text-red">*</span></label>
-          <input type="text" class="form-control" id="nama_proyek" name="nama_proyek" placeholder="Nama Proyek" required>
-          <div class="invalid-feedback"></div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-12">
-          <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save"></i> Simpan
-          </button>
-          <button type="reset" class="btn btn-secondary">
-            <i class="fas fa-undo"></i> Reset
-          </button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Filter Pencarian -->
 <div class="row">
-  <div class="col-md-6">
-    <div class="form-group">
-      <label>Cari Kode Proyek</label>
-      <input type="text" class="form-control" id="search_kode" placeholder="Cari berdasarkan kode...">
-    </div>
-  </div>
-  <div class="col-md-6">
-    <div class="form-group">
-      <label>Cari Nama Proyek</label>
-      <input type="text" class="form-control" id="search_nama" placeholder="Cari berdasarkan nama...">
-    </div>
-  </div>
-</div>
-
-<!-- DataTable -->
-<div class="card">
-  <div class="card-header">
-    <h3 class="card-title">Daftar Proyek</h3>
-    <div class="card-tools">
-      <button type="button" class="btn btn-tool" data-card-widget="collapse">
-        <i class="fas fa-minus"></i>
-      </button>
-    </div>
-  </div>
-  <div class="card-body">
-    <div class="table-responsive">
-      <table id="proyekTable" class="table table-bordered table-striped table-hover">
-        <thead>
-          <tr>
-            <th style="width: 5%;">No</th>
-            <th style="width: 20%;">Kode Proyek</th>
-            <th style="width: 55%;">Nama Proyek</th>
-            <th style="width: 20%;">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Data akan dimuat via AJAX -->
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- Edit Modal -->
-<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editModalLabel">Edit Proyek</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form id="editForm">
-          @csrf
-          @method('PUT')
-          <input type="hidden" id="edit_id" name="id">
-          <div class="form-group">
-            <label for="edit_kode_proyek">Kode Proyek <span class="text-red">*</span></label>
-            <input type="text" class="form-control" id="edit_kode_proyek" name="kode_proyek" required>
-            <div class="invalid-feedback"></div>
-          </div>
-          <div class="form-group">
-            <label for="edit_nama_proyek">Nama Proyek <span class="text-red">*</span></label>
-            <input type="text" class="form-control" id="edit_nama_proyek" name="nama_proyek" required>
-            <div class="invalid-feedback"></div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="button" class="btn btn-primary" id="updateBtn">Simpan Perubahan</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="deleteModalLabel">Konfirmasi Hapus</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>Apakah Anda yakin ingin menghapus proyek <strong id="delete_item_name"></strong>?</p>
-        <div class="alert alert-warning">
-          <i class="fas fa-exclamation-triangle"></i>
-          Data yang telah dihapus tidak dapat dikembalikan!
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title">
+                    <i class="fas fa-project-diagram mr-1"></i>
+                    Data Proyek
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#proyekModal">
+                        <i class="fas fa-plus"></i> Tambah Proyek
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Cari Kode Proyek</label>
+                            <input type="text" class="form-control" id="search_kode" placeholder="Cari berdasarkan kode...">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Cari Nama Proyek</label>
+                            <input type="text" class="form-control" id="search_nama" placeholder="Cari berdasarkan nama...">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="proyekTable" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Kode Proyek</th>
+                                <th>Nama Proyek</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="button" class="btn btn-danger" id="deleteBtn">Hapus</button>
-      </div>
     </div>
-  </div>
+</div>
+
+<!-- Modal Proyek -->
+<div class="modal fade" id="proyekModal" tabindex="-1" aria-labelledby="proyekModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="proyekModalLabel">Tambah Proyek</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="proyekForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="kode_proyek">Kode Proyek <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="kode_proyek" name="kode_proyek" placeholder="PRJ001" required>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="nama_proyek">Nama Proyek <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nama_proyek" name="nama_proyek" placeholder="Nama Proyek" required>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit Proyek -->
+<div class="modal fade" id="editProyekModal" tabindex="-1" aria-labelledby="editProyekModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProyekModalLabel">Edit Proyek</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="editProyekForm">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <input type="hidden" id="edit_id" name="id">
+                    <div class="form-group">
+                        <label for="edit_kode_proyek">Kode Proyek <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_kode_proyek" name="kode_proyek" required>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_nama_proyek">Nama Proyek <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_nama_proyek" name="nama_proyek" required>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -166,236 +140,314 @@
 <!-- DataTables -->
 <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
-<link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
-<!-- Toastr -->
-<link rel="stylesheet" href="{{ asset('plugins/toastr/toastr.min.css') }}">
+<!-- SweetAlert2 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
 
 @push('scripts')
-<!-- DataTables & Plugins -->
+<!-- DataTables -->
 <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
-<script src="{{ asset('plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
-<script src="{{ asset('plugins/datatables-buttons/js/buttons.bootstrap4.min.js') }}"></script>
-<script src="{{ asset('plugins/jszip/jszip.min.js') }}"></script>
-<script src="{{ asset('plugins/pdfmake/pdfmake.min.js') }}"></script>
-<script src="{{ asset('plugins/pdfmake/vfs_fonts.js') }}"></script>
-<script src="{{ asset('plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
-<script src="{{ asset('plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
-<script src="{{ asset('plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
-<!-- Toastr -->
-<script src="{{ asset('plugins/toastr/toastr.min.js') }}"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
 <script>
 $(document).ready(function() {
-  // Initialize DataTable
-  var table = $('#proyekTable').DataTable({
-    processing: true,
-    serverSide: true,
-    ajax: {
-      url: '{{ route("proyek.getData") }}',
-      data: function(d) {
-        d.search_kode = $('#search_kode').val();
-        d.search_nama = $('#search_nama').val();
-      }
-    },
-    columns: [
-      { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-      { data: 'kode_proyek', name: 'kode_proyek' },
-      { data: 'nama_proyek', name: 'nama_proyek' },
-      { 
-        data: 'action', 
-        name: 'action', 
-        orderable: false, 
-        searchable: false 
-      }
-    ],
-    responsive: true,
-    autoWidth: false,
-    dom: '<"row"<"col-md-6"B><"col-md-6"f>>' +
-         '<"row"<"col-md-12"tr>>' +
-         '<"row"<"col-md-5"i><"col-md-7"p>>',
-    buttons: [
-      {
-        extend: 'excel',
-        text: '<i class="fas fa-file-excel"></i> Excel',
-        className: 'btn btn-success btn-sm',
-        exportOptions: {
-          columns: [0, 1, 2]
-        }
-      },
-      {
-        extend: 'pdf',
-        text: '<i class="fas fa-file-pdf"></i> PDF',
-        className: 'btn btn-danger btn-sm',
-        exportOptions: {
-          columns: [0, 1, 2]
-        }
-      },
-      {
-        extend: 'print',
-        text: '<i class="fas fa-print"></i> Print',
-        className: 'btn btn-info btn-sm',
-        exportOptions: {
-          columns: [0, 1, 2]
-        }
-      }
-    ],
-    language: {
-      search: "Cari:",
-      lengthMenu: "Tampilkan _MENU_ data per halaman",
-      zeroRecords: "Data tidak ditemukan",
-      info: "Menampilkan halaman _PAGE_ dari _PAGES_",
-      infoEmpty: "Data tidak tersedia",
-      infoFiltered: "(difilter dari _MAX_ total data)",
-      paginate: {
-        first: "Pertama",
-        last: "Terakhir",
-        next: "Selanjutnya",
-        previous: "Sebelumnya"
-      },
-      processing: "Sedang memproses..."
-    },
-    pageLength: 10,
-    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-    order: [[1, 'asc']]
-  });
-
-  // Custom search filters
-  $('#search_kode, #search_nama').on('keyup', function() {
-    table.ajax.reload();
-  });
-
-  // Add Form Submit
-  $('#addForm').on('submit', function(e) {
-    e.preventDefault();
-    
-    var formData = new FormData(this);
-    
-    $.ajax({
-      url: '{{ route("proyek.store") }}',
-      method: 'POST',
-      data: formData,
-      processData: false,
-      contentType: false,
-      success: function(response) {
-        if(response.success) {
-          toastr.success(response.message);
-          $('#addForm')[0].reset();
-          table.ajax.reload();
-          clearValidation();
-        }
-      },
-      error: function(xhr) {
-        if(xhr.status === 422) {
-          var errors = xhr.responseJSON.errors;
-          displayValidationErrors(errors);
-        } else {
-          toastr.error('Terjadi kesalahan saat menyimpan data');
-        }
-      }
+    // Initialize DataTable
+    var table = $('#proyekTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '{{ route("proyek.getData") }}',
+            data: function(d) {
+                d.search_kode = $('#search_kode').val();
+                d.search_nama = $('#search_nama').val();
+            }
+        },
+        columns: [
+            { 
+                data: 'DT_RowIndex', 
+                name: 'DT_RowIndex', 
+                orderable: false, 
+                searchable: false,
+                width: '5%'
+            },
+            { 
+                data: 'kode_proyek', 
+                name: 'kode_proyek',
+                width: '20%'
+            },
+            { 
+                data: 'nama_proyek', 
+                name: 'nama_proyek',
+                width: '55%'
+            },
+            { 
+                data: 'action', 
+                name: 'action', 
+                orderable: false, 
+                searchable: false,
+                width: '20%'
+            }
+        ],
+        responsive: true,
+        autoWidth: false,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json'
+        },
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
+        order: [[1, 'asc']]
     });
-  });
 
-  // Edit Button Click
-  $(document).on('click', '.edit-btn', function() {
-    var id = $(this).data('id');
-    var kode = $(this).data('kode');
-    var nama = $(this).data('nama');
-    
-    $('#edit_id').val(id);
-    $('#edit_kode_proyek').val(kode);
-    $('#edit_nama_proyek').val(nama);
-    $('#editModal').modal('show');
-    clearValidation('#editForm');
-  });
-
-  // Update Button Click
-  $('#updateBtn').on('click', function() {
-    var id = $('#edit_id').val();
-    var formData = new FormData($('#editForm')[0]);
-    
-    $.ajax({
-      url: '{{ route("proyek.update", ":id") }}'.replace(':id', id),
-      method: 'POST',
-      data: formData,
-      processData: false,
-      contentType: false,
-      success: function(response) {
-        if(response.success) {
-          toastr.success(response.message);
-          $('#editModal').modal('hide');
-          table.ajax.reload();
-          clearValidation('#editForm');
-        }
-      },
-      error: function(xhr) {
-        if(xhr.status === 422) {
-          var errors = xhr.responseJSON.errors;
-          displayValidationErrors(errors, '#editForm');
-        } else {
-          toastr.error('Terjadi kesalahan saat mengupdate data');
-        }
-      }
+    // Custom search filters
+    $('#search_kode, #search_nama').on('keyup', function() {
+        table.ajax.reload();
     });
-  });
 
-  // Delete Button Click
-  $(document).on('click', '.delete-btn', function() {
-    var id = $(this).data('id');
-    var kode = $(this).data('kode');
-    var nama = $(this).data('nama');
-    
-    $('#delete_item_name').text(kode + ' - ' + nama);
-    $('#deleteBtn').data('id', id);
-    $('#deleteModal').modal('show');
-  });
+    // Form submission
+    $('#proyekForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        let formData = new FormData(this);
+        let url = '{{ route("proyek.store") }}';
+        
+        // Show loading state
+        const submitBtn = $(this).find('button[type="submit"]');
+        const originalText = submitBtn.html();
+        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
 
-  // Delete Confirmation
-  $('#deleteBtn').on('click', function() {
-    var id = $(this).data('id');
-    
-    $.ajax({
-      url: '{{ route("proyek.destroy", ":id") }}'.replace(':id', id),
-      method: 'DELETE',
-      data: {
-        '_token': '{{ csrf_token() }}'
-      },
-      success: function(response) {
-        if(response.success) {
-          toastr.success(response.message);
-          $('#deleteModal').modal('hide');
-          table.ajax.reload();
-        }
-      },
-      error: function(xhr) {
-        var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan saat menghapus data';
-        toastr.error(errorMessage);
-      }
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#proyekModal').modal('hide');
+                    table.ajax.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: response.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    resetForm();
+                }
+            },
+            error: function(xhr) {
+                if (xhr.status === 422) {
+                    let errors = xhr.responseJSON.errors;
+                    $('.form-control').removeClass('is-invalid');
+                    $('.invalid-feedback').text('');
+                    
+                    $.each(errors, function(key, value) {
+                        $(`[name="${key}"]`).addClass('is-invalid');
+                        $(`[name="${key}"]`).siblings('.invalid-feedback').text(value[0]);
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan pada server'
+                    });
+                }
+            },
+            complete: function() {
+                // Reset button state
+                submitBtn.html(originalText).prop('disabled', false);
+            }
+        });
     });
-  });
 
-  // Helper Functions
-  function displayValidationErrors(errors, formSelector = '') {
-    $.each(errors, function(key, value) {
-      var input = $(formSelector + ' [name="' + key + '"]');
-      input.addClass('is-invalid');
-      input.next('.invalid-feedback').text(value[0]);
+    // Update form submission
+    $('#editProyekForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        let id = $('#edit_id').val();
+        let formData = new FormData(this);
+        
+        // Show loading state
+        const submitBtn = $(this).find('button[type="submit"]');
+        const originalText = submitBtn.html();
+        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
+
+        $.ajax({
+            url: `{{ route('proyek.update', ':id') }}`.replace(':id', id),
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#editProyekModal').modal('hide');
+                    $('#proyekTable').DataTable().ajax.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: response.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            },
+            error: function(xhr) {
+                if (xhr.status === 422) {
+                    let errors = xhr.responseJSON.errors;
+                    $('.form-control').removeClass('is-invalid');
+                    $('.invalid-feedback').text('');
+                    
+                    $.each(errors, function(key, value) {
+                        $(`#edit_${key}`).addClass('is-invalid');
+                        $(`#edit_${key}`).siblings('.invalid-feedback').text(value[0]);
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan pada server'
+                    });
+                }
+            },
+            complete: function() {
+                submitBtn.html(originalText).prop('disabled', false);
+            }
+        });
     });
-  }
 
-  function clearValidation(formSelector = '') {
-    $(formSelector + ' .is-invalid').removeClass('is-invalid');
-    $(formSelector + ' .invalid-feedback').text('');
-  }
+    // Reset modal when closed
+    $('#proyekModal').on('hidden.bs.modal', function() {
+        resetForm();
+    });
 
-  // Clear validation on input change
-  $('input, select').on('change', function() {
-    $(this).removeClass('is-invalid');
-    $(this).next('.invalid-feedback').text('');
-  });
+    // Clear validation on input change
+    $('input').on('change', function() {
+        $(this).removeClass('is-invalid');
+        $(this).siblings('.invalid-feedback').text('');
+    });
 });
+
+function resetForm() {
+    $('#proyekForm')[0].reset();
+    $('.form-control').removeClass('is-invalid');
+    $('.invalid-feedback').text('');
+}
+
+function editProyek(id) {
+    // Show loading indicator
+    Swal.fire({
+        title: 'Memuat data...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    $.ajax({
+        url: `{{ route('proyek.show', ':id') }}`.replace(':id', id),
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            Swal.close();
+            if (response.success) {
+                $('#edit_id').val(response.data.id);
+                $('#edit_kode_proyek').val(response.data.kode_proyek);
+                $('#edit_nama_proyek').val(response.data.nama_proyek);
+                
+                // Clear validation errors
+                $('.form-control').removeClass('is-invalid');
+                $('.invalid-feedback').text('');
+                
+                $('#editProyekModal').modal('show');
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: response.message || 'Gagal memuat data Proyek'
+                });
+            }
+        },
+        error: function(xhr) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: xhr.responseJSON?.message || 'Gagal memuat data Proyek'
+            });
+            console.error('Error:', xhr.responseJSON);
+        }
+    });
+}
+
+function deleteProyek(id, kode, nama) {
+    Swal.fire({
+        title: 'Apakah Anda yakin?',
+        text: `Anda akan menghapus proyek "${kode} - ${nama}"!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: 'Menghapus...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: `{{ route('proyek.destroy', ':id') }}`.replace(':id', id),
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#proyekTable').DataTable().ajax.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: response.message || 'Gagal menghapus data'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    let message = xhr.responseJSON?.message || 'Terjadi kesalahan pada server';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: message
+                    });
+                    console.error('Error:', xhr.responseJSON);
+                }
+            });
+        }
+    });
+}
 </script>
 @endpush

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Revisi;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class RevisiController extends Controller
@@ -16,27 +15,29 @@ class RevisiController extends Controller
 
     public function getData(Request $request)
     {
-        $query = Revisi::query()->select('revisi.*');
+        $query = Revisi::query();
 
         return DataTables::of($query)
-            ->addIndexColumn()
-            ->addColumn('action', function($row) {
-                return '<button class="btn btn-sm btn-warning edit-btn" data-id="'.$row->id.'" 
-                        data-jenis="'.$row->jenis_revisi.'" data-keterangan="'.$row->keterangan.'">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger delete-btn" data-id="'.$row->id.'" 
-                        data-jenis="'.$row->jenis_revisi.'" data-keterangan="'.$row->keterangan.'">
-                        <i class="fas fa-trash"></i>
-                    </button>';
-            })
             ->filter(function ($query) use ($request) {
                 if ($request->has('search_jenis') && $request->search_jenis != '') {
-                    $query->where('jenis_revisi', 'like', '%'.$request->search_jenis.'%');
+                    $query->where('jenis_revisi', 'like', '%' . $request->search_jenis . '%');
                 }
                 if ($request->has('search_keterangan') && $request->search_keterangan != '') {
-                    $query->where('keterangan', 'like', '%'.$request->search_keterangan.'%');
+                    $query->where('keterangan', 'like', '%' . $request->search_keterangan . '%');
                 }
+            })
+            ->addIndexColumn()
+            ->addColumn('action', function ($row) {
+                return '
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-sm btn-warning" onclick="editRevisi('.$row->id.')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRevisi('.$row->id.', \''.addslashes($row->jenis_revisi).'\')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                ';
             })
             ->rawColumns(['action'])
             ->make(true);
@@ -45,27 +46,18 @@ class RevisiController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'jenis_revisi' => 'required|string|max:100',
-            'keterangan' => 'required|string'
+            'jenis_revisi' => 'required|string|max:100|unique:revisi',
+            'keterangan' => 'required|string|max:255'
         ]);
 
         try {
-            $revisi = Revisi::create([
-                'jenis_revisi' => $request->jenis_revisi,
-                'keterangan' => $request->keterangan
-            ]);
+            $revisi = Revisi::create($request->only(['jenis_revisi', 'keterangan']));
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data berhasil disimpan!',
+                'message' => 'Data revisi berhasil disimpan!',
                 'data' => $revisi
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -77,31 +69,21 @@ class RevisiController extends Controller
     public function update(Request $request, Revisi $revisi)
     {
         $request->validate([
-            'jenis_revisi' => 'required|string|max:100',
-            'keterangan' => 'required|string'
+            'jenis_revisi' => 'required|string|max:100|unique:revisi,jenis_revisi,'.$revisi->id,
+            'keterangan' => 'required|string|max:255'
         ]);
 
         try {
-            $revisi->update([
-                'jenis_revisi' => $request->jenis_revisi,
-                'keterangan' => $request->keterangan
-            ]);
+            $revisi->update($request->only(['jenis_revisi', 'keterangan']));
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data berhasil diupdate!',
-                'data' => $revisi
+                'message' => 'Data revisi berhasil diperbarui!'
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengupdate data: ' . $e->getMessage()
+                'message' => 'Gagal memperbarui data: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -113,7 +95,7 @@ class RevisiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data berhasil dihapus!'
+                'message' => 'Data revisi berhasil dihapus!'
             ]);
         } catch (\Exception $e) {
             return response()->json([

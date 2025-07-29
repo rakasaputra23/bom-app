@@ -494,68 +494,101 @@ function updatePermissions() {
     });
 }
 
-// 7. SHOW DETAIL
+// 7. SHOW DETAIL - VERSI DIPERBAIKI
 function showDetail(id) {
-    $.get(`/user-group/${id}`, function(data) {
-        // ... kode sebelumnya ...
-        
-        // Perbaikan format tanggal
-        let createdAt = '-';
-        if (data.created_at) {
-            try {
-                let date = new Date(data.created_at);
-                createdAt = date.toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            } catch (e) {
-                console.error('Error parsing date:', e);
-            }
-        }
+    $.ajax({
+        url: `/user-group/${id}`,
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                // Format tanggal created_at
+                let createdAt = '-';
+                if (response.userGroup.created_at) {
+                    try {
+                        let date = new Date(response.userGroup.created_at);
+                        createdAt = date.toLocaleDateString('id-ID', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    } catch (e) {
+                        console.error('Error parsing date:', e);
+                    }
+                }
 
-        let content = `
-            <div class="row">
-                <div class="col-12">
-                    <table class="table table-borderless">
-                        <tr>
-                            <td width="150"><strong>Nama Group:</strong></td>
-                            <td>${data.nama}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Jumlah User:</strong></td>
-                            <td>${data.users ? data.users.length : 0} user</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Dibuat:</strong></td>
-                            <td>${createdAt}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            <hr>
-            <div class="row">
-                <div class="col-12">
-                    <h6><strong>Permissions:</strong></h6>
-                    <div class="mb-3">
-                        ${permissionsList}
+                // Format permissions list
+                let permissionsList = '<ul class="list-unstyled">';
+                if (response.permissions && response.permissions.length > 0) {
+                    response.permissions.forEach(permission => {
+                        permissionsList += `<li><i class="fas fa-check-circle text-success mr-2"></i> ${permission.deskripsi} (${permission.route_name})</li>`;
+                    });
+                } else {
+                    permissionsList += '<li class="text-muted">Tidak ada permissions</li>';
+                }
+                permissionsList += '</ul>';
+
+                // Format users list
+                let usersList = '<ul class="list-unstyled">';
+                if (response.users && response.users.length > 0) {
+                    response.users.forEach(user => {
+                        usersList += `<li><i class="fas fa-user mr-2"></i> ${user.nama} (${user.nip || 'N/A'})</li>`;
+                    });
+                } else {
+                    usersList += '<li class="text-muted">Tidak ada user dalam group ini</li>';
+                }
+                usersList += '</ul>';
+
+                // Build HTML content
+                let content = `
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="150"><strong>Nama Group:</strong></td>
+                                    <td>${response.userGroup.nama || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Jumlah User:</strong></td>
+                                    <td>${response.users ? response.users.length : 0} user</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Dibuat:</strong></td>
+                                    <td>${createdAt}</td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <hr>
-            <div class="row">
-                <div class="col-12">
-                    <h6><strong>Users dalam Group:</strong></h6>
-                    <div>
-                        ${usersList}
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <h6><strong>Permissions:</strong></h6>
+                            <div class="mb-3">
+                                ${permissionsList}
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        `;
-        $('#detailUserGroupContent').html(content);
-        $('#detailUserGroupModal').modal('show');
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <h6><strong>Users dalam Group:</strong></h6>
+                            <div>
+                                ${usersList}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#detailUserGroupContent').html(content);
+                $('#detailUserGroupModal').modal('show');
+            } else {
+                Swal.fire('Error!', response.message || 'Gagal memuat detail user group', 'error');
+            }
+        },
+        error: function(xhr) {
+            Swal.fire('Error!', xhr.responseJSON?.message || 'Terjadi kesalahan saat memuat detail', 'error');
+        }
     });
 }
 </script>

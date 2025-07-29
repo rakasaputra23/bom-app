@@ -172,13 +172,10 @@
               </a>
             </li>
             @endif
-
+          
         @endif
 
-        <!-- Divider -->
-        
-      
-        <!-- System Info (for admins only) -->
+        <!-- System Info (for admins only) - Placed outside User Management -->
         @if(Auth::check() && Auth::user()->isSuperAdmin())
         <li class="nav-header">SYSTEM</li>
         <li class="nav-item">
