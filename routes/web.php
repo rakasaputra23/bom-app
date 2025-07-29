@@ -10,6 +10,7 @@ use App\Http\Controllers\BillOfMaterialController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserGroupController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\DashboardController;
 
 // ==========================
 // 🔐 AUTH ROUTES
@@ -31,11 +32,11 @@ Route::post('/password/reset', [AuthController::class, 'resetPassword'])->name('
 Route::middleware(['auth', 'permission'])->group(function () {
 
     // ==========================
-    // 🏠 DASHBOARD & PROFILE
+    // 🏠 DASHBOARD - SEKARANG HARUS ADA PERMISSION
     // ==========================
-    Route::get('/dashboard', fn() => view('dashboard'))->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // PROFILE ROUTES - Updated dengan controller methods
+    // PROFILE ROUTES - Updated dengan controller methods (TETAP PUBLIC)
     Route::prefix('profile')->group(function () {
         Route::get('/', [UserController::class, 'profile'])->name('profile');
         Route::get('/edit', [UserController::class, 'editProfile'])->name('profile.edit');
@@ -75,12 +76,12 @@ Route::middleware(['auth', 'permission'])->group(function () {
         });
 
         Route::prefix('revisi')->group(function () {
-        Route::get('/', [RevisiController::class, 'index'])->name('revisi.index');
-        Route::get('/data', [RevisiController::class, 'getData'])->name('revisi.getData');
-        Route::post('/', [RevisiController::class, 'store'])->name('revisi.store');
-        Route::put('/{revisi}', [RevisiController::class, 'update'])->name('revisi.update');
-        Route::delete('/{revisi}', [RevisiController::class, 'destroy'])->name('revisi.destroy');
-    });
+            Route::get('/', [RevisiController::class, 'index'])->name('revisi.index');
+            Route::get('/data', [RevisiController::class, 'getData'])->name('revisi.getData');
+            Route::post('/', [RevisiController::class, 'store'])->name('revisi.store');
+            Route::put('/{revisi}', [RevisiController::class, 'update'])->name('revisi.update');
+            Route::delete('/{revisi}', [RevisiController::class, 'destroy'])->name('revisi.destroy');
+        });
 
     });
 
@@ -131,11 +132,36 @@ Route::middleware(['auth', 'permission'])->group(function () {
 });
 
 // ==========================
-// 🔄 REDIRECTS
+// 🔄 REDIRECTS - PERBAIKAN UTAMA
 // ==========================
+
+// Route root - redirect ke halaman yang user bisa akses
 Route::get('/', function () {
-    return redirect('/dashboard');
-});
+    if (!Auth::check()) {
+        return redirect()->route('login');
+    }
+    
+    $user = Auth::user();
+    
+    // Jika superadmin, langsung ke dashboard
+    if ($user->isSuperAdmin()) {
+        return redirect()->route('dashboard');
+    }
+    
+    // Cari route pertama yang bisa diakses
+    $firstAccessibleRoute = $user->getFirstAccessibleRoute();
+    
+    if ($firstAccessibleRoute) {
+        return redirect()->route($firstAccessibleRoute);
+    }
+    
+    // Jika tidak ada permission sama sekali, logout
+    Auth::logout();
+    return redirect()->route('login')->with('error', 'Akun Anda tidak memiliki akses ke sistem. Silakan hubungi administrator.');
+    
+})->middleware('auth')->name('root');
+
+// Route home - sama seperti root
 Route::get('/home', function () {
-    return redirect('/dashboard');
-});
+    return redirect('/');
+})->middleware('auth')->name('home');

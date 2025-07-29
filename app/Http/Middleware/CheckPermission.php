@@ -56,20 +56,20 @@ class CheckPermission
 
         // Routes yang tidak perlu dicek permission (public routes)
         $publicRoutes = [
-            'dashboard',
-            'profile',
-            'profile.edit',
-            'profile.update',
             'logout',
             'password.request',
             'password.reset',
-            'password.update'
+            'password.update',
+            'profile',
         ];
 
         if (in_array($routeName, $publicRoutes)) {
             return $next($request);
         }
 
+        // PERBAIKAN UTAMA: Semua route harus dicek permission, termasuk dashboard
+        // Tidak ada pengecualian untuk route apapun kecuali public routes di atas
+        
         // Cek permission dengan caching
         $cacheKey = "user_permissions_{$user->id}_route_{$routeName}";
         $hasPermission = Cache::remember($cacheKey, 300, function () use ($user, $routeName) {
@@ -83,11 +83,19 @@ class CheckPermission
                 'user_permissions' => $user->group->permissions->pluck('route_name')->toArray()
             ]);
             
-            // Return JSON untuk AJAX requests
+            // PERBAIKAN: Redirect ke halaman yang user punya akses
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Anda tidak memiliki izin untuk mengakses resource ini.'
                 ], 403);
+            }
+            
+            // Jika tidak punya akses dashboard, redirect ke halaman pertama yang bisa diakses
+            if ($routeName === 'dashboard' || $routeName === 'home' || $routeName === 'root') {
+                $firstAccessibleRoute = $user->getFirstAccessibleRoute();
+                if ($firstAccessibleRoute) {
+                    return redirect()->route($firstAccessibleRoute);
+                }
             }
             
             abort(403, 'Anda tidak memiliki izin untuk mengakses halaman ini.');

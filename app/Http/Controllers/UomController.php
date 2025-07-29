@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Uom;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Validation\ValidationException;
 
 class UomController extends Controller
 {
@@ -110,7 +111,7 @@ public function update(Request $request, Uom $uom)
             'message' => 'UoM berhasil diperbarui',
             'data' => $uom
         ]);
-    } catch (\ValidationException $e) {
+    } catch (ValidationException $e) {
         return response()->json([
             'success' => false,
             'errors' => $e->errors(),

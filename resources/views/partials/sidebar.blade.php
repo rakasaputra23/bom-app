@@ -1,6 +1,19 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
   <!-- Brand Logo -->
-  <a href="{{ route('dashboard') }}" class="brand-link">
+  @php
+    // PERBAIKAN: Brand logo juga harus cek permission atau redirect ke halaman yang bisa diakses
+    $logoRoute = 'dashboard'; // Default
+    if (Auth::check()) {
+      if (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('dashboard')) {
+        $logoRoute = 'dashboard';
+      } else {
+        $firstAccessible = Auth::user()->getFirstAccessibleRoute();
+        $logoRoute = $firstAccessible ?: 'profile'; // Fallback ke profile jika tidak ada akses apapun
+      }
+    }
+  @endphp
+  
+  <a href="{{ route($logoRoute) }}" class="brand-link">
     <img src="{{ asset('dist/img/AdminLTELogo.png') }}" 
          alt="BOM Logo" 
          class="brand-image img-circle elevation-3" 
@@ -33,7 +46,8 @@
     <nav class="mt-2">
       <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
         
-        <!-- Dashboard - Always visible -->
+        <!-- PERBAIKAN UTAMA: Dashboard - Hanya tampil jika user punya permission -->
+        @if(Auth::check() && (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('dashboard')))
         <li class="nav-item">
           <a href="{{ route('dashboard') }}" 
              class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -41,6 +55,7 @@
             <p>Dashboard</p>
           </a>
         </li>
+        @endif
 
         <!-- BOM Management -->
         @php
@@ -86,8 +101,8 @@
         @endphp
         
         @if($canAccessMasterData)
-        <li class="nav-item {{ request()->routeIs('master.*') ? 'menu-open' : '' }}">
-          <a href="#" class="nav-link {{ request()->routeIs('master.*') ? 'active' : '' }}">
+        <li class="nav-item {{ request()->routeIs('master.*') || request()->routeIs('kode-material.*') || request()->routeIs('revisi.*') || request()->routeIs('proyek.*') || request()->routeIs('uom.*') ? 'menu-open' : '' }}">
+          <a href="#" class="nav-link {{ request()->routeIs('master.*') || request()->routeIs('kode-material.*') || request()->routeIs('revisi.*') || request()->routeIs('proyek.*') || request()->routeIs('uom.*') ? 'active' : '' }}">
             <i class="nav-icon fas fa-database"></i>
             <p>
               Master Data
@@ -172,10 +187,22 @@
               </a>
             </li>
             @endif
-          
+
+            @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('permissions.index'))
+            <li class="nav-item">
+              <a href="{{ route('permissions.index') }}" 
+                 class="nav-link {{ request()->routeIs('permissions.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Permissions</p>
+              </a>
+            </li>
+            @endif
+          </ul>
+        </li>
         @endif
 
-        <!-- System Info (for admins only) - Placed outside User Management -->
+
+        <!-- System Info (for admins only) -->
         @if(Auth::check() && Auth::user()->isSuperAdmin())
         <li class="nav-header">SYSTEM</li>
         <li class="nav-item">
@@ -183,6 +210,30 @@
             <i class="nav-icon fas fa-info-circle"></i>
             <p>System Info</p>
           </a>
+        </li>
+        @endif
+
+        <!-- PERBAIKAN: Pesan jika user tidak punya permission apapun -->
+        @php
+          $hasAnyAccess = Auth::check() && (
+            Auth::user()->isSuperAdmin() || 
+            Auth::user()->hasPermission('dashboard') ||
+            Auth::user()->canAccessModule('bom') ||
+            Auth::user()->canAccessModule('master_data') ||
+            Auth::user()->canAccessModule('user_management')
+          );
+        @endphp
+
+        @if(Auth::check() && !$hasAnyAccess)
+        <li class="nav-header">ACCESS RESTRICTED</li>
+        <li class="nav-item">
+          <div class="nav-link text-warning">
+            <i class="nav-icon fas fa-exclamation-triangle"></i>
+            <p class="text-sm">
+              No menu access<br>
+              <small class="text-muted">Contact admin</small>
+            </p>
+          </div>
         </li>
         @endif
 
@@ -207,6 +258,7 @@ function showSystemInfo() {
                     <p><strong>Debug Mode:</strong> {{ config('app.debug') ? 'Enabled' : 'Disabled' }}</p>
                     <p><strong>Current User:</strong> {{ Auth::user()->nama ?? 'Unknown' }}</p>
                     <p><strong>User Group:</strong> {{ Auth::user()->group->nama ?? 'No Group' }}</p>
+                    <p><strong>Available Permissions:</strong> {{ Auth::user()->getAllPermissions()->count() }}</p>
                 </div>
             `,
             icon: 'info',
@@ -220,7 +272,8 @@ PHP Version: {{ phpversion() }}
 Environment: {{ config('app.env') }}
 Debug Mode: {{ config('app.debug') ? 'Enabled' : 'Disabled' }}
 Current User: {{ Auth::user()->nama ?? 'Unknown' }}
-User Group: {{ Auth::user()->group->nama ?? 'No Group' }}`);
+User Group: {{ Auth::user()->group->nama ?? 'No Group' }}
+Available Permissions: {{ Auth::user()->getAllPermissions()->count() }}`);
     }
     @else
     alert('Access denied!');

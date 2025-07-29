@@ -177,6 +177,47 @@ class User extends Authenticatable
         return $this->hasAnyPermission($permissions);
     }
 
+    // NEW: Method untuk mendapatkan route pertama yang bisa diakses user
+    public function getFirstAccessibleRoute()
+    {
+        if ($this->isSuperAdmin()) {
+            return 'dashboard';
+        }
+
+        // Load permissions jika belum
+        if (!$this->relationLoaded('group')) {
+            $this->load('group.permissions');
+        }
+
+        if (!$this->group || !$this->group->permissions) {
+            return null;
+        }
+
+        $userPermissions = $this->group->permissions->pluck('route_name')->toArray();
+
+        // Prioritas route yang akan di-redirect (urut berdasarkan kepentingan)
+        $routePriorities = [
+            'dashboard', // Jika punya akses dashboard
+            'bom.index', // BOM sebagai prioritas kedua
+            'kode-material.index', // Master data material
+            'proyek.index', // Master data proyek
+            'uom.index', // Master data UOM
+            'revisi.index', // Master data revisi
+            'user', // User management
+            // Tambahkan route lain sesuai kebutuhan
+        ];
+
+        // Cari route pertama yang user punya akses
+        foreach ($routePriorities as $route) {
+            if (in_array($route, $userPermissions)) {
+                return $route;
+            }
+        }
+
+        // Jika tidak ada dari prioritas, ambil permission pertama yang ada
+        return $userPermissions[0] ?? null;
+    }
+
     // Method untuk mendapatkan semua permissions user
     public function getAllPermissions()
     {
