@@ -2,39 +2,54 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class UserGroup extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nama'];
+    protected $fillable = [
+        'nama'
+    ];
 
+    // Relasi ke User
     public function users()
     {
         return $this->hasMany(User::class, 'user_group_id');
     }
 
+    // Relasi ke Permission melalui group_permissions
     public function permissions()
     {
         return $this->belongsToMany(Permission::class, 'group_permissions', 'user_group_id', 'permission_id');
     }
 
-    // PERBAIKAN: Method hasPermission yang lebih efisien
-    public function hasPermission($routeName)
+    // Method untuk assign permission ke group
+    public function givePermissionTo($permission)
     {
-        if (!$routeName) {
-            return false;
+        if (is_string($permission)) {
+            $permission = Permission::where('route_name', $permission)->first();
         }
 
-        // Gunakan whereHas untuk query yang lebih efisien
-        return $this->permissions()->where('route_name', $routeName)->exists();
+        if ($permission && !$this->permissions->contains($permission->id)) {
+            $this->permissions()->attach($permission->id);
+        }
+
+        return $this;
     }
 
-    // TAMBAHAN: Method untuk sync permissions
-    public function syncPermissions(array $permissionIds)
+    // Method untuk revoke permission dari group
+    public function revokePermissionTo($permission)
     {
-        return $this->permissions()->sync($permissionIds);
+        if (is_string($permission)) {
+            $permission = Permission::where('route_name', $permission)->first();
+        }
+
+        if ($permission) {
+            $this->permissions()->detach($permission->id);
+        }
+
+        return $this;
     }
 }

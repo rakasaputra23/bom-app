@@ -1,11 +1,16 @@
 <?php
 
+// ========================================
+// 1. IMPROVED MIDDLEWARE (CheckPermission.php)
+// ========================================
+
 namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class CheckPermission
 {
@@ -21,31 +26,40 @@ class CheckPermission
         $user = Auth::user();
         $routeName = $request->route()->getName();
 
-        // PERBAIKAN: Log untuk debugging
-        Log::info('Permission Check', [
-            'user_id' => $user->id,
-            'user_nip' => $user->nip,
-            'route_name' => $routeName,
-            'user_group' => $user->group ? $user->group->nama : 'No Group'
-        ]);
+        // Log untuk debugging (hanya di development)
+        if (config('app.debug')) {
+            Log::info('Permission Check', [
+                'user_id' => $user->id,
+                'user_nip' => $user->nip,
+                'route_name' => $routeName,
+                'user_group' => $user->group ? $user->group->nama : 'No Group',
+                'is_superadmin' => $user->isSuperAdmin()
+            ]);
+        }
 
-        // PERBAIKAN: Load user group dan permissions
-        $user->load('group.permissions');
+        // Load user group dan permissions
+        if (!$user->relationLoaded('group')) {
+            $user->load('group.permissions');
+        }
 
-        // Superadmin selalu lolos
+        // Superadmin selalu lolos - PERBAIKAN: Cek lebih teliti
         if ($user->isSuperAdmin()) {
-            Log::info('Access granted: Superadmin');
+            Log::info('User is superadmin, allowing access', ['user_id' => $user->id]);
             return $next($request);
         }
 
         // Pastikan user punya grup
         if (!$user->group) {
             Log::warning('Access denied: No user group', ['user_id' => $user->id]);
-            abort(403, 'Akun Anda belum memiliki grup user.');
+            abort(403, 'Akun Anda belum memiliki grup user. Silakan hubungi administrator.');
         }
 
-        // PERBAIKAN: Routes yang tidak perlu dicek permission
+        // Routes yang tidak perlu dicek permission (public routes)
         $publicRoutes = [
+            'dashboard',
+            'profile',
+            'profile.edit',
+            'profile.update',
             'logout',
             'password.request',
             'password.reset',
@@ -56,17 +70,29 @@ class CheckPermission
             return $next($request);
         }
 
-        // Cek apakah grup punya izin akses route ini
-        if (!$user->hasPermission($routeName)) {
+        // Cek permission dengan caching
+        $cacheKey = "user_permissions_{$user->id}_route_{$routeName}";
+        $hasPermission = Cache::remember($cacheKey, 300, function () use ($user, $routeName) {
+            return $user->hasPermission($routeName);
+        });
+
+        if (!$hasPermission) {
             Log::warning('Access denied: No permission', [
                 'user_id' => $user->id,
                 'route_name' => $routeName,
                 'user_permissions' => $user->group->permissions->pluck('route_name')->toArray()
             ]);
+            
+            // Return JSON untuk AJAX requests
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Anda tidak memiliki izin untuk mengakses resource ini.'
+                ], 403);
+            }
+            
             abort(403, 'Anda tidak memiliki izin untuk mengakses halaman ini.');
         }
 
-        Log::info('Access granted: Permission found');
         return $next($request);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Permission extends Model
 {
@@ -14,14 +14,9 @@ class Permission extends Model
         'deskripsi'
     ];
 
+    // Relasi ke UserGroup melalui group_permissions
     public function userGroups()
     {
         return $this->belongsToMany(UserGroup::class, 'group_permissions', 'permission_id', 'user_group_id');
-    }
-
-    // TAMBAHAN: Method untuk mendapatkan permission berdasarkan route
-    public static function getByRoute($routeName)
-    {
-        return static::where('route_name', $routeName)->first();
     }
 }
