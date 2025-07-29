@@ -42,7 +42,7 @@
           <div class="invalid-feedback"></div>
         </div>
         <div class="form-group col-md-4">
-          <label for="spesifikasi">Spesifikasi <span class="text-red">*</span></label>
+          <label for="spesifikasi">Spesifikasi</label>
           <input type="text" class="form-control" id="spesifikasi" name="spesifikasi" placeholder="Spesifikasi">
           <div class="invalid-feedback"></div>
         </div>
@@ -50,7 +50,7 @@
       <div class="row">
         <div class="form-group col-md-3">
           <label for="uom_id">Satuan <span class="text-red">*</span></label>
-          <select class="form-control" id="uom_id" name="uom_id" required>
+          <select class="form-control select2" id="uom_id" name="uom_id" required style="width: 100%;">
             <option value="">Pilih Satuan</option>
             @foreach($uoms as $uom)
               <option value="{{ $uom->id }}">
@@ -101,9 +101,9 @@
       <label>Filter Satuan</label>
       <select class="form-control" id="search_satuan">
         <option value="">Semua Satuan</option>
-        @foreach($uoms as $uom)
+        @foreach($uoms->unique('satuan') as $uom)
           <option value="{{ $uom->satuan }}">
-            {{ $uom->full_format }}
+            {{ $uom->satuan }}
           </option>
         @endforeach
       </select>
@@ -174,7 +174,7 @@
           </div>
           <div class="form-group">
             <label for="edit_uom_id">Satuan <span class="text-red">*</span></label>
-            <select class="form-control" id="edit_uom_id" name="uom_id" required>
+            <select class="form-control select2" id="edit_uom_id" name="uom_id" required style="width: 100%;">
               <option value="">Pilih Satuan</option>
               @foreach($uoms as $uom)
                 <option value="{{ $uom->id }}">
@@ -227,6 +227,9 @@
 <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
 <!-- Toastr -->
 <link rel="stylesheet" href="{{ asset('plugins/toastr/toastr.min.css') }}">
+<!-- Select2 -->
+<link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
+<link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
 @endpush
 
 @push('scripts')
@@ -245,9 +248,18 @@
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
 <!-- Toastr -->
 <script src="{{ asset('plugins/toastr/toastr.min.js') }}"></script>
+<!-- Select2 -->
+<script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
 
 <script>
 $(document).ready(function() {
+  // Initialize Select2 only for form elements
+  $('#uom_id, #edit_uom_id').select2({
+    theme: 'bootstrap4',
+    placeholder: 'Pilih Satuan',
+    allowClear: true
+  });
+
   // Initialize DataTable
   var table = $('#materialTable').DataTable({
     processing: true,
@@ -345,6 +357,7 @@ $(document).ready(function() {
         if(response.success) {
           toastr.success(response.message);
           $('#addForm')[0].reset();
+          $('#uom_id').val(null).trigger('change');
           table.ajax.reload();
           clearValidation();
         }
@@ -374,7 +387,7 @@ $(document).ready(function() {
           $('#edit_kode_material').val(data.kode_material);
           $('#edit_nama_material').val(data.nama_material);
           $('#edit_spesifikasi').val(data.spesifikasi);
-          $('#edit_uom_id').val(data.uom_id);
+          $('#edit_uom_id').val(data.uom_id).trigger('change');
           $('#editModal').modal('show');
           clearValidation('#editForm');
         }
@@ -468,6 +481,14 @@ $(document).ready(function() {
   $('input, select').on('change', function() {
     $(this).removeClass('is-invalid');
     $(this).next('.invalid-feedback').text('');
+  });
+
+  // Initialize Select2 in modal when shown
+  $('#editModal').on('shown.bs.modal', function () {
+    $('#edit_uom_id').select2({
+      theme: 'bootstrap4',
+      dropdownParent: $('#editModal')
+    });
   });
 });
 </script>

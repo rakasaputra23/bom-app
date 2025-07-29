@@ -25,29 +25,29 @@ class UserGroupController extends Controller
      * Mengambil data user groups untuk DataTable
      */
     public function getData()
-    {
-        try {
-            $userGroups = UserGroup::withCount('users')->get();
-            
-            return response()->json([
-                'data' => $userGroups->map(function ($group) {
-                    return [
-                        'id' => $group->id,
-                        'nama' => $group->nama ?? 'Tidak ada nama',
-                        'users_count' => $group->users_count ?? 0,
-                        'created_at' => $group->created_at ? $group->created_at->format('d/m/Y H:i') : '-',
-                    ];
-                })
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error fetching user groups data: ' . $e->getMessage());
-            return response()->json([
-                'data' => [],
-                'error' => 'Terjadi kesalahan saat mengambil data'
-            ], 500);
-        }
+{
+    try {
+        $userGroups = UserGroup::withCount('users')->get();
+        
+        return response()->json([
+            'data' => $userGroups->map(function ($group) {
+                return [
+                    'id' => $group->id,
+                    'nama' => $group->nama ?? 'Tidak ada nama',
+                    'users_count' => $group->users_count ?? 0,
+                    // Format tanggal ke ISO string (YYYY-MM-DD HH:MM:SS)
+                    'created_at' => $group->created_at ? $group->created_at->toISOString() : '-',
+                ];
+            })
+        ]);
+    } catch (Exception $e) {
+        Log::error('Error fetching user groups data: ' . $e->getMessage());
+        return response()->json([
+            'data' => [],
+            'error' => 'Terjadi kesalahan saat mengambil data'
+        ], 500);
     }
+}
 
     /**
      * Menyimpan user group baru

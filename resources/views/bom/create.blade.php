@@ -57,9 +57,9 @@
           @enderror
         </div>
         <div class="form-group col-md-3">
-          <label for="proyek_id">Proyek</label>
-          <select class="form-control @error('proyek_id') is-invalid @enderror" 
-                  id="proyek_id" name="proyek_id" required>
+          <label for="proyek_id">Proyek <span class="text-red">*</span></label>
+          <select class="form-control select2 @error('proyek_id') is-invalid @enderror" 
+                  id="proyek_id" name="proyek_id" required style="width: 100%;">
             <option value="">Pilih Proyek</option>
             @foreach($proyeks as $proyek)
               <option value="{{ $proyek->id }}" {{ old('proyek_id') == $proyek->id ? 'selected' : '' }}>
@@ -72,9 +72,9 @@
           @enderror
         </div>
         <div class="form-group col-md-3">
-          <label for="revisi_id">Revisi</label>
-          <select class="form-control @error('revisi_id') is-invalid @enderror" 
-                  id="revisi_id" name="revisi_id" required>
+          <label for="revisi_id">Revisi <span class="text-red">*</span></label>
+          <select class="form-control select2 @error('revisi_id') is-invalid @enderror" 
+                  id="revisi_id" name="revisi_id" required style="width: 100%;">
             <option value="">Pilih Revisi</option>
             @foreach($revisis as $revisi)
               <option value="{{ $revisi->id }}" {{ old('revisi_id') == $revisi->id ? 'selected' : '' }}>
@@ -115,15 +115,15 @@
           <tbody>
             <tr>
               <td>
-                <select class="form-control material-select" name="items[0][material_id]" required>
-                  <option value="">Pilih Kode</option>
+                <select class="form-control material-select select2" name="items[0][material_id]" required style="width: 100%;">
+                  <option value="">Pilih Kode Material</option>
                   @foreach($materials as $material)
                     <option value="{{ $material->id }}" 
                             data-desc="{{ $material->nama_material }}" 
                             data-spec="{{ $material->spesifikasi }}"
                             data-uom="{{ $material->uom ? $material->uom->satuan : '' }}" 
                             data-qty="{{ $material->uom ? $material->uom->qty : 1 }}">
-                      {{ $material->kode_material }}
+                      {{ $material->kode_material }} - {{ $material->nama_material }}
                     </option>
                   @endforeach
                 </select>
@@ -189,10 +189,25 @@
 
 <script>
 $(document).ready(function() {
-  // Initialize Select2 for existing selects
+  // Initialize Select2 for main form selects
+  $('#proyek_id').select2({
+    theme: 'bootstrap4',
+    placeholder: 'Pilih Proyek',
+    allowClear: true
+  });
+
+  $('#revisi_id').select2({
+    theme: 'bootstrap4',
+    placeholder: 'Pilih Revisi',
+    allowClear: true
+  });
+
+  // Initialize Select2 for material selects
   $('.material-select').select2({
     theme: 'bootstrap4',
-    placeholder: 'Pilih Kode Material'
+    placeholder: 'Pilih Kode Material',
+    allowClear: true,
+    width: '100%'
   });
 
   // Auto-fill data for existing items on page load
@@ -238,21 +253,21 @@ $(document).ready(function() {
     }
   });
 
-  // Add new item
+  // Add new item with Select2 initialization
   $('#addItem').click(function() {
     var rowCount = $('#itemTable tbody tr').length;
     var newRow = `
       <tr>
         <td>
-          <select class="form-control material-select" name="items[${rowCount}][material_id]" required>
-            <option value="">Pilih Kode</option>
+          <select class="form-control material-select select2" name="items[${rowCount}][material_id]" required style="width: 100%;">
+            <option value="">Pilih Kode Material</option>
             @foreach($materials as $material)
               <option value="{{ $material->id }}" 
                       data-desc="{{ $material->nama_material }}" 
                       data-spec="{{ $material->spesifikasi }}"
                       data-uom="{{ $material->uom ? $material->uom->satuan : '' }}" 
                       data-qty="{{ $material->uom ? $material->uom->qty : 1 }}">
-                {{ $material->kode_material }}
+                {{ $material->kode_material }} - {{ $material->nama_material }}
               </option>
             @endforeach
           </select>
@@ -281,16 +296,23 @@ $(document).ready(function() {
     `;
     
     $('#itemTable tbody').append(newRow);
+    
+    // Initialize Select2 for the new row
     $('#itemTable tbody tr:last .material-select').select2({
       theme: 'bootstrap4',
-      placeholder: 'Pilih Kode Material'
+      placeholder: 'Pilih Kode Material',
+      allowClear: true,
+      width: '100%'
     });
   });
   
-  // Remove item
+  // Remove item with Select2 destroy
   $(document).on('click', '.remove-item', function() {
     if($('#itemTable tbody tr').length > 1) {
+      // Destroy Select2 before removing
+      $(this).closest('tr').find('.material-select').select2('destroy');
       $(this).closest('tr').remove();
+      
       // Update array indices
       $('#itemTable tbody tr').each(function(index) {
         $(this).find('.material-select').attr('name', `items[${index}][material_id]`);
@@ -320,6 +342,26 @@ $(document).ready(function() {
       alert('Minimal harus ada 1 item dengan material yang valid!');
       return false;
     }
+  });
+
+  // Clear validation on input change
+  $('input, select').on('change', function() {
+    $(this).removeClass('is-invalid');
+    $(this).next('.invalid-feedback').text('');
+  });
+
+  // Form reset handling
+  $('button[type="reset"]').on('click', function() {
+    // Reset Select2 values
+    $('#proyek_id, #revisi_id').val(null).trigger('change');
+    $('.material-select').val(null).trigger('change');
+    
+    // Clear readonly fields
+    $('.desc, .spec, .uom, .qty-input').val('');
+    
+    // Clear validation
+    $('.is-invalid').removeClass('is-invalid');
+    $('.invalid-feedback').text('');
   });
 });
 </script>

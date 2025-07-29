@@ -135,4 +135,78 @@ class UserController extends Controller
             'message' => 'User berhasil dihapus'
         ]);
     }
+
+    /**
+ * Menampilkan halaman profil user yang sedang login
+ */
+public function profile()
+{
+    $user = auth()->user()->load('group');
+    return view('profile', compact('user')); // ✅ Sesuai dengan file profile.blade.php
+}
+
+/**
+ * Menampilkan halaman edit profil user yang sedang login
+ */
+public function editProfile()
+{
+    $user = auth()->user()->load('group');
+    return view('profile.edit', compact('user'));
+}
+
+/**
+ * Update profil user yang sedang login
+ */
+public function updateProfile(Request $request)
+{
+    $user = auth()->user();
+    
+    $validator = Validator::make($request->all(), [
+        'nip' => 'required|string|unique:users,nip,' . $user->id,
+        'nama' => 'required|string|max:255',
+        'posisi' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email,' . $user->id,
+        'current_password' => 'nullable|required_with:password',
+        'password' => 'nullable|string|min:6|confirmed',
+    ]);
+
+    if ($validator->fails()) {
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
+    }
+
+    // Jika user ingin mengubah password, validasi password lama
+    if ($request->filled('password')) {
+        if (!$request->filled('current_password')) {
+            return redirect()->back()
+                ->withErrors(['current_password' => 'Password lama harus diisi untuk mengubah password'])
+                ->withInput();
+        }
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return redirect()->back()
+                ->withErrors(['current_password' => 'Password lama tidak sesuai'])
+                ->withInput();
+        }
+    }
+
+    // Update data user
+    $updateData = [
+        'nip' => $request->nip,
+        'nama' => $request->nama,
+        'posisi' => $request->posisi,
+        'email' => $request->email,
+    ];
+
+    // Tambahkan password jika diisi
+    if ($request->filled('password')) {
+        $updateData['password'] = Hash::make($request->password);
+    }
+
+    $user->update($updateData);
+
+    return redirect()->route('profile')
+        ->with('success', 'Profil berhasil diperbarui');
+}
 }

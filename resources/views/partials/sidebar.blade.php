@@ -84,7 +84,7 @@
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-users-cog"></i>
             <p>
-              User Management
+              Users
               <i class="right fas fa-angle-left"></i>
             </p>
           </a>
@@ -92,7 +92,7 @@
             <li class="nav-item">
               <a href="{{ route('user') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Users</p>
+                <p>User Management</p>
               </a>
             </li>
             <li class="nav-item">

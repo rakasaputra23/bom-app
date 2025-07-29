@@ -35,9 +35,11 @@ Route::middleware(['auth', 'permission'])->group(function () {
     // ==========================
     Route::get('/dashboard', fn() => view('dashboard'))->name('dashboard');
 
+    // PROFILE ROUTES - Updated dengan controller methods
     Route::prefix('profile')->group(function () {
-        Route::get('/', fn() => view('profile'))->name('profile');
-        Route::get('/edit', fn() => view('profile.edit'))->name('profile.edit');
+        Route::get('/', [UserController::class, 'profile'])->name('profile');
+        Route::get('/edit', [UserController::class, 'editProfile'])->name('profile.edit');
+        Route::put('/', [UserController::class, 'updateProfile'])->name('profile.update');
     });
 
     // ==========================

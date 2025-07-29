@@ -199,15 +199,29 @@ $(document).ready(function() {
             type: 'GET'
         },
         columns: [
-            { data: 'nama', name: 'nama' },
-            { data: 'users_count', name: 'users_count' },
-            { 
-                data: 'created_at', 
-                name: 'created_at',
-                render: function(data) {
-                    return new Date(data).toLocaleDateString('id-ID');
-                }
-            },
+    { data: 'nama', name: 'nama' },
+    { data: 'users_count', name: 'users_count' },
+    { 
+        data: 'created_at', 
+        name: 'created_at',
+        render: function(data) {
+            if (data === '-' || !data) return '-';
+            try {
+                // Parse ISO string dan format ke locale Indonesia
+                let date = new Date(data);
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                console.error('Error parsing date:', e);
+                return '-';
+            }
+        }
+    },
             {
                 data: 'id',
                 render: function(data, type, row) {
@@ -483,18 +497,23 @@ function updatePermissions() {
 // 7. SHOW DETAIL
 function showDetail(id) {
     $.get(`/user-group/${id}`, function(data) {
-        let permissionsList = '';
-        if (data.permissions && data.permissions.length > 0) {
-            permissionsList = data.permissions.map(p => `<span class="badge bg-secondary me-1 mb-1">${p.deskripsi}</span>`).join('');
-        } else {
-            permissionsList = '<span class="text-muted">Tidak ada permissions</span>';
-        }
-
-        let usersList = '';
-        if (data.users && data.users.length > 0) {
-            usersList = data.users.map(u => `<span class="badge bg-info me-1 mb-1">${u.nama} (${u.nip})</span>`).join('');
-        } else {
-            usersList = '<span class="text-muted">Tidak ada user</span>';
+        // ... kode sebelumnya ...
+        
+        // Perbaikan format tanggal
+        let createdAt = '-';
+        if (data.created_at) {
+            try {
+                let date = new Date(data.created_at);
+                createdAt = date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                console.error('Error parsing date:', e);
+            }
         }
 
         let content = `
@@ -511,7 +530,7 @@ function showDetail(id) {
                         </tr>
                         <tr>
                             <td><strong>Dibuat:</strong></td>
-                            <td>${new Date(data.created_at).toLocaleDateString('id-ID')}</td>
+                            <td>${createdAt}</td>
                         </tr>
                     </table>
                 </div>

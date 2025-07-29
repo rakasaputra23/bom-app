@@ -27,17 +27,23 @@
               alt="User profile picture">
         </div>
 
-        <h3 class="profile-username text-center">Mohammad Raka Saputra</h3>
+        <h3 class="profile-username text-center">{{ auth()->user()->nama }}</h3>
 
         <ul class="list-group list-group-unbordered mb-3">
           <li class="list-group-item">
-            <b>Email</b> <a class="float-right">raka2553@gmail.com</a>
+            <b>NIP</b> <a class="float-right">{{ auth()->user()->nip }}</a>
           </li>
           <li class="list-group-item">
-            <b>User Group</b> <a class="float-right">Superadmin</a>
+            <b>Email</b> <a class="float-right">{{ auth()->user()->email }}</a>
           </li>
           <li class="list-group-item">
-            <b>Bergabung</b> <a class="float-right">01 Januari 2023</a>
+            <b>Posisi</b> <a class="float-right">{{ auth()->user()->posisi }}</a>
+          </li>
+          <li class="list-group-item">
+            <b>User Group</b> <a class="float-right">{{ auth()->user()->group->nama ?? 'Belum Ada Group' }}</a>
+          </li>
+          <li class="list-group-item">
+            <b>Bergabung</b> <a class="float-right">{{ auth()->user()->created_at->format('d F Y') }}</a>
           </li>
         </ul>
 
@@ -52,22 +58,45 @@
         <h3 class="card-title">Detail Profil</h3>
       </div>
       <div class="card-body">
+        <strong><i class="fas fa-id-card mr-1"></i> NIP</strong>
+        <p class="text-muted">{{ auth()->user()->nip }}</p>
+        <hr>
+        
         <strong><i class="fas fa-user mr-1"></i> Nama Lengkap</strong>
-        <p class="text-muted">Mohammad Raka Saputra</p>
+        <p class="text-muted">{{ auth()->user()->nama }}</p>
+        <hr>
+        
+        <strong><i class="fas fa-briefcase mr-1"></i> Posisi</strong>
+        <p class="text-muted">{{ auth()->user()->posisi }}</p>
         <hr>
         
         <strong><i class="fas fa-at mr-1"></i> Email</strong>
-        <p class="text-muted">raka2553@gmail.com</p>
+        <p class="text-muted">{{ auth()->user()->email }}</p>
         <hr>
         
         <strong><i class="fas fa-users mr-1"></i> User Group</strong>
-        <p class="text-muted">Superadmin</p>
+        <p class="text-muted">{{ auth()->user()->group->nama ?? 'Belum Ada Group' }}</p>
         <hr>
         
         <strong><i class="fas fa-calendar-alt mr-1"></i> Bergabung Sejak</strong>
-        <p class="text-muted">01 Januari 2023</p>
+        <p class="text-muted">{{ auth()->user()->created_at->format('d F Y H:i') }}</p>
+        <hr>
+        
+        <strong><i class="fas fa-clock mr-1"></i> Terakhir Update</strong>
+        <p class="text-muted">{{ auth()->user()->updated_at->format('d F Y H:i') }}</p>
       </div>
     </div>
+
+    @if(auth()->user()->isSuperAdmin())
+    <div class="card mt-3">
+      <div class="card-header bg-warning">
+        <h3 class="card-title"><i class="fas fa-crown mr-1"></i> Status Super Admin</h3>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-0">Anda memiliki akses penuh ke seluruh sistem sebagai Super Administrator.</p>
+      </div>
+    </div>
+    @endif
   </div>
 </div>
 @endsection
