@@ -32,6 +32,7 @@
                 </div>
             </div>
             <div class="card-body">
+                <!-- Filter Section -->
                 <div class="row mb-3">
                     <div class="col-md-3">
                         <div class="form-group">
@@ -66,6 +67,7 @@
                     </div>
                 </div>
                 
+                <!-- DataTable -->
                 <div class="table-responsive">
                     <table id="kodeMaterialTable" class="table table-striped table-bordered">
                         <thead>
@@ -85,7 +87,7 @@
     </div>
 </div>
 
-<!-- Modal Kode Material -->
+<!-- Modal Tambah Kode Material -->
 <div class="modal fade" id="kodeMaterialModal" tabindex="-1" aria-labelledby="kodeMaterialModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -195,6 +197,7 @@
 <!-- DataTables -->
 <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+<link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
 <!-- SweetAlert2 -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <!-- Select2 -->
@@ -203,11 +206,19 @@
 @endpush
 
 @push('scripts')
-<!-- DataTables -->
+<!-- DataTables & Plugins -->
 <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
+<script src="{{ asset('plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
+<script src="{{ asset('plugins/datatables-buttons/js/buttons.bootstrap4.min.js') }}"></script>
+<script src="{{ asset('plugins/jszip/jszip.min.js') }}"></script>
+<script src="{{ asset('plugins/pdfmake/pdfmake.min.js') }}"></script>
+<script src="{{ asset('plugins/pdfmake/vfs_fonts.js') }}"></script>
+<script src="{{ asset('plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
+<script src="{{ asset('plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
+<script src="{{ asset('plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 <!-- Select2 -->
@@ -222,7 +233,7 @@ $(document).ready(function() {
         allowClear: true
     });
 
-    // Initialize DataTable
+    // Initialize DataTable with Export Buttons
     var table = $('#kodeMaterialTable').DataTable({
         processing: true,
         serverSide: true,
@@ -273,8 +284,114 @@ $(document).ready(function() {
         ],
         responsive: true,
         autoWidth: false,
+        // Export Buttons Configuration
+        dom: '<"row"<"col-md-6"B><"col-md-6"f>>' +
+             '<"row"<"col-md-12"tr>>' +
+             '<"row"<"col-md-5"i><"col-md-7"p>>',
+        buttons: [
+            {
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: 'btn btn-success btn-sm mr-1',
+                title: 'Data Kode Material',
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4] // Exclude action column
+                },
+                customize: function(xlsx) {
+                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
+                    // Add styling to header
+                    $('row:first c', sheet).attr('s', '2');
+                }
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: 'btn btn-danger btn-sm mr-1',
+                title: 'Data Kode Material',
+                orientation: 'landscape',
+                pageSize: 'A4',
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4] // Exclude action column
+                },
+                customize: function(doc) {
+                    // Customize PDF styling
+                    doc.content[1].table.widths = ['10%', '20%', '30%', '25%', '15%'];
+                    doc.styles.tableHeader.fontSize = 10;
+                    doc.styles.tableBodyEven.fontSize = 9;
+                    doc.styles.tableBodyOdd.fontSize = 9;
+                    doc.defaultStyle.fontSize = 9;
+                    
+                    // Add header
+                    doc.content.splice(0, 1, {
+                        text: [
+                            { text: 'DATA KODE MATERIAL\n', fontSize: 16, bold: true },
+                            { text: 'Tanggal Cetak: ' + new Date().toLocaleDateString('id-ID'), fontSize: 10 }
+                        ],
+                        alignment: 'center',
+                        margin: [0, 0, 0, 20]
+                    });
+                }
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i> Print',
+                className: 'btn btn-info btn-sm',
+                title: 'Data Kode Material',
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4] // Exclude action column
+                },
+                customize: function(win) {
+                    // Add custom CSS for print
+                    $(win.document.body)
+                        .css('font-size', '10pt')
+                        .prepend(
+                            '<div style="text-align:center; margin-bottom: 20px;">' +
+                            '<h2 style="margin: 0;">DATA KODE MATERIAL</h2>' +
+                            '<p style="margin: 5px 0;">Tanggal Cetak: ' + new Date().toLocaleDateString('id-ID') + '</p>' +
+                            '</div>'
+                        );
+                    
+                    $(win.document.body).find('table')
+                        .addClass('compact')
+                        .css('font-size', '9pt');
+                    
+                    // Style table headers
+                    $(win.document.body).find('table thead tr th')
+                        .css({
+                            'background-color': '#f8f9fa',
+                            'border': '1px solid #dee2e6',
+                            'padding': '8px',
+                            'text-align': 'center'
+                        });
+                    
+                    // Style table cells
+                    $(win.document.body).find('table tbody tr td')
+                        .css({
+                            'border': '1px solid #dee2e6',
+                            'padding': '6px'
+                        });
+                }
+            }
+        ],
         language: {
-            url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json'
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data per halaman",
+            zeroRecords: "Data tidak ditemukan",
+            info: "Menampilkan halaman _PAGE_ dari _PAGES_",
+            infoEmpty: "Data tidak tersedia",
+            infoFiltered: "(difilter dari _MAX_ total data)",
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
+            },
+            processing: "Memproses data...",
+            buttons: {
+                excel: "Excel",
+                pdf: "PDF", 
+                print: "Print"
+            }
         },
         pageLength: 10,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
@@ -290,7 +407,7 @@ $(document).ready(function() {
         table.ajax.reload();
     });
 
-    // Form submission
+    // Form submission for Add
     $('#kodeMaterialForm').on('submit', function(e) {
         e.preventDefault();
         
@@ -350,7 +467,7 @@ $(document).ready(function() {
         });
     });
 
-    // Update form submission
+    // Form submission for Update
     $('#editKodeMaterialForm').on('submit', function(e) {
         e.preventDefault();
         
@@ -374,7 +491,7 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     $('#editKodeMaterialModal').modal('hide');
-                    $('#kodeMaterialTable').DataTable().ajax.reload();
+                    table.ajax.reload();
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil!',
@@ -414,12 +531,13 @@ $(document).ready(function() {
     });
 
     // Clear validation on input change
-    $('input').on('change', function() {
+    $('input, select').on('change', function() {
         $(this).removeClass('is-invalid');
         $(this).siblings('.invalid-feedback').text('');
     });
 });
 
+// Helper Functions
 function resetForm() {
     $('#kodeMaterialForm')[0].reset();
     $('#uom_id').val(null).trigger('change');

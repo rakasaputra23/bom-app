@@ -37,12 +37,10 @@ class CheckPermission
             ]);
         }
 
-        // Load user group dan permissions
-        if (!$user->relationLoaded('group')) {
-            $user->load('group.permissions');
-        }
+        // Load user group dan permissions - FRESH LOAD untuk menghindari cache issue
+        $user->load('group.permissions');
 
-        // Superadmin selalu lolos - PERBAIKAN: Cek lebih teliti
+        // Superadmin selalu lolos - HANYA untuk grup "superadmin"
         if ($user->isSuperAdmin()) {
             Log::info('User is superadmin, allowing access', ['user_id' => $user->id]);
             return $next($request);
@@ -67,12 +65,10 @@ class CheckPermission
             return $next($request);
         }
 
-        // PERBAIKAN UTAMA: Semua route harus dicek permission, termasuk dashboard
-        // Tidak ada pengecualian untuk route apapun kecuali public routes di atas
-        
-        // Cek permission dengan caching
+        // PERBAIKAN UTAMA: Hilangkan cache untuk memastikan permission selalu fresh
+        // Atau gunakan cache dengan TTL yang sangat pendek (30 detik)
         $cacheKey = "user_permissions_{$user->id}_route_{$routeName}";
-        $hasPermission = Cache::remember($cacheKey, 300, function () use ($user, $routeName) {
+        $hasPermission = Cache::remember($cacheKey, 30, function () use ($user, $routeName) {
             return $user->hasPermission($routeName);
         });
 
@@ -80,6 +76,8 @@ class CheckPermission
             Log::warning('Access denied: No permission', [
                 'user_id' => $user->id,
                 'route_name' => $routeName,
+                'user_group' => $user->group->nama,
+                'is_regular_admin' => $user->isRegularAdmin(),
                 'user_permissions' => $user->group->permissions->pluck('route_name')->toArray()
             ]);
             
