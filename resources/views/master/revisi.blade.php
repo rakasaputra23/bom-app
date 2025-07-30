@@ -9,7 +9,13 @@
     </div>
     <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item">
+                @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('dashboard'))
+                    <a href="{{ route('dashboard') }}">Dashboard</a>
+                @else
+                    Dashboard
+                @endif
+            </li>
             <li class="breadcrumb-item active">Revisi</li>
         </ol>
     </div>
@@ -17,6 +23,19 @@
 @endsection
 
 @section('content')
+@php
+    // Force refresh user relations untuk memastikan permission terbaru
+    Auth::user()->refreshRelations();
+    
+    // Check permissions dengan fresh data
+    $canIndex = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('revisi.index');
+    $canCreate = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('revisi.store');
+    $canEdit = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('revisi.update');
+    $canDelete = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('revisi.destroy');
+    $hasAnyAccess = $canIndex || $canCreate || $canEdit || $canDelete;
+@endphp
+
+@if($hasAnyAccess)
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -26,11 +45,15 @@
                     Data Revisi
                 </h3>
                 <div class="card-tools">
+                    @if($canCreate)
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#revisiModal">
                         <i class="fas fa-plus"></i> Tambah Revisi
                     </button>
+                    @endif
                 </div>
             </div>
+            
+            @if($canIndex)
             <div class="card-body">
                 <!-- Filter Section -->
                 <div class="row mb-3">
@@ -56,16 +79,40 @@
                                 <th width="5%">No</th>
                                 <th>Jenis Revisi</th>
                                 <th>Keterangan</th>
+                                @if($canEdit || $canDelete)
                                 <th width="15%">Aksi</th>
+                                @endif
                             </tr>
                         </thead>
                     </table>
                 </div>
             </div>
+            @else
+            <div class="card-body text-center">
+                <i class="fas fa-eye-slash text-warning fa-3x mb-3"></i>
+                <h4 class="text-warning">Tidak Dapat Melihat Data</h4>
+                <p class="text-muted">Anda tidak memiliki izin untuk melihat data revisi.</p>
+            </div>
+            @endif
         </div>
     </div>
 </div>
+@else
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
+                <h4 class="text-warning">Akses Terbatas</h4>
+                <p class="text-muted">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
+                <p class="text-muted">Silakan hubungi administrator untuk mendapatkan akses.</p>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
+@if($canCreate)
 <!-- Modal Tambah Revisi -->
 <div class="modal fade" id="revisiModal" tabindex="-1" aria-labelledby="revisiModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -77,6 +124,7 @@
                 </button>
             </div>
             <form id="revisiForm">
+                @csrf
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="jenis_revisi">Jenis Revisi <span class="text-danger">*</span></label>
@@ -99,7 +147,9 @@
         </div>
     </div>
 </div>
+@endif
 
+@if($canEdit)
 <!-- Modal Edit Revisi -->
 <div class="modal fade" id="editRevisiModal" tabindex="-1" aria-labelledby="editRevisiModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -136,6 +186,7 @@
         </div>
     </div>
 </div>
+@endif
 @endsection
 
 @push('styles')
@@ -166,8 +217,71 @@
 
 <script>
 $(document).ready(function() {
-    // Initialize DataTable with Export Buttons
-    const table = $('#revisiTable').DataTable({
+    // Permission flags for JavaScript - MENGGUNAKAN FRESH DATA
+    const permissions = {
+        canIndex: {{ $canIndex ? 'true' : 'false' }},
+        canCreate: {{ $canCreate ? 'true' : 'false' }},
+        canEdit: {{ $canEdit ? 'true' : 'false' }},
+        canDelete: {{ $canDelete ? 'true' : 'false' }},
+        hasActionColumn: {{ ($canEdit || $canDelete) ? 'true' : 'false' }}
+    };
+
+    // Hanya jalankan inisialisasi jika user punya permission index
+    if (!permissions.canIndex) {
+        return;
+    }
+
+    // Konfigurasi kolom DataTable berdasarkan permission
+    let columns = [
+        { 
+            data: 'DT_RowIndex', 
+            name: 'DT_RowIndex', 
+            orderable: false, 
+            searchable: false,
+            width: '5%'
+        },
+        { 
+            data: 'jenis_revisi', 
+            name: 'jenis_revisi',
+            width: permissions.hasActionColumn ? '30%' : '40%'
+        },
+        { 
+            data: 'keterangan', 
+            name: 'keterangan',
+            width: permissions.hasActionColumn ? '50%' : '55%'
+        }
+    ];
+
+    // Tambahkan kolom aksi jika user punya permission edit atau delete
+    if (permissions.hasActionColumn) {
+        columns.push({
+            data: 'action', 
+            name: 'action', 
+            orderable: false, 
+            searchable: false,
+            width: '15%',
+            render: function(data, type, row) {
+                let buttons = '';
+                
+                if (permissions.canEdit) {
+                    buttons += `<button onclick="editRevisi(${row.id})" class="btn btn-sm btn-warning mr-1">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>`;
+                }
+                
+                if (permissions.canDelete) {
+                    buttons += `<button onclick="deleteRevisi(${row.id}, '${row.jenis_revisi}', '${row.keterangan}')" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash"></i> Hapus
+                    </button>`;
+                }
+                
+                return buttons || '-';
+            }
+        });
+    }
+
+    // Initialize DataTable
+    var table = $('#revisiTable').DataTable({
         processing: true,
         serverSide: true,
         ajax: {
@@ -177,35 +291,9 @@ $(document).ready(function() {
                 d.search_keterangan = $('#search_keterangan').val();
             }
         },
-        columns: [
-            { 
-                data: 'DT_RowIndex', 
-                name: 'DT_RowIndex', 
-                orderable: false, 
-                searchable: false,
-                width: '5%'
-            },
-            { 
-                data: 'jenis_revisi', 
-                name: 'jenis_revisi',
-                width: '30%'
-            },
-            { 
-                data: 'keterangan', 
-                name: 'keterangan',
-                width: '50%'
-            },
-            { 
-                data: 'action', 
-                name: 'action', 
-                orderable: false, 
-                searchable: false,
-                width: '15%'
-            }
-        ],
+        columns: columns,
         responsive: true,
         autoWidth: false,
-        // Export Buttons Configuration
         dom: '<"row"<"col-md-6"B><"col-md-6"f>>' +
              '<"row"<"col-md-12"tr>>' +
              '<"row"<"col-md-5"i><"col-md-7"p>>',
@@ -215,14 +303,7 @@ $(document).ready(function() {
                 text: '<i class="fas fa-file-excel"></i> Excel',
                 className: 'btn btn-success btn-sm mr-1',
                 title: 'Data Revisi',
-                exportOptions: {
-                    columns: [0, 1, 2] // Exclude action column
-                },
-                customize: function(xlsx) {
-                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
-                    // Add styling to header
-                    $('row:first c', sheet).attr('s', '2');
-                }
+                exportOptions: { columns: [0, 1, 2] }
             },
             {
                 extend: 'pdf',
@@ -231,67 +312,14 @@ $(document).ready(function() {
                 title: 'Data Revisi',
                 orientation: 'landscape',
                 pageSize: 'A4',
-                exportOptions: {
-                    columns: [0, 1, 2] // Exclude action column
-                },
-                customize: function(doc) {
-                    // Customize PDF styling
-                    doc.content[1].table.widths = ['10%', '30%', '60%'];
-                    doc.styles.tableHeader.fontSize = 10;
-                    doc.styles.tableBodyEven.fontSize = 9;
-                    doc.styles.tableBodyOdd.fontSize = 9;
-                    doc.defaultStyle.fontSize = 9;
-                    
-                    // Add header
-                    doc.content.splice(0, 1, {
-                        text: [
-                            { text: 'DATA REVISI\n', fontSize: 16, bold: true },
-                            { text: 'Tanggal Cetak: ' + new Date().toLocaleDateString('id-ID'), fontSize: 10 }
-                        ],
-                        alignment: 'center',
-                        margin: [0, 0, 0, 20]
-                    });
-                }
+                exportOptions: { columns: [0, 1, 2] }
             },
             {
                 extend: 'print',
                 text: '<i class="fas fa-print"></i> Print',
                 className: 'btn btn-info btn-sm',
                 title: 'Data Revisi',
-                exportOptions: {
-                    columns: [0, 1, 2] // Exclude action column
-                },
-                customize: function(win) {
-                    // Add custom CSS for print
-                    $(win.document.body)
-                        .css('font-size', '10pt')
-                        .prepend(
-                            '<div style="text-align:center; margin-bottom: 20px;">' +
-                            '<h2 style="margin: 0;">DATA REVISI</h2>' +
-                            '<p style="margin: 5px 0;">Tanggal Cetak: ' + new Date().toLocaleDateString('id-ID') + '</p>' +
-                            '</div>'
-                        );
-                    
-                    $(win.document.body).find('table')
-                        .addClass('compact')
-                        .css('font-size', '9pt');
-                    
-                    // Style table headers
-                    $(win.document.body).find('table thead tr th')
-                        .css({
-                            'background-color': '#f8f9fa',
-                            'border': '1px solid #dee2e6',
-                            'padding': '8px',
-                            'text-align': 'center'
-                        });
-                    
-                    // Style table cells
-                    $(win.document.body).find('table tbody tr td')
-                        .css({
-                            'border': '1px solid #dee2e6',
-                            'padding': '6px'
-                        });
-                }
+                exportOptions: { columns: [0, 1, 2] }
             }
         ],
         language: {
@@ -303,16 +331,11 @@ $(document).ready(function() {
             infoFiltered: "(difilter dari _MAX_ total data)",
             paginate: {
                 first: "Pertama",
-                last: "Terakhir",
+                last: "Terakhir", 
                 next: "Selanjutnya",
                 previous: "Sebelumnya"
             },
-            processing: "Memproses data...",
-            buttons: {
-                excel: "Excel",
-                pdf: "PDF", 
-                print: "Print"
-            }
+            processing: "Memproses data..."
         },
         pageLength: 10,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
@@ -324,128 +347,128 @@ $(document).ready(function() {
         table.ajax.reload();
     });
 
-    // Form submission for Add
-    $('#revisiForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        const form = $(this);
-        const url = '{{ route("revisi.store") }}';
-        const submitBtn = form.find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        
-        // Show loading state
-        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
-        
-        $.ajax({
-            url: url,
-            method: 'POST',
-            data: form.serialize(),
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#revisiModal').modal('hide');
-                    table.ajax.reload();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: response.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                    resetForm();
-                }
-            },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    const errors = xhr.responseJSON.errors;
-                    $('.form-control').removeClass('is-invalid');
-                    $('.invalid-feedback').text('');
-                    
-                    $.each(errors, function(key, value) {
-                        $(`[name="${key}"]`).addClass('is-invalid');
-                        $(`[name="${key}"]`).siblings('.invalid-feedback').text(value[0]);
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: 'Terjadi kesalahan pada server'
-                    });
-                }
-            },
-            complete: function() {
-                // Reset button state
-                submitBtn.html(originalText).prop('disabled', false);
-            }
-        });
-    });
+    // Form submission untuk Add
+    if (permissions.canCreate) {
+        $('#revisiForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            let formData = $(this).serialize();
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
 
-    // Form submission for Update
-    $('#editRevisiForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        const form = $(this);
-        const id = $('#edit_id').val();
-        const url = '{{ route("revisi.update", ":id") }}'.replace(':id', id);
-        const submitBtn = form.find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        
-        // Show loading state
-        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
-        
-        $.ajax({
-            url: url,
-            method: 'POST',
-            data: form.serialize() + '&_method=PUT',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#editRevisiModal').modal('hide');
-                    table.ajax.reload();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: response.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
+            $.ajax({
+                url: '{{ route("revisi.store") }}',
+                method: 'POST',
+                data: formData,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#revisiModal').modal('hide');
+                        table.ajax.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        resetForm();
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        $('.form-control').removeClass('is-invalid');
+                        $('.invalid-feedback').text('');
+                        
+                        $.each(errors, function(key, value) {
+                            $(`[name="${key}"]`).addClass('is-invalid');
+                            $(`[name="${key}"]`).siblings('.invalid-feedback').text(value[0]);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Terjadi kesalahan pada server'
+                        });
+                    }
+                },
+                complete: function() {
+                    submitBtn.html(originalText).prop('disabled', false);
                 }
-            },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    const errors = xhr.responseJSON.errors;
-                    $('.form-control').removeClass('is-invalid');
-                    $('.invalid-feedback').text('');
-                    
-                    $.each(errors, function(key, value) {
-                        $(`#edit_${key}`).addClass('is-invalid');
-                        $(`#edit_${key}`).siblings('.invalid-feedback').text(value[0]);
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: 'Terjadi kesalahan pada server'
-                    });
-                }
-            },
-            complete: function() {
-                submitBtn.html(originalText).prop('disabled', false);
-            }
+            });
         });
-    });
+    }
+
+    // Form submission untuk Update
+    if (permissions.canEdit) {
+        $('#editRevisiForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            let id = $('#edit_id').val();
+            let formData = $(this).serialize();
+            
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
+
+            $.ajax({
+                url: `{{ route('revisi.update', ':id') }}`.replace(':id', id),
+                method: 'POST',
+                data: formData,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#editRevisiModal').modal('hide');
+                        table.ajax.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        $('.form-control').removeClass('is-invalid');
+                        $('.invalid-feedback').text('');
+                        
+                        $.each(errors, function(key, value) {
+                            $(`#edit_${key}`).addClass('is-invalid');
+                            $(`#edit_${key}`).siblings('.invalid-feedback').text(value[0]);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Terjadi kesalahan pada server'
+                        });
+                    }
+                },
+                complete: function() {
+                    submitBtn.html(originalText).prop('disabled', false);
+                }
+            });
+        });
+    }
 
     // Reset modal when closed
-    $('#revisiModal').on('hidden.bs.modal', function() {
-        resetForm();
-    });
+    if (permissions.canCreate) {
+        $('#revisiModal').on('hidden.bs.modal', function() {
+            resetForm();
+        });
+    }
 
     // Clear validation on input change
-    $('input').on('input', function() {
+    $('input').on('change', function() {
         $(this).removeClass('is-invalid');
         $(this).siblings('.invalid-feedback').text('');
     });
@@ -453,12 +476,15 @@ $(document).ready(function() {
 
 // Helper Functions
 function resetForm() {
+    @if($canCreate)
     $('#revisiForm')[0].reset();
     $('.form-control').removeClass('is-invalid');
     $('.invalid-feedback').text('');
+    @endif
 }
 
 function editRevisi(id) {
+    @if($canEdit)
     // Show loading indicator
     Swal.fire({
         title: 'Memuat data...',
@@ -469,7 +495,7 @@ function editRevisi(id) {
     });
 
     $.ajax({
-        url: '{{ route("revisi.show", ":id") }}'.replace(':id', id),
+        url: `{{ route('revisi.show', ':id') }}`.replace(':id', id),
         method: 'GET',
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -490,7 +516,7 @@ function editRevisi(id) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error!',
-                    text: response.message || 'Gagal memuat data revisi'
+                    text: response.message || 'Gagal memuat data Revisi'
                 });
             }
         },
@@ -498,17 +524,25 @@ function editRevisi(id) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
-                text: xhr.responseJSON?.message || 'Gagal memuat data revisi'
+                text: xhr.responseJSON?.message || 'Gagal memuat data Revisi'
             });
             console.error('Error:', xhr.responseJSON);
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk mengedit data ini.'
+    });
+    @endif
 }
 
-function deleteRevisi(id, jenis) {
+function deleteRevisi(id, jenis, keterangan) {
+    @if($canDelete)
     Swal.fire({
         title: 'Apakah Anda yakin?',
-        text: `Anda akan menghapus revisi "${jenis}"!`,
+        text: `Anda akan menghapus revisi "${jenis} - ${keterangan}"!`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
@@ -518,7 +552,6 @@ function deleteRevisi(id, jenis) {
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            // Show loading
             Swal.fire({
                 title: 'Menghapus...',
                 allowOutsideClick: false,
@@ -528,7 +561,7 @@ function deleteRevisi(id, jenis) {
             });
 
             $.ajax({
-                url: '{{ route("revisi.destroy", ":id") }}'.replace(':id', id),
+                url: `{{ route('revisi.destroy', ':id') }}`.replace(':id', id),
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -558,11 +591,17 @@ function deleteRevisi(id, jenis) {
                         title: 'Error!',
                         text: message
                     });
-                    console.error('Error:', xhr.responseJSON);
                 }
             });
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk menghapus data ini.'
+    });
+    @endif
 }
 </script>
 @endpush

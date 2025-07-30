@@ -17,12 +17,12 @@
   <!-- Custom CSS -->
   <style>
     .login-page {
-      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{{ asset("dist/img/login-bg.jpeg") }}');
+      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{{ asset("dist/img/login-bg.webp") }}');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
       background-attachment: fixed;
-      backdrop-filter: blur(5px);
+      backdrop-filter: blur(1px);
     }
     .login-box {
       width: 400px;

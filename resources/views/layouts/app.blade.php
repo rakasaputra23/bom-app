@@ -82,5 +82,21 @@
 
 @stack('scripts')
 
+<script>
+// Global function untuk refresh halaman setelah permission update
+window.refreshUserPermissions = function() {
+    // Force reload halaman untuk memastikan permission terbaru
+    setTimeout(function() {
+        window.location.reload();
+    }, 1000);
+};
+
+// Function untuk check permission di JavaScript
+window.userHasPermission = function(permission) {
+    // Implementasi sesuai kebutuhan, bisa via AJAX ke endpoint khusus
+    return false; // Default false untuk keamanan
+};
+</script>
+
 </body>
 </html>

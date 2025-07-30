@@ -9,7 +9,13 @@
   </div>
   <div class="col-sm-6">
     <ol class="breadcrumb float-sm-right">
-      <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+      <li class="breadcrumb-item">
+        @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('dashboard'))
+          <a href="{{ route('dashboard') }}">Dashboard</a>
+        @else
+          Dashboard
+        @endif
+      </li>
       <li class="breadcrumb-item active">Unit of Measure</li>
     </ol>
   </div>
@@ -17,6 +23,19 @@
 @endsection
 
 @section('content')
+@php
+    // Force refresh user relations to ensure latest permissions
+    Auth::user()->refreshRelations();
+    
+    // Check permissions with fresh data
+    $canIndex = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('uom.index');
+    $canCreate = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('uom.store');
+    $canEdit = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('uom.update');
+    $canDelete = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('uom.destroy');
+    $hasAnyAccess = $canIndex || $canCreate || $canEdit || $canDelete;
+@endphp
+
+@if($hasAnyAccess)
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -26,11 +45,15 @@
                     Data Unit of Measure
                 </h3>
                 <div class="card-tools">
+                    @if($canCreate)
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uomModal">
                         <i class="fas fa-plus"></i> Tambah UoM
                     </button>
+                    @endif
                 </div>
             </div>
+            
+            @if($canIndex)
             <div class="card-body">
                 <!-- Filter Section -->
                 <div class="row mb-3">
@@ -56,16 +79,40 @@
                                 <th>No</th>
                                 <th>Satuan</th>
                                 <th>Qty</th>
+                                @if($canEdit || $canDelete)
                                 <th>Aksi</th>
+                                @endif
                             </tr>
                         </thead>
                     </table>
                 </div>
             </div>
+            @else
+            <div class="card-body text-center">
+                <i class="fas fa-eye-slash text-warning fa-3x mb-3"></i>
+                <h4 class="text-warning">Tidak Dapat Melihat Data</h4>
+                <p class="text-muted">Anda tidak memiliki izin untuk melihat data UoM.</p>
+            </div>
+            @endif
         </div>
     </div>
 </div>
+@else
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
+                <h4 class="text-warning">Akses Terbatas</h4>
+                <p class="text-muted">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
+                <p class="text-muted">Silakan hubungi administrator untuk mendapatkan akses.</p>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
+@if($canCreate)
 <!-- Modal Tambah UoM -->
 <div class="modal fade" id="uomModal" tabindex="-1" aria-labelledby="uomModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -99,7 +146,9 @@
         </div>
     </div>
 </div>
+@endif
 
+@if($canEdit)
 <!-- Modal Edit UoM -->
 <div class="modal fade" id="editUomModal" tabindex="-1" aria-labelledby="editUomModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -136,6 +185,7 @@
         </div>
     </div>
 </div>
+@endif
 @endsection
 
 @push('styles')
@@ -166,6 +216,72 @@
 
 <script>
 $(document).ready(function() {
+    // Permission flags for JavaScript
+    const permissions = {
+        canIndex: {{ $canIndex ? 'true' : 'false' }},
+        canCreate: {{ $canCreate ? 'true' : 'false' }},
+        canEdit: {{ $canEdit ? 'true' : 'false' }},
+        canDelete: {{ $canDelete ? 'true' : 'false' }},
+        hasActionColumn: {{ ($canEdit || $canDelete) ? 'true' : 'false' }}
+    };
+
+    // Only initialize if user has index permission
+    if (!permissions.canIndex) {
+        return;
+    }
+
+    // Configure DataTable columns based on permissions
+    let columns = [
+        { 
+            data: 'DT_RowIndex', 
+            name: 'DT_RowIndex', 
+            orderable: false, 
+            searchable: false,
+            width: '5%'
+        },
+        { 
+            data: 'satuan', 
+            name: 'satuan',
+            width: permissions.hasActionColumn ? '35%' : '45%'
+        },
+        { 
+            data: 'qty', 
+            name: 'qty',
+            width: permissions.hasActionColumn ? '35%' : '50%'
+        }
+    ];
+
+    // Add action column if user has edit or delete permission
+    if (permissions.hasActionColumn) {
+        columns.push({
+            data: 'action', 
+            name: 'action', 
+            orderable: false, 
+            searchable: false,
+            width: '25%',
+            render: function(data, type, row) {
+                let buttons = '';
+                
+                if (permissions.canEdit) {
+                    buttons += `<button onclick="editUom(${row.id})" class="btn btn-sm btn-warning mr-1" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>`;
+                }
+                
+                if (permissions.canDelete) {
+                    buttons += `<button onclick="deleteUom(${row.id}, '${row.satuan}')" class="btn btn-sm btn-danger" title="Hapus">
+                        <i class="fas fa-trash"></i>
+                    </button>`;
+                }
+                
+                return buttons || '-';
+            }
+        });
+    }
+
+    // Configure export columns
+    let exportColumns = permissions.hasActionColumn ? [0, 1, 2] : [0, 1, 2];
+
     // Initialize DataTable with Export Buttons
     var table = $('#uomTable').DataTable({
         processing: true,
@@ -177,44 +293,7 @@ $(document).ready(function() {
                 d.search_qty = $('#search_qty').val();
             }
         },
-        columns: [
-            { 
-                data: 'DT_RowIndex', 
-                name: 'DT_RowIndex', 
-                orderable: false, 
-                searchable: false,
-                width: '5%'
-            },
-            { 
-                data: 'satuan', 
-                name: 'satuan',
-                width: '35%'
-            },
-            { 
-                data: 'qty', 
-                name: 'qty',
-                width: '35%'
-            },
-            { 
-                data: 'action', 
-                name: 'action', 
-                orderable: false, 
-                searchable: false,
-                width: '25%',
-                render: function(data, type, row) {
-                    return `
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-warning" onclick="editUom(${row.id})" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteUom(${row.id}, '${row.satuan}')" title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                }
-            }
-        ],
+        columns: columns,
         responsive: true,
         autoWidth: false,
         // Export Buttons Configuration
@@ -228,7 +307,7 @@ $(document).ready(function() {
                 className: 'btn btn-success btn-sm mr-1',
                 title: 'Data Unit of Measure (UoM)',
                 exportOptions: {
-                    columns: [0, 1, 2] // Exclude action column
+                    columns: exportColumns
                 },
                 customize: function(xlsx) {
                     var sheet = xlsx.xl.worksheets['sheet1.xml'];
@@ -244,7 +323,7 @@ $(document).ready(function() {
                 orientation: 'portrait',
                 pageSize: 'A4',
                 exportOptions: {
-                    columns: [0, 1, 2] // Exclude action column
+                    columns: exportColumns
                 },
                 customize: function(doc) {
                     // Customize PDF styling
@@ -271,7 +350,7 @@ $(document).ready(function() {
                 className: 'btn btn-info btn-sm',
                 title: 'Data Unit of Measure (UoM)',
                 exportOptions: {
-                    columns: [0, 1, 2] // Exclude action column
+                    columns: exportColumns
                 },
                 customize: function(win) {
                     // Add custom CSS for print
@@ -337,127 +416,133 @@ $(document).ready(function() {
     });
 
     // Form submission for Add
-    $('#uomForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        let formData = new FormData(this);
-        let url = '{{ route("uom.store") }}';
-        
-        // Show loading state
-        const submitBtn = $(this).find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
+    if (permissions.canCreate) {
+        $('#uomForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            let formData = new FormData(this);
+            let url = '{{ route("uom.store") }}';
+            
+            // Show loading state
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
 
-        $.ajax({
-            url: url,
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#uomModal').modal('hide');
-                    table.ajax.reload();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: response.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                    resetForm();
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#uomModal').modal('hide');
+                        table.ajax.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        resetForm();
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        $('.form-control').removeClass('is-invalid');
+                        $('.invalid-feedback').text('');
+                        
+                        $.each(errors, function(key, value) {
+                            $(`[name="${key}"]`).addClass('is-invalid');
+                            $(`[name="${key}"]`).siblings('.invalid-feedback').text(value[0]);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Terjadi kesalahan pada server'
+                        });
+                    }
+                },
+                complete: function() {
+                    // Reset button state
+                    submitBtn.html(originalText).prop('disabled', false);
                 }
-            },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    let errors = xhr.responseJSON.errors;
-                    $('.form-control').removeClass('is-invalid');
-                    $('.invalid-feedback').text('');
-                    
-                    $.each(errors, function(key, value) {
-                        $(`[name="${key}"]`).addClass('is-invalid');
-                        $(`[name="${key}"]`).siblings('.invalid-feedback').text(value[0]);
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: 'Terjadi kesalahan pada server'
-                    });
-                }
-            },
-            complete: function() {
-                // Reset button state
-                submitBtn.html(originalText).prop('disabled', false);
-            }
+            });
         });
-    });
+    }
 
     // Form submission for Update
-    $('#editUomForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        let id = $('#edit_id').val();
-        let formData = new FormData(this);
-        
-        // Show loading state
-        const submitBtn = $(this).find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
+    if (permissions.canEdit) {
+        $('#editUomForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            let id = $('#edit_id').val();
+            let formData = new FormData(this);
+            
+            // Show loading state
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
 
-        $.ajax({
-            url: `{{ route('uom.update', ':id') }}`.replace(':id', id),
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#editUomModal').modal('hide');
-                    table.ajax.reload();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: response.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
+            $.ajax({
+                url: `{{ route('uom.update', ':id') }}`.replace(':id', id),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#editUomModal').modal('hide');
+                        table.ajax.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        $('.form-control').removeClass('is-invalid');
+                        $('.invalid-feedback').text('');
+                        
+                        $.each(errors, function(key, value) {
+                            $(`#edit_${key}`).addClass('is-invalid');
+                            $(`#edit_${key}`).siblings('.invalid-feedback').text(value[0]);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Terjadi kesalahan pada server'
+                        });
+                    }
+                },
+                complete: function() {
+                    submitBtn.html(originalText).prop('disabled', false);
                 }
-            },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    let errors = xhr.responseJSON.errors;
-                    $('.form-control').removeClass('is-invalid');
-                    $('.invalid-feedback').text('');
-                    
-                    $.each(errors, function(key, value) {
-                        $(`#edit_${key}`).addClass('is-invalid');
-                        $(`#edit_${key}`).siblings('.invalid-feedback').text(value[0]);
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: 'Terjadi kesalahan pada server'
-                    });
-                }
-            },
-            complete: function() {
-                submitBtn.html(originalText).prop('disabled', false);
-            }
+            });
         });
-    });
+    }
 
     // Reset modal when closed
-    $('#uomModal').on('hidden.bs.modal', function() {
-        resetForm();
-    });
+    if (permissions.canCreate) {
+        $('#uomModal').on('hidden.bs.modal', function() {
+            resetForm();
+        });
+    }
 
     // Clear validation on input change
     $('input').on('change', function() {
@@ -468,12 +553,15 @@ $(document).ready(function() {
 
 // Helper Functions
 function resetForm() {
+    @if($canCreate)
     $('#uomForm')[0].reset();
     $('.form-control').removeClass('is-invalid');
     $('.invalid-feedback').text('');
+    @endif
 }
 
 function editUom(id) {
+    @if($canEdit)
     // Show loading indicator
     Swal.fire({
         title: 'Memuat data...',
@@ -518,9 +606,17 @@ function editUom(id) {
             console.error('Error:', xhr.responseJSON);
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk mengedit data ini.'
+    });
+    @endif
 }
 
 function deleteUom(id, satuan) {
+    @if($canDelete)
     Swal.fire({
         title: 'Apakah Anda yakin?',
         text: `Anda akan menghapus satuan "${satuan}"!`,
@@ -578,6 +674,13 @@ function deleteUom(id, satuan) {
             });
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk menghapus data ini.'
+    });
+    @endif
 }
 </script>
 @endpush

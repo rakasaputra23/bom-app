@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class UserGroup extends Model
 {
@@ -37,6 +38,24 @@ class UserGroup extends Model
         }
 
         return $this;
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updated(function ($userGroup) {
+            // Force refresh semua user dalam group ini
+            $users = $userGroup->users;
+            foreach ($users as $user) {
+                $user->refreshRelations();
+            }
+            
+            Log::info('UserGroup updated, user relations refreshed', [
+                'group_id' => $userGroup->id,
+                'users_count' => $users->count()
+            ]);
+        });
     }
 
     // Method untuk revoke permission dari group

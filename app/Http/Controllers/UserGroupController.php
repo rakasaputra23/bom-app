@@ -9,7 +9,6 @@ use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 use Exception;
 
 class UserGroupController extends Controller
@@ -37,7 +36,6 @@ class UserGroupController extends Controller
                         'id' => $group->id,
                         'nama' => $group->nama ?? 'Tidak ada nama',
                         'users_count' => $group->users_count ?? 0,
-                        // Format tanggal ke ISO string (YYYY-MM-DD HH:MM:SS)
                         'created_at' => $group->created_at ? $group->created_at->toISOString() : '-',
                     ];
                 })
@@ -80,7 +78,6 @@ class UserGroupController extends Controller
                 'nama' => trim($request->nama)
             ]);
 
-            // Ensure permissions is always an array
             $permissions = $request->input('permissions', []);
             if (!is_array($permissions)) {
                 $permissions = [];
@@ -91,9 +88,6 @@ class UserGroupController extends Controller
             });
             
             $userGroup->permissions()->sync($validPermissions);
-
-            // Clear general cache untuk jaga-jaga
-            $this->clearAllPermissionCache();
 
             DB::commit();
 
@@ -160,7 +154,7 @@ class UserGroupController extends Controller
     }
 
     /**
-     * Update user group - DENGAN CACHE CLEARING YANG DIPERKUAT
+     * Update user group - DENGAN FORCE REFRESH USER RELATIONS
      */
     public function update(Request $request, $id)
     {
@@ -193,14 +187,10 @@ class UserGroupController extends Controller
 
         DB::beginTransaction();
         try {
-            // PERBAIKAN 1: Clear cache SEBELUM update untuk memastikan tidak ada cache lama
-            $this->clearUserGroupPermissionCache($userGroup->id);
-
             $userGroup->update([
                 'nama' => trim($request->nama)
             ]);
 
-            // Ensure permissions is always an array
             $permissions = $request->input('permissions', []);
             if (!is_array($permissions)) {
                 $permissions = [];
@@ -212,11 +202,8 @@ class UserGroupController extends Controller
             
             $userGroup->permissions()->sync($validPermissions);
 
-            // PERBAIKAN 2: Clear cache SETELAH update juga untuk memastikan
-            $this->clearUserGroupPermissionCache($userGroup->id);
-            
-            // PERBAIKAN 3: Clear semua cache permission
-            $this->clearAllPermissionCache();
+            // PERBAIKAN KRITIS: Force refresh semua user dalam grup ini
+            $this->forceRefreshUsersInGroup($userGroup->id);
 
             DB::commit();
 
@@ -224,12 +211,12 @@ class UserGroupController extends Controller
                 'group_id' => $userGroup->id,
                 'group_name' => $userGroup->nama,
                 'permissions_count' => count($validPermissions),
-                'cache_cleared' => true
+                'users_refreshed' => true
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'User Group berhasil diupdate dan cache telah dibersihkan',
+                'message' => 'User Group berhasil diupdate',
                 'userGroup' => $userGroup->fresh()->load('permissions')
             ]);
 
@@ -274,14 +261,8 @@ class UserGroupController extends Controller
         try {
             $groupName = $userGroup->nama;
             
-            // Clear cache sebelum hapus
-            $this->clearUserGroupPermissionCache($id);
-            
             $userGroup->permissions()->detach();
             $userGroup->delete();
-
-            // Clear semua cache setelah hapus
-            $this->clearAllPermissionCache();
 
             DB::commit();
 
@@ -354,182 +335,31 @@ class UserGroupController extends Controller
     }
 
     /**
-     * PERBAIKAN: Clear cache permissions untuk semua user dalam group - LEBIH COMPREHENSIVE
+     * PERBAIKAN KRITIS: Force refresh semua user dalam group
      */
-    private function clearUserGroupPermissionCache($groupId)
+    private function forceRefreshUsersInGroup($groupId)
     {
         try {
-            // Ambil semua user dalam group ini
+            // Ambil semua user dalam group ini dan force refresh relations mereka
             $users = User::where('user_group_id', $groupId)->get();
             
-            if ($users->isEmpty()) {
-                Log::info("No users found in group {$groupId} to clear cache");
-                return;
-            }
-
-            $affectedUsers = 0;
-            // Clear cache untuk setiap user dalam group
             foreach ($users as $user) {
-                $this->clearUserPermissionCache($user->id);
+                // Unload existing relationships
+                unset($user->relations['group']);
                 
-                // TAMBAHAN: Panggil method clearPermissionCache dari User model juga
-                if (method_exists($user, 'clearPermissionCache')) {
-                    $user->clearPermissionCache();
-                }
+                // Load fresh dengan permissions
+                $user->load('group.permissions');
                 
-                $affectedUsers++;
+                Log::info('User relations refreshed', [
+                    'user_id' => $user->id,
+                    'group_id' => $groupId
+                ]);
             }
 
-            Log::info("Cache cleared for user group", [
-                'group_id' => $groupId,
-                'users_affected' => $affectedUsers
-            ]);
+            Log::info("Successfully refreshed {$users->count()} users in group {$groupId}");
 
         } catch (Exception $e) {
-            Log::error("Error clearing cache for user group {$groupId}: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * PERBAIKAN: Clear cache permissions untuk user tertentu - LEBIH LENGKAP
-     */
-    private function clearUserPermissionCache($userId)
-    {
-        try {
-            // Daftar semua route yang mungkin di-cache
-            $allRoutes = [
-                'dashboard',
-                'bom.index', 'bom.create', 'bom.show', 'bom.edit', 'bom.store', 'bom.update', 'bom.destroy',
-                'user', 'user.getData', 'user.show', 'user.store', 'user.update', 'user.destroy',
-                'user.group', 'user.group.getData', 'user.group.show', 'user.group.store', 'user.group.update', 'user.group.destroy', 'user.group.permissions',
-                'permissions.index', 'permissions.getData', 'permissions.show', 'permissions.store', 'permissions.update', 'permissions.destroy',
-                'kode-material.index', 'kode-material.getData', 'kode-material.show', 'kode-material.store', 'kode-material.update', 'kode-material.destroy',
-                'revisi.index', 'revisi.getData', 'revisi.store', 'revisi.update', 'revisi.destroy',
-                'proyek.index', 'proyek.getData', 'proyek.show', 'proyek.store', 'proyek.update', 'proyek.destroy',
-                'uom.index', 'uom.getData', 'uom.show', 'uom.store', 'uom.update', 'uom.destroy'
-            ];
-
-            $clearedKeys = 0;
-
-            // Clear dengan berbagai pattern cache key
-            foreach ($allRoutes as $route) {
-                $cacheKeys = [
-                    "user_permissions_{$userId}_route_{$route}",
-                    "user_{$userId}_has_permission_{$route}",
-                    "user_{$userId}_permission_{$route}",
-                    "permission_{$userId}_{$route}"
-                ];
-                
-                foreach ($cacheKeys as $key) {
-                    if (Cache::forget($key)) {
-                        $clearedKeys++;
-                    }
-                }
-            }
-
-            // Clear general user cache patterns
-            $generalKeys = [
-                "user_permissions_{$userId}",
-                "user_{$userId}_permissions",
-                "permissions_user_{$userId}",
-                "user_group_permissions_{$userId}"
-            ];
-
-            foreach ($generalKeys as $key) {
-                if (Cache::forget($key)) {
-                    $clearedKeys++;
-                }
-            }
-
-            Log::info("Cache cleared for user", [
-                'user_id' => $userId,
-                'cache_keys_cleared' => $clearedKeys
-            ]);
-
-        } catch (Exception $e) {
-            Log::error("Error clearing cache for user {$userId}: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * FUNGSI BARU: Clear semua cache permission - ULTIMATE CLEAR
-     */
-    private function clearAllPermissionCache()
-    {
-        try {
-            // Method 1: Clear dengan tags jika cache driver mendukung
-            if (method_exists(Cache::getStore(), 'tags')) {
-                Cache::tags(['user_permissions', 'permissions', 'user_groups'])->flush();
-            }
-
-            // Method 2: Clear specific patterns jika menggunakan Redis
-            if (Cache::getStore() instanceof \Illuminate\Cache\RedisStore) {
-                $redis = Cache::getRedis();
-                
-                $patterns = [
-                    'user_permissions_*',
-                    'user_*_has_permission_*',
-                    'user_*_permission_*',
-                    'permission_*',
-                    'user_group_permissions_*'
-                ];
-                
-                foreach ($patterns as $pattern) {
-                    $keys = $redis->keys($pattern);
-                    if (!empty($keys)) {
-                        $redis->del($keys);
-                    }
-                }
-            } else {
-                // Method 3: Untuk file cache, clear semua cache yang mungkin
-                // Ambil semua user dan clear cache mereka
-                $allUsers = User::pluck('id');
-                foreach ($allUsers as $userId) {
-                    $this->clearUserPermissionCache($userId);
-                }
-            }
-
-            Log::info("All permission cache cleared successfully");
-
-        } catch (Exception $e) {
-            Log::error("Error clearing all permission cache: " . $e->getMessage());
-            
-            // Fallback: Clear seluruh cache jika metode lain gagal
-            try {
-                Cache::flush();
-                Log::info("Fallback: Entire cache flushed");
-            } catch (Exception $fallbackError) {
-                Log::error("Fallback cache flush also failed: " . $fallbackError->getMessage());
-            }
-        }
-    }
-
-    /**
-     * FUNGSI BARU: Manual endpoint untuk clear cache (untuk debugging)
-     */
-    public function clearCache(Request $request)
-    {
-        try {
-            if (!auth()->user()->isSuperAdmin()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized'
-                ], 403);
-            }
-
-            $this->clearAllPermissionCache();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'All permission cache cleared successfully'
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Manual cache clear failed: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to clear cache: ' . $e->getMessage()
-            ], 500);
+            Log::error("Error refreshing users in group {$groupId}: " . $e->getMessage());
         }
     }
 }

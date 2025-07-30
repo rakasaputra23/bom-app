@@ -30,10 +30,10 @@ class RevisiController extends Controller
             ->addColumn('action', function ($row) {
                 return '
                     <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-warning" onclick="editRevisi('.$row->id.')">
+                        <button type="button" class="btn btn-sm btn-warning" onclick="editRevisi('.$row->id.')" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteRevisi('.$row->id.', \''.addslashes($row->jenis_revisi).'\')">
+                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteRevisi('.$row->id.', \''.addslashes($row->jenis_revisi).'\', \''.addslashes($row->keterangan).'\')" title="Hapus">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -46,18 +46,27 @@ class RevisiController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'jenis_revisi' => 'required|string|max:100|unique:revisi',
-            'keterangan' => 'required|string|max:255'
+            'jenis_revisi' => 'required|string|max:100|unique:revisi,jenis_revisi',
+            'keterangan' => 'required|string|max:255',
         ]);
 
         try {
-            $revisi = Revisi::create($request->only(['jenis_revisi', 'keterangan']));
+            $revisi = Revisi::create([
+                'jenis_revisi' => $request->jenis_revisi,
+                'keterangan' => $request->keterangan
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data revisi berhasil disimpan!',
+                'message' => 'Data Revisi berhasil disimpan!',
                 'data' => $revisi
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -68,30 +77,48 @@ class RevisiController extends Controller
 
     public function show(Revisi $revisi)
     {
-        return response()->json([
-            'success' => true,
-            'data' => $revisi
-        ]);
+        try {
+            return response()->json([
+                'success' => true,
+                'data' => $revisi,
+                'message' => 'Data Revisi berhasil dimuat'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat data Revisi'
+            ], 500);
+        }
     }
 
     public function update(Request $request, Revisi $revisi)
     {
         $request->validate([
             'jenis_revisi' => 'required|string|max:100|unique:revisi,jenis_revisi,'.$revisi->id,
-            'keterangan' => 'required|string|max:255'
+            'keterangan' => 'required|string|max:255',
         ]);
 
         try {
-            $revisi->update($request->only(['jenis_revisi', 'keterangan']));
+            $revisi->update([
+                'jenis_revisi' => $request->jenis_revisi,
+                'keterangan' => $request->keterangan
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data revisi berhasil diperbarui!'
+                'message' => 'Revisi berhasil diperbarui',
+                'data' => $revisi
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+                'message' => 'Validasi gagal'
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui data: ' . $e->getMessage()
+                'message' => 'Gagal memperbarui Revisi'
             ], 500);
         }
     }
@@ -100,15 +127,15 @@ class RevisiController extends Controller
     {
         try {
             $revisi->delete();
-
+            
             return response()->json([
                 'success' => true,
-                'message' => 'Data revisi berhasil dihapus!'
+                'message' => 'Revisi berhasil dihapus'
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus data: ' . $e->getMessage()
+                'message' => 'Gagal menghapus Revisi'
             ], 500);
         }
     }

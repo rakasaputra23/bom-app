@@ -52,55 +52,39 @@ class User extends Authenticatable
         return $this->nama;
     }
 
-    // PERBAIKAN UTAMA: Method isSuperAdmin yang lebih ketat - hanya "superadmin"
+    // PERBAIKAN UTAMA: Method isSuperAdmin yang lebih ketat
     public function isSuperAdmin()
     {
-        // Eager load group jika belum
-        if (!$this->relationLoaded('group')) {
-            $this->load('group');
-        }
+        // SELALU load fresh untuk avoid cache issue
+        $this->loadMissing('group');
         
         if (!$this->group) {
             return false;
         }
 
-        // PERBAIKAN KRITIS: Hanya grup "superadmin" yang dianggap superadmin
-        // Admin, administrator, dll harus mengikuti permission system
-        $superAdminNames = ['superadmin', 'super admin']; // Hanya 2 variasi ini
+        // HANYA grup "superadmin" yang dianggap superadmin
+        $superAdminNames = ['superadmin', 'super admin'];
         $groupName = strtolower(trim($this->group->nama));
         
-        $isSuperAdmin = in_array($groupName, $superAdminNames);
-        
-        // Log untuk debugging
-        Log::info('SuperAdmin Check', [
-            'user_id' => $this->id,
-            'group_name' => $groupName,
-            'is_superadmin' => $isSuperAdmin,
-            'allowed_names' => $superAdminNames
-        ]);
-        
-        return $isSuperAdmin;
+        return in_array($groupName, $superAdminNames);
     }
 
-    // NEW: Method untuk cek apakah user adalah admin biasa (bukan superadmin)
+    // Method untuk cek apakah user adalah admin biasa (bukan superadmin)
     public function isRegularAdmin()
     {
-        if (!$this->relationLoaded('group')) {
-            $this->load('group');
-        }
+        $this->loadMissing('group');
         
         if (!$this->group) {
             return false;
         }
 
-        // Admin biasa yang harus mengikuti permission system
         $adminNames = ['admin', 'administrator'];
         $groupName = strtolower(trim($this->group->nama));
         
         return in_array($groupName, $adminNames) && !$this->isSuperAdmin();
     }
 
-    // PERBAIKAN: Method hasPermission dengan cache yang lebih pendek dan bisa di-clear
+    // PERBAIKAN KRITIS: Method hasPermission tanpa cache yang bermasalah
     public function hasPermission($routeName)
     {
         if (!$routeName) {
@@ -109,64 +93,40 @@ class User extends Authenticatable
 
         // HANYA superadmin yang bypass permission check
         if ($this->isSuperAdmin()) {
-            Log::info('Superadmin bypass permission check', [
-                'user_id' => $this->id,
-                'route_name' => $routeName,
-                'group_name' => $this->group->nama ?? 'No Group'
-            ]);
             return true;
         }
 
-        // SEMUA USER LAINNYA (termasuk admin biasa) harus cek permission
-        // Pastikan group dan permissions ter-load fresh
-        if (!$this->relationLoaded('group') || !$this->group || !$this->group->relationLoaded('permissions')) {
-            $this->load('group.permissions');
-        }
+        // LOAD FRESH permissions setiap kali untuk menghindari cache issue
+        $this->loadMissing('group.permissions');
 
-        if (!$this->group) {
-            Log::warning('User has no group', ['user_id' => $this->id]);
+        if (!$this->group || !$this->group->permissions) {
             return false;
         }
 
-        // Cache key yang lebih spesifik dengan TTL pendek (30 detik)
-        $cacheKey = "user_{$this->id}_has_permission_{$routeName}";
+        // CHECK langsung tanpa cache
+        $userPermissions = $this->group->permissions->pluck('route_name')->toArray();
+        $hasPermission = in_array($routeName, $userPermissions);
         
-        return Cache::remember($cacheKey, 30, function () use ($routeName) {
-            if (!$this->group->permissions) {
-                Log::info('Group has no permissions', [
-                    'user_id' => $this->id,
-                    'group_id' => $this->group->id,
-                    'group_name' => $this->group->nama
-                ]);
-                return false;
-            }
-            
-            $userPermissions = $this->group->permissions->pluck('route_name')->toArray();
-            $hasPermission = in_array($routeName, $userPermissions);
-            
-            Log::info('Permission check result', [
+        // Log hanya untuk debugging jika diperlukan
+        if (config('app.debug')) {
+            Log::info('Permission check', [
                 'user_id' => $this->id,
-                'user_nip' => $this->nip,
-                'group_name' => $this->group->nama,
                 'route_name' => $routeName,
-                'user_permissions' => $userPermissions,
                 'has_permission' => $hasPermission,
-                'is_regular_admin' => $this->isRegularAdmin()
+                'user_permissions' => $userPermissions
             ]);
-            
-            return $hasPermission;
-        });
+        }
+        
+        return $hasPermission;
     }
 
     // Method hasAnyPermission untuk mengecek multiple permissions
     public function hasAnyPermission($permissions)
     {
-        // HANYA superadmin yang bypass
         if ($this->isSuperAdmin()) {
             return true;
         }
 
-        // Admin biasa dan user lain harus cek satu per satu
         foreach ((array) $permissions as $permission) {
             if ($this->hasPermission($permission)) {
                 return true;
@@ -176,19 +136,13 @@ class User extends Authenticatable
         return false;
     }
 
-    // PERBAIKAN: Method canAccessModule dengan kontrol ketat
+    // PERBAIKAN: Method canAccessModule
     public function canAccessModule($module)
     {
-        // HANYA superadmin yang bisa akses semua module tanpa cek
         if ($this->isSuperAdmin()) {
-            Log::info('Superadmin accessing module', [
-                'user_id' => $this->id,
-                'module' => $module
-            ]);
             return true;
         }
 
-        // SEMUA USER LAIN (termasuk admin) harus cek permission per module
         $modulePermissions = [
             'master_data' => [
                 'kode-material.index', 
@@ -251,100 +205,57 @@ class User extends Authenticatable
         ];
 
         $permissions = $modulePermissions[$module] ?? [];
-        $canAccess = $this->hasAnyPermission($permissions);
-        
-        Log::info('Module access check', [
-            'user_id' => $this->id,
-            'user_group' => $this->group->nama ?? 'No Group',
-            'module' => $module,
-            'required_permissions' => $permissions,
-            'can_access' => $canAccess,
-            'is_regular_admin' => $this->isRegularAdmin()
-        ]);
-        
-        return $canAccess;
+        return $this->hasAnyPermission($permissions);
     }
 
-    // PERBAIKAN: Method getFirstAccessibleRoute dengan clear cache
+    // PERBAIKAN: Method getFirstAccessibleRoute
     public function getFirstAccessibleRoute()
     {
-        // Clear cache untuk memastikan data terbaru
-        $this->clearPermissionCache();
-        
-        // HANYA superadmin yang otomatis ke dashboard
         if ($this->isSuperAdmin()) {
             return 'dashboard';
         }
 
-        // SEMUA USER LAIN (termasuk admin) harus cek permission
-        // Load permissions fresh
-        $this->load('group.permissions');
+        // Load fresh permissions
+        $this->loadMissing('group.permissions');
 
         if (!$this->group || !$this->group->permissions) {
-            Log::warning('User has no accessible routes', [
-                'user_id' => $this->id,
-                'has_group' => !!$this->group,
-                'has_permissions' => $this->group ? !!$this->group->permissions : false
-            ]);
             return null;
         }
 
         $userPermissions = $this->group->permissions->pluck('route_name')->toArray();
 
-        // Prioritas route yang akan di-redirect (urut berdasarkan kepentingan)
+        // Prioritas route
         $routePriorities = [
-            'dashboard', // Jika punya akses dashboard
-            'bom.index', // BOM sebagai prioritas kedua
-            'kode-material.index', // Master data material
-            'proyek.index', // Master data proyek
-            'uom.index', // Master data UOM
-            'revisi.index', // Master data revisi
-            'user', // User management
+            'dashboard',
+            'bom.index',
+            'kode-material.index',
+            'proyek.index',
+            'uom.index',
+            'revisi.index',
+            'user',
         ];
 
-        // Cari route pertama yang user punya akses
         foreach ($routePriorities as $route) {
             if (in_array($route, $userPermissions)) {
-                Log::info('First accessible route found', [
-                    'user_id' => $this->id,
-                    'route' => $route,
-                    'is_regular_admin' => $this->isRegularAdmin()
-                ]);
                 return $route;
             }
         }
 
-        // Jika tidak ada dari prioritas, ambil permission pertama yang ada
-        $firstRoute = $userPermissions[0] ?? null;
-        
-        Log::info('Using first available permission as route', [
-            'user_id' => $this->id,
-            'first_route' => $firstRoute,
-            'all_permissions' => $userPermissions,
-            'is_regular_admin' => $this->isRegularAdmin()
-        ]);
-        
-        return $firstRoute;
+        return $userPermissions[0] ?? null;
     }
 
     // Method untuk mendapatkan semua permissions user
     public function getAllPermissions()
     {
-        // HANYA superadmin yang dapat semua permissions
         if ($this->isSuperAdmin()) {
             return \App\Models\Permission::all();
         }
 
-        // Admin biasa dan user lain hanya dapat permission yang diberikan
-        // Load group dengan permissions jika belum
-        if (!$this->relationLoaded('group')) {
-            $this->load('group.permissions');
-        }
-
+        $this->loadMissing('group.permissions');
         return $this->group ? $this->group->permissions : collect();
     }
 
-    // NEW: Method untuk mendapatkan user role yang lebih deskriptif
+    // Method untuk mendapatkan user role yang lebih deskriptif
     public function getUserRole()
     {
         if ($this->isSuperAdmin()) {
@@ -358,92 +269,63 @@ class User extends Authenticatable
         return $this->group ? strtolower($this->group->nama) : 'user';
     }
 
-    // NEW: Method untuk cek apakah user bisa manage users lain
+    // Method untuk cek apakah user bisa manage users lain
     public function canManageUsers()
     {
         return $this->isSuperAdmin() || 
                $this->hasAnyPermission(['user', 'user.store', 'user.update', 'user.destroy']);
     }
 
-    // NEW: Method untuk cek apakah user bisa manage user groups
+    // Method untuk cek apakah user bisa manage user groups
     public function canManageUserGroups()
     {
         return $this->isSuperAdmin() || 
                $this->hasAnyPermission(['user.group', 'user.group.store', 'user.group.update', 'user.group.destroy']);
     }
 
-    // NEW: Method untuk cek apakah user bisa manage permissions
+    // Method untuk cek apakah user bisa manage permissions
     public function canManagePermissions()
     {
         return $this->isSuperAdmin() || 
                $this->hasAnyPermission(['permissions.index', 'permissions.store', 'permissions.update', 'permissions.destroy']);
     }
 
-    // PERBAIKAN: Method untuk clear permission cache yang lebih comprehensive
-    public function clearPermissionCache()
+    // PERBAIKAN: Method untuk refresh user relationship - PENTING!
+    public function refreshRelations()
     {
-        try {
-            // Clear semua cache pattern yang berkaitan dengan user ini
-            $cachePatterns = [
-                "user_{$this->id}_permissions",
-                "user_permissions_{$this->id}",
-                "user_{$this->id}_has_permission_*",
-                "user_permissions_{$this->id}_route_*"
-            ];
-
-            // Clear cache untuk semua route yang mungkin
-            $allRoutes = [
-                'dashboard', 'bom.index', 'bom.create', 'bom.show', 'bom.edit', 'bom.store', 'bom.update', 'bom.destroy',
-                'user', 'user.getData', 'user.show', 'user.store', 'user.update', 'user.destroy',
-                'user.group', 'user.group.getData', 'user.group.show', 'user.group.store', 'user.group.update', 'user.group.destroy',
-                'permissions.index', 'permissions.getData', 'permissions.show', 'permissions.store', 'permissions.update', 'permissions.destroy',
-                'kode-material.index', 'kode-material.getData', 'kode-material.show', 'kode-material.store', 'kode-material.update', 'kode-material.destroy',
-                'revisi.index', 'revisi.getData', 'revisi.store', 'revisi.update', 'revisi.destroy',
-                'proyek.index', 'proyek.getData', 'proyek.show', 'proyek.store', 'proyek.update', 'proyek.destroy',
-                'uom.index', 'uom.getData', 'uom.show', 'uom.store', 'uom.update', 'uom.destroy'
-            ];
-
-            $clearedKeys = 0;
-            foreach ($allRoutes as $route) {
-                $keys = [
-                    "user_{$this->id}_has_permission_{$route}",
-                    "user_permissions_{$this->id}_route_{$route}"
-                ];
-                
-                foreach ($keys as $key) {
-                    if (Cache::forget($key)) {
-                        $clearedKeys++;
-                    }
-                }
-            }
-            
-            Log::info('Permission cache cleared successfully', [
-                'user_id' => $this->id,
-                'user_nip' => $this->nip,
-                'cache_keys_cleared' => $clearedKeys
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error clearing permission cache', [
-                'user_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
-        }
+        // Unload existing relationships
+        unset($this->relations['group']);
+        
+        // Load fresh
+        $this->load('group.permissions');
+        
+        return $this;
     }
 
-    // Event hooks untuk clear cache saat user diupdate
+    // BARU: Static method untuk refresh specific user dari database
+    public static function findAndRefresh($id)
+    {
+        $user = static::with('group.permissions')->find($id);
+        return $user;
+    }
+
+    // Event hooks - DIPERBAIKI untuk force refresh
     protected static function boot()
     {
         parent::boot();
 
         static::updated(function ($user) {
-            $user->clearPermissionCache();
-            Log::info('User updated, cache cleared', ['user_id' => $user->id]);
+            // Force refresh relationships
+            $user->refreshRelations();
+            
+            Log::info('User updated, relationships refreshed', ['user_id' => $user->id]);
         });
 
         static::saved(function ($user) {
-            $user->clearPermissionCache();
-            Log::info('User saved, cache cleared', ['user_id' => $user->id]);
+            // Force refresh relationships  
+            $user->refreshRelations();
+            
+            Log::info('User saved, relationships refreshed', ['user_id' => $user->id]);
         });
     }
 }

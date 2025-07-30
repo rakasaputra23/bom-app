@@ -1,16 +1,11 @@
 <?php
 
-// ========================================
-// 1. IMPROVED MIDDLEWARE (CheckPermission.php)
-// ========================================
-
 namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class CheckPermission
 {
@@ -26,6 +21,9 @@ class CheckPermission
         $user = Auth::user();
         $routeName = $request->route()->getName();
 
+        // PENTING: Selalu refresh relations untuk memastikan data terbaru
+        $user->refreshRelations();
+
         // Log untuk debugging (hanya di development)
         if (config('app.debug')) {
             Log::info('Permission Check', [
@@ -36,9 +34,6 @@ class CheckPermission
                 'is_superadmin' => $user->isSuperAdmin()
             ]);
         }
-
-        // Load user group dan permissions - FRESH LOAD untuk menghindari cache issue
-        $user->load('group.permissions');
 
         // Superadmin selalu lolos - HANYA untuk grup "superadmin"
         if ($user->isSuperAdmin()) {
@@ -58,30 +53,22 @@ class CheckPermission
             'password.request',
             'password.reset',
             'password.update',
-            'profile',
         ];
 
         if (in_array($routeName, $publicRoutes)) {
             return $next($request);
         }
 
-        // PERBAIKAN UTAMA: Hilangkan cache untuk memastikan permission selalu fresh
-        // Atau gunakan cache dengan TTL yang sangat pendek (30 detik)
-        $cacheKey = "user_permissions_{$user->id}_route_{$routeName}";
-        $hasPermission = Cache::remember($cacheKey, 30, function () use ($user, $routeName) {
-            return $user->hasPermission($routeName);
-        });
-
-        if (!$hasPermission) {
+        // PERBAIKAN: Langsung check permission tanpa cache
+        if (!$user->hasPermission($routeName)) {
             Log::warning('Access denied: No permission', [
                 'user_id' => $user->id,
                 'route_name' => $routeName,
                 'user_group' => $user->group->nama,
                 'is_regular_admin' => $user->isRegularAdmin(),
-                'user_permissions' => $user->group->permissions->pluck('route_name')->toArray()
+                'user_permissions' => $user->group->permissions ? $user->group->permissions->pluck('route_name')->toArray() : []
             ]);
             
-            // PERBAIKAN: Redirect ke halaman yang user punya akses
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Anda tidak memiliki izin untuk mengakses resource ini.'
@@ -89,9 +76,9 @@ class CheckPermission
             }
             
             // Jika tidak punya akses dashboard, redirect ke halaman pertama yang bisa diakses
-            if ($routeName === 'dashboard' || $routeName === 'home' || $routeName === 'root') {
+            if (in_array($routeName, ['dashboard', 'home', 'root'])) {
                 $firstAccessibleRoute = $user->getFirstAccessibleRoute();
-                if ($firstAccessibleRoute) {
+                if ($firstAccessibleRoute && $firstAccessibleRoute !== $routeName) {
                     return redirect()->route($firstAccessibleRoute);
                 }
             }

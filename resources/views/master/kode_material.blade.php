@@ -9,7 +9,13 @@
   </div>
   <div class="col-sm-6">
     <ol class="breadcrumb float-sm-right">
-      <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+      <li class="breadcrumb-item">
+        @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('dashboard'))
+          <a href="{{ route('dashboard') }}">Dashboard</a>
+        @else
+          Dashboard
+        @endif
+      </li>
       <li class="breadcrumb-item active">Kode Material</li>
     </ol>
   </div>
@@ -17,6 +23,19 @@
 @endsection
 
 @section('content')
+@php
+    // PERBAIKAN: Force refresh user relations untuk memastikan permission terbaru
+    Auth::user()->refreshRelations();
+    
+    // Check permissions dengan fresh data
+    $canIndex = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('kode-material.index');
+    $canCreate = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('kode-material.store');
+    $canEdit = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('kode-material.update');
+    $canDelete = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('kode-material.destroy');
+    $hasAnyAccess = $canIndex || $canCreate || $canEdit || $canDelete;
+@endphp
+
+@if($hasAnyAccess)
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -26,11 +45,15 @@
                     Data Kode Material
                 </h3>
                 <div class="card-tools">
+                    @if($canCreate)
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#kodeMaterialModal">
                         <i class="fas fa-plus"></i> Tambah Kode Material
                     </button>
+                    @endif
                 </div>
             </div>
+            
+            @if($canIndex)
             <div class="card-body">
                 <!-- Filter Section -->
                 <div class="row mb-3">
@@ -77,16 +100,40 @@
                                 <th>Nama Material</th>
                                 <th>Spesifikasi</th>
                                 <th>Satuan</th>
+                                @if($canEdit || $canDelete)
                                 <th>Aksi</th>
+                                @endif
                             </tr>
                         </thead>
                     </table>
                 </div>
             </div>
+            @else
+            <div class="card-body text-center">
+                <i class="fas fa-eye-slash text-warning fa-3x mb-3"></i>
+                <h4 class="text-warning">Tidak Dapat Melihat Data</h4>
+                <p class="text-muted">Anda tidak memiliki izin untuk melihat data kode material.</p>
+            </div>
+            @endif
         </div>
     </div>
 </div>
+@else
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
+                <h4 class="text-warning">Akses Terbatas</h4>
+                <p class="text-muted">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
+                <p class="text-muted">Silakan hubungi administrator untuk mendapatkan akses.</p>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
+@if($canCreate)
 <!-- Modal Tambah Kode Material -->
 <div class="modal fade" id="kodeMaterialModal" tabindex="-1" aria-labelledby="kodeMaterialModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -137,7 +184,9 @@
         </div>
     </div>
 </div>
+@endif
 
+@if($canEdit)
 <!-- Modal Edit Kode Material -->
 <div class="modal fade" id="editKodeMaterialModal" tabindex="-1" aria-labelledby="editKodeMaterialModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -191,6 +240,7 @@
         </div>
     </div>
 </div>
+@endif
 @endsection
 
 @push('styles')
@@ -226,12 +276,90 @@
 
 <script>
 $(document).ready(function() {
-    // Initialize Select2
-    $('.select2').select2({
-        theme: 'bootstrap4',
-        placeholder: 'Pilih Satuan',
-        allowClear: true
-    });
+    // Permission flags for JavaScript - MENGGUNAKAN FRESH DATA
+    const permissions = {
+        canIndex: {{ $canIndex ? 'true' : 'false' }},
+        canCreate: {{ $canCreate ? 'true' : 'false' }},
+        canEdit: {{ $canEdit ? 'true' : 'false' }},
+        canDelete: {{ $canDelete ? 'true' : 'false' }},
+        hasActionColumn: {{ ($canEdit || $canDelete) ? 'true' : 'false' }}
+    };
+
+    // Hanya jalankan inisialisasi jika user punya permission index
+    if (!permissions.canIndex) {
+        return;
+    }
+
+    // Initialize Select2 (hanya jika ada permission create atau edit)
+    if (permissions.canCreate || permissions.canEdit) {
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            placeholder: 'Pilih Satuan',
+            allowClear: true
+        });
+    }
+
+    // Konfigurasi kolom DataTable berdasarkan permission
+    let columns = [
+        { 
+            data: 'DT_RowIndex', 
+            name: 'DT_RowIndex', 
+            orderable: false, 
+            searchable: false,
+            width: '5%'
+        },
+        { 
+            data: 'kode_material', 
+            name: 'kode_material',
+            width: permissions.hasActionColumn ? '15%' : '20%'
+        },
+        { 
+            data: 'nama_material', 
+            name: 'nama_material',
+            width: permissions.hasActionColumn ? '25%' : '30%'
+        },
+        { 
+            data: 'spesifikasi', 
+            name: 'spesifikasi',
+            width: permissions.hasActionColumn ? '25%' : '30%'
+        },
+        { 
+            data: 'satuan', 
+            name: 'satuan',
+            width: permissions.hasActionColumn ? '10%' : '20%'
+        }
+    ];
+
+    // Tambahkan kolom aksi jika user punya permission edit atau delete
+    if (permissions.hasActionColumn) {
+        columns.push({
+            data: 'action', 
+            name: 'action', 
+            orderable: false, 
+            searchable: false,
+            width: '20%',
+            render: function(data, type, row) {
+                let buttons = '';
+                
+                if (permissions.canEdit) {
+                    buttons += `<button onclick="editKodeMaterial(${row.id})" class="btn btn-sm btn-warning mr-1">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>`;
+                }
+                
+                if (permissions.canDelete) {
+                    buttons += `<button onclick="deleteKodeMaterial(${row.id}, '${row.kode_material}', '${row.nama_material}')" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash"></i> Hapus
+                    </button>`;
+                }
+                
+                return buttons || '-';
+            }
+        });
+    }
+
+    // Konfigurasi export columns
+    let exportColumns = permissions.hasActionColumn ? [0, 1, 2, 3, 4] : [0, 1, 2, 3, 4];
 
     // Initialize DataTable with Export Buttons
     var table = $('#kodeMaterialTable').DataTable({
@@ -246,42 +374,7 @@ $(document).ready(function() {
                 d.search_satuan = $('#search_satuan').val();
             }
         },
-        columns: [
-            { 
-                data: 'DT_RowIndex', 
-                name: 'DT_RowIndex', 
-                orderable: false, 
-                searchable: false,
-                width: '5%'
-            },
-            { 
-                data: 'kode_material', 
-                name: 'kode_material',
-                width: '15%'
-            },
-            { 
-                data: 'nama_material', 
-                name: 'nama_material',
-                width: '25%'
-            },
-            { 
-                data: 'spesifikasi', 
-                name: 'spesifikasi',
-                width: '25%'
-            },
-            { 
-                data: 'satuan', 
-                name: 'satuan',
-                width: '10%'
-            },
-            { 
-                data: 'action', 
-                name: 'action', 
-                orderable: false, 
-                searchable: false,
-                width: '20%'
-            }
-        ],
+        columns: columns,
         responsive: true,
         autoWidth: false,
         // Export Buttons Configuration
@@ -295,11 +388,10 @@ $(document).ready(function() {
                 className: 'btn btn-success btn-sm mr-1',
                 title: 'Data Kode Material',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4] // Exclude action column
+                    columns: exportColumns
                 },
                 customize: function(xlsx) {
                     var sheet = xlsx.xl.worksheets['sheet1.xml'];
-                    // Add styling to header
                     $('row:first c', sheet).attr('s', '2');
                 }
             },
@@ -311,17 +403,16 @@ $(document).ready(function() {
                 orientation: 'landscape',
                 pageSize: 'A4',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4] // Exclude action column
+                    columns: exportColumns
                 },
                 customize: function(doc) {
-                    // Customize PDF styling
-                    doc.content[1].table.widths = ['10%', '20%', '30%', '25%', '15%'];
+                    doc.content[1].table.widths = permissions.hasActionColumn ? 
+                        ['10%', '20%', '30%', '25%', '15%'] : ['10%', '22.5%', '30%', '22.5%', '15%'];
                     doc.styles.tableHeader.fontSize = 10;
                     doc.styles.tableBodyEven.fontSize = 9;
                     doc.styles.tableBodyOdd.fontSize = 9;
                     doc.defaultStyle.fontSize = 9;
                     
-                    // Add header
                     doc.content.splice(0, 1, {
                         text: [
                             { text: 'DATA KODE MATERIAL\n', fontSize: 16, bold: true },
@@ -338,10 +429,9 @@ $(document).ready(function() {
                 className: 'btn btn-info btn-sm',
                 title: 'Data Kode Material',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4] // Exclude action column
+                    columns: exportColumns
                 },
                 customize: function(win) {
-                    // Add custom CSS for print
                     $(win.document.body)
                         .css('font-size', '10pt')
                         .prepend(
@@ -355,7 +445,6 @@ $(document).ready(function() {
                         .addClass('compact')
                         .css('font-size', '9pt');
                     
-                    // Style table headers
                     $(win.document.body).find('table thead tr th')
                         .css({
                             'background-color': '#f8f9fa',
@@ -364,7 +453,6 @@ $(document).ready(function() {
                             'text-align': 'center'
                         });
                     
-                    // Style table cells
                     $(win.document.body).find('table tbody tr td')
                         .css({
                             'border': '1px solid #dee2e6',
@@ -407,128 +495,128 @@ $(document).ready(function() {
         table.ajax.reload();
     });
 
-    // Form submission for Add
-    $('#kodeMaterialForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        let formData = new FormData(this);
-        let url = '{{ route("kode-material.store") }}';
-        
-        // Show loading state
-        const submitBtn = $(this).find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
+    // Form submission untuk Add
+    if (permissions.canCreate) {
+        $('#kodeMaterialForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            let formData = new FormData(this);
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
 
-        $.ajax({
-            url: url,
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#kodeMaterialModal').modal('hide');
-                    table.ajax.reload();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: response.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                    resetForm();
+            $.ajax({
+                url: '{{ route("kode-material.store") }}',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#kodeMaterialModal').modal('hide');
+                        table.ajax.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        resetForm();
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        $('.form-control').removeClass('is-invalid');
+                        $('.invalid-feedback').text('');
+                        
+                        $.each(errors, function(key, value) {
+                            $(`[name="${key}"]`).addClass('is-invalid');
+                            $(`[name="${key}"]`).siblings('.invalid-feedback').text(value[0]);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Terjadi kesalahan pada server'
+                        });
+                    }
+                },
+                complete: function() {
+                    submitBtn.html(originalText).prop('disabled', false);
                 }
-            },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    let errors = xhr.responseJSON.errors;
-                    $('.form-control').removeClass('is-invalid');
-                    $('.invalid-feedback').text('');
-                    
-                    $.each(errors, function(key, value) {
-                        $(`[name="${key}"]`).addClass('is-invalid');
-                        $(`[name="${key}"]`).siblings('.invalid-feedback').text(value[0]);
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: 'Terjadi kesalahan pada server'
-                    });
-                }
-            },
-            complete: function() {
-                // Reset button state
-                submitBtn.html(originalText).prop('disabled', false);
-            }
+            });
         });
-    });
+    }
 
-    // Form submission for Update
-    $('#editKodeMaterialForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        let id = $('#edit_id').val();
-        let formData = new FormData(this);
-        
-        // Show loading state
-        const submitBtn = $(this).find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
+    // Form submission untuk Update
+    if (permissions.canEdit) {
+        $('#editKodeMaterialForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            let id = $('#edit_id').val();
+            let formData = new FormData(this);
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
 
-        $.ajax({
-            url: `{{ route('kode-material.update', ':id') }}`.replace(':id', id),
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#editKodeMaterialModal').modal('hide');
-                    table.ajax.reload();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: response.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
+            $.ajax({
+                url: `{{ route('kode-material.update', ':id') }}`.replace(':id', id),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#editKodeMaterialModal').modal('hide');
+                        table.ajax.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        $('.form-control').removeClass('is-invalid');
+                        $('.invalid-feedback').text('');
+                        
+                        $.each(errors, function(key, value) {
+                            $(`#edit_${key}`).addClass('is-invalid');
+                            $(`#edit_${key}`).siblings('.invalid-feedback').text(value[0]);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Terjadi kesalahan pada server'
+                        });
+                    }
+                },
+                complete: function() {
+                    submitBtn.html(originalText).prop('disabled', false);
                 }
-            },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    let errors = xhr.responseJSON.errors;
-                    $('.form-control').removeClass('is-invalid');
-                    $('.invalid-feedback').text('');
-                    
-                    $.each(errors, function(key, value) {
-                        $(`#edit_${key}`).addClass('is-invalid');
-                        $(`#edit_${key}`).siblings('.invalid-feedback').text(value[0]);
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: 'Terjadi kesalahan pada server'
-                    });
-                }
-            },
-            complete: function() {
-                submitBtn.html(originalText).prop('disabled', false);
-            }
+            });
         });
-    });
+    }
 
     // Reset modal when closed
-    $('#kodeMaterialModal').on('hidden.bs.modal', function() {
-        resetForm();
-    });
+    if (permissions.canCreate) {
+        $('#kodeMaterialModal').on('hidden.bs.modal', function() {
+            resetForm();
+        });
+    }
 
     // Clear validation on input change
     $('input, select').on('change', function() {
@@ -539,14 +627,16 @@ $(document).ready(function() {
 
 // Helper Functions
 function resetForm() {
+    @if($canCreate)
     $('#kodeMaterialForm')[0].reset();
     $('#uom_id').val(null).trigger('change');
     $('.form-control').removeClass('is-invalid');
     $('.invalid-feedback').text('');
+    @endif
 }
 
 function editKodeMaterial(id) {
-    // Show loading indicator
+    @if($canEdit)
     Swal.fire({
         title: 'Memuat data...',
         allowOutsideClick: false,
@@ -570,7 +660,6 @@ function editKodeMaterial(id) {
                 $('#edit_spesifikasi').val(response.data.spesifikasi);
                 $('#edit_uom_id').val(response.data.uom_id).trigger('change');
                 
-                // Clear validation errors
                 $('.form-control').removeClass('is-invalid');
                 $('.invalid-feedback').text('');
                 
@@ -592,9 +681,17 @@ function editKodeMaterial(id) {
             console.error('Error:', xhr.responseJSON);
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk mengedit data ini.'
+    });
+    @endif
 }
 
 function deleteKodeMaterial(id, kode, nama) {
+    @if($canDelete)
     Swal.fire({
         title: 'Apakah Anda yakin?',
         text: `Anda akan menghapus kode material "${kode} - ${nama}"!`,
@@ -607,7 +704,6 @@ function deleteKodeMaterial(id, kode, nama) {
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            // Show loading
             Swal.fire({
                 title: 'Menghapus...',
                 allowOutsideClick: false,
@@ -652,6 +748,13 @@ function deleteKodeMaterial(id, kode, nama) {
             });
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk menghapus data ini.'
+    });
+    @endif
 }
 </script>
 @endpush
