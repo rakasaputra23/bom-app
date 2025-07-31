@@ -23,6 +23,15 @@
 @endpush
 
 @section('content')
+@php
+    // IMPLEMENTASI PERMISSION SYSTEM - FRESH DATA
+    Auth::user()->refreshRelations();
+    
+    $canCreate = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('permissions.store');
+    $canEdit = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('permissions.update');
+    $canDelete = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('permissions.destroy');
+@endphp
+
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -32,9 +41,11 @@
                     Data Permission
                 </h3>
                 <div class="card-tools">
+                    @if($canCreate)
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addPermissionModal">
                         <i class="fas fa-plus"></i> Tambah Permission
                     </button>
+                    @endif
                 </div>
             </div>
             <div class="card-body">
@@ -56,6 +67,7 @@
     </div>
 </div>
 
+@if($canCreate)
 <!-- Modal Tambah Permission -->
 <div class="modal fade" id="addPermissionModal" tabindex="-1" aria-labelledby="addPermissionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -93,7 +105,9 @@
         </div>
     </div>
 </div>
+@endif
 
+@if($canEdit)
 <!-- Modal Edit Permission -->
 <div class="modal fade" id="editPermissionModal" tabindex="-1" aria-labelledby="editPermissionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -132,6 +146,7 @@
         </div>
     </div>
 </div>
+@endif
 @endsection
 
 @push('scripts')
@@ -145,6 +160,13 @@
 
 <script>
 $(document).ready(function() {
+    // IMPLEMENTASI PERMISSION FLAGS - MENGGUNAKAN FRESH DATA
+    const permissions = {
+        canCreate: {{ $canCreate ? 'true' : 'false' }},
+        canEdit: {{ $canEdit ? 'true' : 'false' }},
+        canDelete: {{ $canDelete ? 'true' : 'false' }}
+    };
+
     // Initialize DataTable
     let table = $('#permissionsTable').DataTable({
         processing: true,
@@ -190,16 +212,23 @@ $(document).ready(function() {
             {
                 data: null,
                 render: function(data, type, row) {
-                    return `
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-warning" onclick="editPermission(${row.id})" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="deletePermission(${row.id})" title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
+                    // IMPLEMENTASI PERMISSION UNTUK TOMBOL - CONDITIONAL RENDERING
+                    let buttons = '<div class="btn-group" role="group">';
+                    
+                    if (permissions.canEdit) {
+                        buttons += `<button type="button" class="btn btn-sm btn-warning" onclick="editPermission(${row.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>`;
+                    }
+                    
+                    if (permissions.canDelete) {
+                        buttons += `<button type="button" class="btn btn-sm btn-danger" onclick="deletePermission(${row.id})" title="Hapus">
+                            <i class="fas fa-trash"></i>
+                        </button>`;
+                    }
+                    
+                    buttons += '</div>';
+                    return buttons;
                 },
                 orderable: false,
                 searchable: false,
@@ -231,6 +260,8 @@ $(document).ready(function() {
         const originalText = submitBtn.html();
         submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
 
+        // IMPLEMENTASI PERMISSION CHECK
+        @if($canCreate)
         $.ajax({
             url: "{{ route('permissions.store') }}",
             type: "POST",
@@ -267,6 +298,14 @@ $(document).ready(function() {
                 submitBtn.html(originalText).prop('disabled', false);
             }
         });
+        @else
+        submitBtn.html(originalText).prop('disabled', false);
+        Swal.fire({
+            icon: 'error',
+            title: 'Akses Ditolak!',
+            text: 'Anda tidak memiliki izin untuk menambah data.'
+        });
+        @endif
     });
 
     // Form submission - Edit
@@ -285,6 +324,8 @@ $(document).ready(function() {
         const originalText = submitBtn.html();
         submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
 
+        // IMPLEMENTASI PERMISSION CHECK
+        @if($canEdit)
         $.ajax({
             url: "{{ route('permissions.update', '') }}/" + id,
             type: "POST",
@@ -321,6 +362,14 @@ $(document).ready(function() {
                 submitBtn.html(originalText).prop('disabled', false);
             }
         });
+        @else
+        submitBtn.html(originalText).prop('disabled', false);
+        Swal.fire({
+            icon: 'error',
+            title: 'Akses Ditolak!',
+            text: 'Anda tidak memiliki izin untuk mengedit data ini.'
+        });
+        @endif
     });
 
     // Reset modal when closed
@@ -337,6 +386,8 @@ $(document).ready(function() {
 });
 
 function editPermission(id) {
+    // IMPLEMENTASI PERMISSION CHECK
+    @if($canEdit)
     $.ajax({
         url: "{{ route('permissions.show', '') }}/" + id,
         type: "GET",
@@ -355,9 +406,18 @@ function editPermission(id) {
             });
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk mengedit data ini.'
+    });
+    @endif
 }
 
 function deletePermission(id) {
+    // IMPLEMENTASI PERMISSION CHECK
+    @if($canDelete)
     Swal.fire({
         title: 'Apakah Anda yakin?',
         text: "Permission akan dihapus permanen!",
@@ -407,6 +467,13 @@ function deletePermission(id) {
             });
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk menghapus data ini.'
+    });
+    @endif
 }
 
 // Helper functions

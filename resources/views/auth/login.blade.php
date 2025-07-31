@@ -17,7 +17,7 @@
   <!-- Custom CSS -->
   <style>
     .login-page {
-      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{{ asset("dist/img/login-bg.webp") }}');
+      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{{ asset("dist/img/login-bg.jpg") }}');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;

@@ -173,7 +173,7 @@
                         </select>
                         <div class="invalid-feedback"></div>
                     </div>
-                </div>
+                                    </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary">
@@ -244,6 +244,17 @@
 @endsection
 
 @push('styles')
+<style>
+.select2-container {
+    z-index: 1060 !important; /* Pastikan dropdown muncul di atas modal */
+}
+.select2-search__field {
+    width: 100% !important;
+}
+.select2-dropdown {
+    z-index: 1061 !important;
+}
+</style>
 <!-- DataTables -->
 <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
@@ -291,13 +302,47 @@ $(document).ready(function() {
     }
 
     // Initialize Select2 (hanya jika ada permission create atau edit)
-    if (permissions.canCreate || permissions.canEdit) {
-        $('.select2').select2({
+    if (permissions.canCreate) {
+        $('#uom_id').select2({
             theme: 'bootstrap4',
             placeholder: 'Pilih Satuan',
-            allowClear: true
+            allowClear: true,
+            dropdownParent: $('#kodeMaterialModal'),
+            minimumInputLength: 0,
+            language: {
+                noResults: function() {
+                    return "Tidak ditemukan";
+                },
+                searching: function() {
+                    return "Mencari...";
+                }
+            }
         });
     }
+
+    if (permissions.canEdit) {
+        $('#edit_uom_id').select2({
+            theme: 'bootstrap4',
+            placeholder: 'Pilih Satuan',
+            allowClear: true,
+            dropdownParent: $('#editKodeMaterialModal'),
+            minimumInputLength: 0,
+            language: {
+                noResults: function() {
+                    return "Tidak ditemukan";
+                },
+                searching: function() {
+                    return "Mencari...";
+                }
+            }
+    });
+}
+
+// Fokus ke input search saat dropdown dibuka (untuk semua select2)
+$(document).on('select2:open', () => {
+    document.querySelector('.select2-search__field').focus();
+});
+
 
     // Konfigurasi kolom DataTable berdasarkan permission
     let columns = [
