@@ -23,14 +23,22 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
+        // Cek apakah NIP ada di database
+        $user = User::where('nip', $request->nip)->first();
+        
+        if (!$user) {
+            // NIP tidak ditemukan
+            return back()->with('error', 'NIP tidak ditemukan dalam sistem')->onlyInput('nip');
+        }
+        
+        // NIP ada, cek password
         if (Auth::attempt(['nip' => $request->nip, 'password' => $request->password])) {
             $request->session()->regenerate();
             return redirect()->intended('/dashboard');
+        } else {
+            // Password salah
+            return back()->with('error', 'Password yang Anda masukkan salah')->onlyInput('nip');
         }
-
-        return back()->withErrors([
-            'nip' => 'NIP atau password salah.',
-        ])->onlyInput('nip');
     }
 
     // Logout

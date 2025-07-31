@@ -6,16 +6,17 @@
         <i class="fas fa-bars"></i>
       </a>
     </li>
+    @if(Auth::check() && (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('dashboard')))
     <li class="nav-item d-none d-sm-inline-block">
       <a href="{{ route('dashboard') }}" class="nav-link">
         <i class="fas fa-home mr-1"></i> Home
       </a>
     </li>
+    @endif
   </ul>
 
   <!-- Right navbar links -->
   <ul class="navbar-nav ml-auto">
-
     <!-- User Account Dropdown -->
     <li class="nav-item dropdown">
       <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
@@ -30,13 +31,22 @@
         @endif
       </a>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+        @if(Auth::check() && (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('profile.view')))
         <a class="dropdown-item" href="{{ route('profile') }}">
           <i class="fas fa-user mr-2"></i> Profile
         </a>
+        @endif
+        
+        @if(Auth::check() && (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('profile.edit')))
         <a class="dropdown-item" href="{{ route('profile.edit') }}">
           <i class="fas fa-edit mr-2"></i> Edit Profile
         </a>
+        @endif
+        
+        @if(Auth::check() && (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('profile.view') || Auth::user()->hasPermission('profile.edit')))
         <div class="dropdown-divider"></div>
+        @endif
+        
         <form action="{{ route('logout') }}" method="POST" style="display: inline;">
           @csrf
           <button type="submit" class="dropdown-item text-danger">
@@ -46,4 +56,4 @@
       </div>
     </li>
   </ul>
-</nav>
+</nav>  
