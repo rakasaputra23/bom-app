@@ -9,13 +9,11 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
-    // Halaman login
     public function showLogin()
     {
         return view('auth.login');
     }
 
-    // Proses login
     public function login(Request $request)
     {
         $request->validate([
@@ -23,17 +21,26 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt(['nip' => $request->nip, 'password' => $request->password])) {
-            $request->session()->regenerate();
-            return redirect()->intended('/dashboard');
+        // Cek apakah NIP terdaftar
+        $user = User::where('nip', $request->nip)->first();
+
+        if (!$user) {
+            return back()->withErrors(['nip' => 'NIP tidak terdaftar.'])
+                         ->onlyInput('nip');
         }
 
-        return back()->withErrors([
-            'nip' => 'NIP atau password salah.',
-        ])->onlyInput('nip');
+        // Cek password
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Password salah.'])
+                         ->onlyInput('nip');
+        }
+
+        // Jika semua valid, lakukan login
+        Auth::login($user, $request->filled('remember'));
+        $request->session()->regenerate();
+        return redirect()->intended('/dashboard');
     }
 
-    // Logout
     public function logout(Request $request)
     {
         Auth::logout();
@@ -42,13 +49,11 @@ class AuthController extends Controller
         return redirect('/login');
     }
 
-    // Halaman form lupa password
     public function showForgotPassword()
     {
         return view('auth.passwords.email');
     }
 
-    // Halaman reset password manual (token dan email statis)
     public function showResetPasswordForm()
     {
         return view('auth.passwords.reset', [
@@ -57,7 +62,6 @@ class AuthController extends Controller
         ]);
     }
 
-    // Proses reset password
     public function resetPassword(Request $request)
     {
         $request->validate([
