@@ -9,7 +9,9 @@
   </div>
   <div class="col-sm-6">
     <ol class="breadcrumb float-sm-right">
+      @if(Auth::check() && (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('dashboard')))
       <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Home</a></li>
+      @endif
       <li class="breadcrumb-item active">Profil</li>
     </ol>
   </div>
@@ -47,7 +49,9 @@
           </li>
         </ul>
 
+        @if(Auth::check() && (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('profile.edit')))
         <a href="{{ route('profile.edit') }}" class="btn btn-primary btn-block"><b>Edit Profil</b></a>
+        @endif
       </div>
     </div>
   </div>
