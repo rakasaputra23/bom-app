@@ -27,7 +27,7 @@
     }
 
     .login-page {
-      background-image: url('{{ asset("dist/img/login-bg1.jpg") }}');
+      background-image: url('{{ asset("dist/img/login-bg.jpg") }}');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
