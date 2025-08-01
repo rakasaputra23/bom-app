@@ -88,6 +88,7 @@ class DatabaseSeeder extends Seeder
             ['route_name' => 'revisi.index', 'deskripsi' => 'Lihat Revisi'],
             ['route_name' => 'revisi.getData', 'deskripsi' => 'Get Data Revisi'],
             ['route_name' => 'revisi.store', 'deskripsi' => 'Tambah Revisi'],
+            ['route_name' => 'revisi.show', 'deskripsi' => 'Lihat Detail Revisi'],
             ['route_name' => 'revisi.update', 'deskripsi' => 'Edit Revisi'],
             ['route_name' => 'revisi.destroy', 'deskripsi' => 'Hapus Revisi'],
             
@@ -133,7 +134,8 @@ class DatabaseSeeder extends Seeder
             'proyek.getData', 
             'proyek.show',
             'revisi.index',
-            'revisi.getData'
+            'revisi.getData',
+            'revisi.show'
         ])->get();
         $produksiGroup->permissions()->sync($produksiPermissions->pluck('id'));
 

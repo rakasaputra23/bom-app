@@ -24,6 +24,15 @@
 @endpush
 
 @section('content')
+@php
+    // Check permissions
+    Auth::user()->refreshRelations();
+    $canCreate = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('user.store');
+    $canEdit = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('user.update');
+    $canDelete = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('user.destroy');
+    $canView = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('user.show');
+@endphp
+
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -33,9 +42,11 @@
                     Data User
                 </h3>
                 <div class="card-tools">
+                    @if($canCreate)
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#userModal">
                         <i class="fas fa-plus"></i> Tambah User
                     </button>
+                    @endif
                 </div>
             </div>
             <div class="card-body">
@@ -188,6 +199,14 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
+    // Permission flags for JavaScript
+    const permissions = {
+        canCreate: {{ $canCreate ? 'true' : 'false' }},
+        canEdit: {{ $canEdit ? 'true' : 'false' }},
+        canDelete: {{ $canDelete ? 'true' : 'false' }},
+        canView: {{ $canView ? 'true' : 'false' }}
+    };
+
     // Initialize Select2 for User Group
     $('#user_group_id').select2({
         theme: 'bootstrap4',
@@ -246,19 +265,37 @@ $(document).ready(function() {
             {
                 data: 'id',
                 render: function(data, type, row) {
-                    return `
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-info" onclick="showDetail(${data})" title="Detail">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-warning" onclick="editUser(${data})" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteUser(${data})" title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
+                    let buttons = '<div class="btn-group" role="group">';
+                    
+                    // Tombol Detail - hanya muncul jika ada permission
+                    if (permissions.canView) {
+                        buttons += `<button type="button" class="btn btn-sm btn-info" onclick="showDetail(${data})" title="Detail">
+                            <i class="fas fa-eye"></i>
+                        </button>`;
+                    }
+                    
+                    // Tombol Edit - hanya muncul jika ada permission
+                    if (permissions.canEdit) {
+                        buttons += `<button type="button" class="btn btn-sm btn-warning" onclick="editUser(${data})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>`;
+                    }
+                    
+                    // Tombol Hapus - hanya muncul jika ada permission
+                    if (permissions.canDelete) {
+                        buttons += `<button type="button" class="btn btn-sm btn-danger" onclick="deleteUser(${data})" title="Hapus">
+                            <i class="fas fa-trash"></i>
+                        </button>`;
+                    }
+                    
+                    buttons += '</div>';
+                    
+                    // Jika tidak ada permission sama sekali, tampilkan dash
+                    if (!permissions.canView && !permissions.canEdit && !permissions.canDelete) {
+                        return '-';
+                    }
+                    
+                    return buttons;
                 }
             }
         ],
@@ -357,6 +394,20 @@ function resetForm() {
 }
 
 function editUser(id) {
+    // Check permission di JavaScript juga untuk keamanan tambahan
+    const permissions = {
+        canEdit: {{ $canEdit ? 'true' : 'false' }}
+    };
+    
+    if (!permissions.canEdit) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Akses Ditolak!',
+            text: 'Anda tidak memiliki izin untuk mengedit data.'
+        });
+        return;
+    }
+
     $.get(`{{ url('user') }}/${id}`, function(data) {
         $('#userModalLabel').text('Edit User');
         $('#userForm').data('action', `{{ url('user') }}/${id}`).data('method', 'PUT');
@@ -378,6 +429,20 @@ function editUser(id) {
 }
 
 function showDetail(id) {
+    // Check permission di JavaScript juga untuk keamanan tambahan
+    const permissions = {
+        canView: {{ $canView ? 'true' : 'false' }}
+    };
+    
+    if (!permissions.canView) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Akses Ditolak!',
+            text: 'Anda tidak memiliki izin untuk melihat detail data.'
+        });
+        return;
+    }
+
     $.get(`{{ url('user') }}/${id}`, function(data) {
         let content = `
             <div class="row">
@@ -435,6 +500,20 @@ function showDetail(id) {
 }
 
 function deleteUser(id) {
+    // Check permission di JavaScript juga untuk keamanan tambahan
+    const permissions = {
+        canDelete: {{ $canDelete ? 'true' : 'false' }}
+    };
+    
+    if (!permissions.canDelete) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Akses Ditolak!',
+            text: 'Anda tidak memiliki izin untuk menghapus data.'
+        });
+        return;
+    }
+
     Swal.fire({
         title: 'Apakah Anda yakin?',
         text: "Data user akan dihapus permanen!",

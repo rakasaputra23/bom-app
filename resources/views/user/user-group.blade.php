@@ -21,6 +21,17 @@
 @endpush
 
 @section('content')
+@php
+    // IMPLEMENTASI PERMISSION SYSTEM - FRESH DATA
+    Auth::user()->refreshRelations();
+    
+    $canCreate = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('user.group.store');
+    $canEdit = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('user.group.update');
+    $canDelete = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('user.group.destroy');
+    $canShow = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('user.group.show');
+    $canManagePermissions = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('user.group.permissions');
+@endphp
+
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -30,9 +41,11 @@
                     Data User Group
                 </h3>
                 <div class="card-tools">
+                    @if($canCreate)
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#userGroupModal">
                         <i class="fas fa-plus"></i> Tambah User Group
                     </button>
+                    @endif
                 </div>
             </div>
             <div class="card-body">
@@ -53,6 +66,7 @@
     </div>
 </div>
 
+@if($canCreate)
 <!-- Modal User Group -->
 <div class="modal fade" id="userGroupModal" tabindex="-1" aria-labelledby="userGroupModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -102,6 +116,7 @@
         </div>
     </div>
 </div>
+@endif
 
 <!-- Modal Detail User Group -->
 <div class="modal fade" id="detailUserGroupModal" tabindex="-1" aria-labelledby="detailUserGroupModalLabel" aria-hidden="true">
@@ -145,6 +160,7 @@
     </div>
 </div>
 
+@if($canEdit)
 <!-- Modal Edit User Group -->
 <div class="modal fade" id="editUserGroupModal" tabindex="-1" aria-labelledby="editUserGroupModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -172,6 +188,7 @@
         </div>
     </div>
 </div>
+@endif
 @endsection
 
 @push('scripts')
@@ -184,6 +201,15 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
+    // IMPLEMENTASI PERMISSION FLAGS - MENGGUNAKAN FRESH DATA
+    const permissions = {
+        canCreate: {{ $canCreate ? 'true' : 'false' }},
+        canEdit: {{ $canEdit ? 'true' : 'false' }},
+        canDelete: {{ $canDelete ? 'true' : 'false' }},
+        canShow: {{ $canShow ? 'true' : 'false' }},
+        canManagePermissions: {{ $canManagePermissions ? 'true' : 'false' }}
+    };
+
     // Pastikan DataTables sudah dimuat
     if (typeof $.fn.DataTable === 'undefined') {
         console.error('DataTables tidak dimuat dengan benar');
@@ -225,22 +251,35 @@ $(document).ready(function() {
             {
                 data: 'id',
                 render: function(data, type, row) {
-                    return `
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-info" onclick="showDetail(${data})" title="Detail">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-secondary" onclick="managePermissions(${data})" title="Permissions">
-                                <i class="fas fa-key"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-warning" onclick="editUserGroup(${data})" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteUserGroup(${data})" title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
+                    // IMPLEMENTASI PERMISSION UNTUK TOMBOL - CONDITIONAL RENDERING
+                    let buttons = '<div class="btn-group" role="group">';
+                    
+                    if (permissions.canShow) {
+                        buttons += `<button type="button" class="btn btn-sm btn-info" onclick="showDetail(${data})" title="Detail">
+                            <i class="fas fa-eye"></i>
+                        </button>`;
+                    }
+                    
+                    if (permissions.canManagePermissions) {
+                        buttons += `<button type="button" class="btn btn-sm btn-secondary" onclick="managePermissions(${data})" title="Permissions">
+                            <i class="fas fa-key"></i>
+                        </button>`;
+                    }
+                    
+                    if (permissions.canEdit) {
+                        buttons += `<button type="button" class="btn btn-sm btn-warning" onclick="editUserGroup(${data})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>`;
+                    }
+                    
+                    if (permissions.canDelete) {
+                        buttons += `<button type="button" class="btn btn-sm btn-danger" onclick="deleteUserGroup(${data})" title="Hapus">
+                            <i class="fas fa-trash"></i>
+                        </button>`;
+                    }
+                    
+                    buttons += '</div>';
+                    return buttons;
                 },
                 orderable: false,
                 searchable: false
@@ -288,6 +327,8 @@ $(document).ready(function() {
 
 // 1. STORE USER GROUP
 function storeUserGroup(formData) {
+    // IMPLEMENTASI PERMISSION CHECK
+    @if($canCreate)
     $.ajax({
         url: '{{ route("user.group.store") }}',
         method: 'POST',
@@ -324,10 +365,19 @@ function storeUserGroup(formData) {
             }
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk menambah data.'
+    });
+    @endif
 }
 
 // 2. EDIT USER GROUP
 function editUserGroup(id) {
+    // IMPLEMENTASI PERMISSION CHECK
+    @if($canEdit)
     $.ajax({
         url: `/user-group/${id}`,
         method: 'GET',
@@ -342,10 +392,19 @@ function editUserGroup(id) {
             Swal.fire('Error!', 'Gagal memuat data user group', 'error');
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk mengedit data ini.'
+    });
+    @endif
 }
 
 // 3. UPDATE USER GROUP
 function updateUserGroup(id, formData) {
+    // IMPLEMENTASI PERMISSION CHECK
+    @if($canEdit)
     $.ajax({
         url: `/user-group/${id}`,
         method: 'POST',
@@ -375,10 +434,19 @@ function updateUserGroup(id, formData) {
             }
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk mengedit data ini.'
+    });
+    @endif
 }
 
 // 4. DELETE USER GROUP
 function deleteUserGroup(id) {
+    // IMPLEMENTASI PERMISSION CHECK
+    @if($canDelete)
     Swal.fire({
         title: 'Apakah Anda yakin?',
         text: "Data user group akan dihapus permanen!",
@@ -408,10 +476,19 @@ function deleteUserGroup(id) {
             });
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk menghapus data ini.'
+    });
+    @endif
 }
 
 // 5. MANAGE PERMISSIONS
 function managePermissions(id) {
+    // IMPLEMENTASI PERMISSION CHECK
+    @if($canManagePermissions)
     $.ajax({
         url: `/user-group/${id}/permissions`,
         method: 'GET',
@@ -460,10 +537,19 @@ function managePermissions(id) {
             Swal.fire('Error!', 'Gagal memuat data permissions', 'error');
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk mengelola permissions.'
+    });
+    @endif
 }
 
 // 6. UPDATE PERMISSIONS
 function updatePermissions() {
+    // IMPLEMENTASI PERMISSION CHECK
+    @if($canManagePermissions)
     let id = $('#permissionUserGroupId').val();
     let selectedPermissions = [];
     
@@ -492,10 +578,19 @@ function updatePermissions() {
             Swal.fire('Error!', xhr.responseJSON?.message || 'Gagal mengupdate permissions', 'error');
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk mengelola permissions.'
+    });
+    @endif
 }
 
 // 7. SHOW DETAIL - VERSI DIPERBAIKI
 function showDetail(id) {
+    // IMPLEMENTASI PERMISSION CHECK
+    @if($canShow)
     $.ajax({
         url: `/user-group/${id}`,
         method: 'GET',
@@ -590,6 +685,13 @@ function showDetail(id) {
             Swal.fire('Error!', xhr.responseJSON?.message || 'Terjadi kesalahan saat memuat detail', 'error');
         }
     });
+    @else
+    Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak!',
+        text: 'Anda tidak memiliki izin untuk melihat detail data ini.'
+    });
+    @endif
 }
 </script>
 @endpush
