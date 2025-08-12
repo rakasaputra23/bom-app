@@ -17,24 +17,143 @@
 @endsection
 
 @section('content')
+<!-- Statistics Cards -->
+<div class="row mb-3">
+  <div class="col-lg-2 col-6">
+    <div class="small-box bg-secondary">
+      <div class="inner">
+        <h3 id="stat-draft">0</h3>
+        <p>Draft</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-edit"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-2 col-6">
+    <div class="small-box bg-warning">
+      <div class="inner">
+        <h3 id="stat-pending1">0</h3>
+        <p>Pending Approval 1</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-clock"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-2 col-6">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3 id="stat-pending2">0</h3>
+        <p>Pending Approval 2</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-hourglass-half"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-2 col-6">
+    <div class="small-box bg-success">
+      <div class="inner">
+        <h3 id="stat-approved">0</h3>
+        <p>Approved</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-2 col-6">
+    <div class="small-box bg-danger">
+      <div class="inner">
+        <h3 id="stat-rejected">0</h3>
+        <p>Rejected</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-times-circle"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-2 col-6">
+    <div class="small-box bg-primary">
+      <div class="inner">
+        <h3 id="stat-total">0</h3>
+        <p>Total BOM</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-list-alt"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mb-3">
+  <div class="col-md-6">
+    @if(Auth::user()->can('bom.create'))
+      <a href="{{ route('bom.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Buat BOM Baru
+      </a>
+    @endif
+    @if(Auth::user()->can('bom.approve.1') || Auth::user()->can('bom.approve.2'))
+      <a href="{{ route('bom.pending.approvals') }}" class="btn btn-warning">
+        <i class="fas fa-clock"></i> BOM Menunggu Approval
+        <span class="badge badge-light" id="pending-count">0</span>
+      </a>
+    @endif
+  </div>
+  <div class="col-md-6 text-right">
+    <button type="button" class="btn btn-info" id="refreshData">
+      <i class="fas fa-sync-alt"></i> Refresh Data
+    </button>
+  </div>
+</div>
+
 <!-- Filter Pencarian -->
-<div class="row">
-  <div class="col-md-4">
-    <div class="form-group">
-      <label>Cari Nomor BOM</label>
-      <input type="text" class="form-control" id="search_nomor" placeholder="Cari berdasarkan nomor BOM...">
+<div class="card card-outline card-secondary collapsed-card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-filter"></i> Filter & Pencarian
+    </h3>
+    <div class="card-tools">
+      <button type="button" class="btn btn-tool" data-card-widget="collapse">
+        <i class="fas fa-plus"></i>
+      </button>
     </div>
   </div>
-  <div class="col-md-4">
-    <div class="form-group">
-      <label>Cari Proyek</label>
-      <input type="text" class="form-control" id="search_proyek" placeholder="Cari berdasarkan proyek...">
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="form-group">
-      <label>Cari Revisi</label>
-      <input type="text" class="form-control" id="search_revisi" placeholder="Cari berdasarkan revisi...">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="form-group">
+          <label>Cari Nomor BOM</label>
+          <input type="text" class="form-control" id="search_nomor" placeholder="Cari berdasarkan nomor BOM...">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label>Cari Proyek</label>
+          <input type="text" class="form-control" id="search_proyek" placeholder="Cari berdasarkan proyek...">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label>Filter Status</label>
+          <select class="form-control" id="filter_status">
+            <option value="">Semua Status</option>
+            <option value="DRAFT">Draft</option>
+            <option value="PENDING_APPROVAL_1">Menunggu Approval 1</option>
+            <option value="PENDING_APPROVAL_2">Menunggu Approval 2</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label>Cari Pembuat</label>
+          <input type="text" class="form-control" id="search_creator" placeholder="Cari berdasarkan pembuat...">
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -55,33 +174,92 @@
         <thead>
           <tr>
             <th style="width: 5%;">No</th>
-            <th style="width: 15%;">Nomor</th>
-            <th style="width: 20%;">Proyek</th>
-            <th style="width: 15%;">Tgl. Terbit</th>
-            <th style="width: 15%;">Revisi</th>
-            <th style="width: 20%;">Kategori</th>
-            <th style="width: 10%;">Aksi</th>
+            <th style="width: 12%;">Nomor</th>
+            <th style="width: 15%;">Proyek</th>
+            <th style="width: 10%;">Tgl. Terbit</th>
+            <th style="width: 10%;">Kategori</th>
+            <th style="width: 12%;">Status</th>
+            <th style="width: 12%;">Pembuat</th>
+            <th style="width: 12%;">Terakhir Update</th>
+            <th style="width: 12%;">Aksi</th>
           </tr>
         </thead>
         <tbody>
           @foreach($billOfMaterials as $index => $bom)
-          <tr data-bom-id="{{ $bom->id }}">
+          <tr data-bom-id="{{ $bom->id }}" data-status="{{ $bom->status }}">
             <td>{{ $index + 1 }}</td>
-            <td>{{ $bom->nomor_bom }}</td>
-            <td>{{ $bom->proyek->nama_proyek }}</td>
-            <td>{{ date('d/m/Y', strtotime($bom->tanggal)) }}</td>
-            <td>{{ $bom->revisi->jenis_revisi }}</td>
-            <td>{{ $bom->kategori }}</td>
             <td>
-              <button class="btn btn-sm btn-info view-btn" title="Lihat" data-bom-id="{{ $bom->id }}">
-                <i class="fas fa-eye"></i>
-              </button>
-              <a href="{{ route('bom.edit', $bom->id) }}" class="btn btn-sm btn-warning" title="Edit">
-                <i class="fas fa-edit"></i>
-              </a>
-              <button class="btn btn-sm btn-danger delete-btn" title="Hapus" data-bom-id="{{ $bom->id }}" data-bom-nomor="{{ $bom->nomor_bom }}">
-                <i class="fas fa-trash"></i>
-              </button>
+              <strong>{{ $bom->nomor_bom }}</strong><br>
+              <small class="text-muted">{{ $bom->revisi->jenis_revisi ?? '-' }}</small>
+            </td>
+            <td>
+              <strong>{{ $bom->proyek->kode_proyek ?? '-' }}</strong><br>
+              <small>{{ Str::limit($bom->proyek->nama_proyek ?? '-', 25) }}</small>
+            </td>
+            <td>{{ date('d/m/Y', strtotime($bom->tanggal)) }}</td>
+            <td><span class="badge badge-light">{{ $bom->kategori }}</span></td>
+            <td>{!! $bom->status_badge !!}</td>
+            <td>
+              <strong>{{ $bom->createdBy->nama ?? '-' }}</strong><br>
+              <small class="text-muted">{{ $bom->createdBy->nip ?? '-' }}</small>
+            </td>
+            <td>
+              {{ $bom->updated_at ? $bom->updated_at->format('d/m/Y H:i') : '-' }}<br>
+              @if($bom->status === 'APPROVED' && $bom->approvedBy2)
+                <small class="text-success">Approved by: {{ $bom->approvedBy2->nama }}</small>
+              @elseif($bom->status === 'REJECTED' && $bom->rejectedBy)
+                <small class="text-danger">Rejected by: {{ $bom->rejectedBy->nama }}</small>
+              @endif
+            </td>
+            <td>
+              <div class="btn-group-vertical" role="group" style="width: 100%;">
+                <!-- View Button -->
+                <button class="btn btn-sm btn-info view-btn" title="Lihat Detail" data-bom-id="{{ $bom->id }}">
+                  <i class="fas fa-eye"></i> Lihat
+                </button>
+                
+                <!-- Edit Button - Only for DRAFT/REJECTED and creator -->
+                @if($bom->canBeEdited() && ($bom->created_by === Auth::id() || Auth::user()->can('bom.edit')))
+                  <a href="{{ route('bom.edit', $bom->id) }}" class="btn btn-sm btn-warning" title="Edit">
+                    <i class="fas fa-edit"></i> Edit
+                  </a>
+                @endif
+
+                <!-- Submit Button - Only for creator and DRAFT/REJECTED status -->
+                @if($bom->canBeSubmitted() && ($bom->created_by === Auth::id() || Auth::user()->can('bom.submit')))
+                  <button class="btn btn-sm btn-primary submit-btn" title="Submit untuk Approval" data-bom-id="{{ $bom->id }}">
+                    <i class="fas fa-paper-plane"></i> Submit
+                  </button>
+                @endif
+
+                <!-- Approval Level 1 Button -->
+                @if($bom->canBeApprovedBy1() && Auth::user()->can('bom.approve.1'))
+                  <button class="btn btn-sm btn-success approve1-btn" title="Approve Level 1" data-bom-id="{{ $bom->id }}">
+                    <i class="fas fa-check"></i> Approve L1
+                  </button>
+                @endif
+
+                <!-- Approval Level 2 Button -->
+                @if($bom->canBeApprovedBy2() && Auth::user()->can('bom.approve.2'))
+                  <button class="btn btn-sm btn-success approve2-btn" title="Final Approve" data-bom-id="{{ $bom->id }}">
+                    <i class="fas fa-check-double"></i> Final Approve
+                  </button>
+                @endif
+
+                <!-- Reject Button - For both approval levels -->
+                @if($bom->isPending() && Auth::user()->can('bom.reject'))
+                  <button class="btn btn-sm btn-danger reject-btn" title="Reject" data-bom-id="{{ $bom->id }}">
+                    <i class="fas fa-times"></i> Reject
+                  </button>
+                @endif
+
+                <!-- Delete Button - Only for DRAFT/REJECTED and creator -->
+                @if(in_array($bom->status, ['DRAFT', 'REJECTED']) && ($bom->created_by === Auth::id() || Auth::user()->can('bom.destroy')))
+                  <button class="btn btn-sm btn-danger delete-btn" title="Hapus" data-bom-id="{{ $bom->id }}" data-bom-nomor="{{ $bom->nomor_bom }}">
+                    <i class="fas fa-trash"></i> Hapus
+                  </button>
+                @endif
+              </div>
             </td>
           </tr>
           @endforeach
@@ -103,67 +281,82 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <div class="form-group row">
-                <label class="col-sm-4 col-form-label font-weight-bold">Nomor BOM</label>
-                <div class="col-sm-8">
-                  <p class="form-control-plaintext" id="view_nomor"></p>
-                </div>
-              </div>
-              <div class="form-group row">
-                <label class="col-sm-4 col-form-label font-weight-bold">Proyek</label>
-                <div class="col-sm-8">
-                  <p class="form-control-plaintext" id="view_proyek"></p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-group row">
-                <label class="col-sm-4 col-form-label font-weight-bold">Tanggal</label>
-                <div class="col-sm-8">
-                  <p class="form-control-plaintext" id="view_tanggal"></p>
-                </div>
-              </div>
-              <div class="form-group row">
-                <label class="col-sm-4 col-form-label font-weight-bold">Revisi</label>
-                <div class="col-sm-8">
-                  <p class="form-control-plaintext" id="view_revisi"></p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-md-12 text-center">
-              <h4 class="bg-light py-2" id="view_kategori"></h4>
-            </div>
-          </div>
-
-          <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-              <thead class="bg-secondary">
-                <tr>
-                  <th width="5%">REV</th>
-                  <th width="5%">NO</th>
-                  <th width="15%">KODE MATERIAL</th>
-                  <th width="25%">DESKRIPSI</th>
-                  <th width="10%">QTY</th>
-                  <th width="10%">SATUAN</th>
-                  <th width="15%">SPESIFIKASI</th>
-                  <th width="15%">KETERANGAN</th>
-                </tr>
-              </thead>
-              <tbody id="view_items">
-                <!-- Items will be loaded here -->
-              </tbody>
-            </table>
-          </div>
+          <!-- Content will be loaded via AJAX -->
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">
           <i class="fas fa-times"></i> Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Approval Modal -->
+<div class="modal fade" id="approvalModal" tabindex="-1" role="dialog" aria-labelledby="approvalModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-success">
+        <h5 class="modal-title" id="approvalModalLabel">Approve BOM</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="approvalForm">
+          <div class="form-group">
+            <label>Nomor BOM</label>
+            <input type="text" class="form-control" id="approval_nomor" readonly>
+          </div>
+          <div class="form-group">
+            <label>Keterangan Approval (Opsional)</label>
+            <textarea class="form-control" id="approval_note" rows="3" placeholder="Masukkan keterangan approval..."></textarea>
+            <small class="form-text text-muted">Keterangan ini akan tercatat dalam history approval</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          <i class="fas fa-times"></i> Batal
+        </button>
+        <button type="button" class="btn btn-success" id="confirmApproval">
+          <i class="fas fa-check"></i> <span id="approvalButtonText">Approve</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-danger">
+        <h5 class="modal-title" id="rejectModalLabel">Reject BOM</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="rejectForm">
+          <div class="form-group">
+            <label>Nomor BOM</label>
+            <input type="text" class="form-control" id="reject_nomor" readonly>
+          </div>
+          <div class="form-group">
+            <label>Alasan Penolakan <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="reject_note" rows="4" placeholder="Masukkan alasan penolakan dengan jelas..." required></textarea>
+            <small class="form-text text-muted">Alasan penolakan akan dikirim ke pembuat BOM untuk perbaikan</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          <i class="fas fa-times"></i> Batal
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmReject">
+          <i class="fas fa-times"></i> Reject BOM
         </button>
       </div>
     </div>
@@ -216,6 +409,14 @@
 <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
 <!-- SweetAlert2 -->
 <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
+<style>
+.btn-group-vertical .btn {
+  margin-bottom: 2px;
+}
+.btn-group-vertical .btn:last-child {
+  margin-bottom: 0;
+}
+</style>
 @endpush
 
 @push('scripts')
@@ -229,6 +430,9 @@
 
 <script>
 $(document).ready(function() {
+  // Load statistics
+  loadStatistics();
+  
   // Initialize DataTable
   var table = $('#bomTable').DataTable({
     responsive: true,
@@ -251,10 +455,10 @@ $(document).ready(function() {
     },
     pageLength: 10,
     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-    order: [[1, 'asc']],
+    order: [[7, 'desc']],
     columnDefs: [
       { 
-        targets: [0, 6], 
+        targets: [0, 8], 
         orderable: false 
       }
     ]
@@ -269,9 +473,45 @@ $(document).ready(function() {
     table.column(2).search(this.value).draw();
   });
 
-  $('#search_revisi').on('keyup', function() {
-    table.column(4).search(this.value).draw();
+  $('#filter_status').on('change', function() {
+    table.column(5).search(this.value).draw();
   });
+
+  $('#search_creator').on('keyup', function() {
+    table.column(6).search(this.value).draw();
+  });
+
+  // Load statistics function
+  function loadStatistics() {
+    $.ajax({
+      url: '{{ route("bom.statistics") }}',
+      type: 'GET',
+      success: function(response) {
+        if (response.success) {
+          const data = response.data;
+          $('#stat-total').text(data.total_bom);
+          $('#stat-draft').text(data.draft);
+          $('#stat-pending1').text(data.pending_approval_1);
+          $('#stat-pending2').text(data.pending_approval_2);
+          $('#stat-approved').text(data.approved);
+          $('#stat-rejected').text(data.rejected);
+          $('#pending-count').text(data.pending_approval_1 + data.pending_approval_2);
+        }
+      },
+      error: function() {
+        console.log('Failed to load statistics');
+      }
+    });
+  }
+
+  // Refresh data
+  $('#refreshData').on('click', function() {
+    location.reload();
+  });
+
+  // Variables for actions
+  var currentBomId = null;
+  var currentAction = null;
 
   // View BOM
   $(document).on('click', '.view-btn', function() {
@@ -309,6 +549,12 @@ $(document).ready(function() {
                     <p class="form-control-plaintext" id="view_proyek"></p>
                   </div>
                 </div>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label font-weight-bold">Status</label>
+                  <div class="col-sm-8">
+                    <p class="form-control-plaintext" id="view_status"></p>
+                  </div>
+                </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group row">
@@ -323,6 +569,31 @@ $(document).ready(function() {
                     <p class="form-control-plaintext" id="view_revisi"></p>
                   </div>
                 </div>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label font-weight-bold">Dibuat Oleh</label>
+                  <div class="col-sm-8">
+                    <p class="form-control-plaintext" id="view_created_by"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="approval_history" class="row mb-3" style="display: none;">
+              <div class="col-12">
+                <h5>History Approval</h5>
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered">
+                    <thead class="thead-light">
+                      <tr>
+                        <th>Level</th>
+                        <th>Approver</th>
+                        <th>Tanggal</th>
+                        <th>Keterangan</th>
+                      </tr>
+                    </thead>
+                    <tbody id="approval_history_body">
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
             <div class="row mb-3">
@@ -334,18 +605,16 @@ $(document).ready(function() {
               <table class="table table-bordered table-striped">
                 <thead class="bg-secondary">
                   <tr>
-                    <th width="5%">REV</th>
                     <th width="5%">NO</th>
                     <th width="15%">KODE MATERIAL</th>
                     <th width="25%">DESKRIPSI</th>
                     <th width="10%">QTY</th>
                     <th width="10%">SATUAN</th>
                     <th width="15%">SPESIFIKASI</th>
-                    <th width="15%">KETERANGAN</th>
+                    <th width="20%">KETERANGAN</th>
                   </tr>
                 </thead>
                 <tbody id="view_items">
-                  <!-- Items will be loaded here -->
                 </tbody>
               </table>
             </div>
@@ -354,10 +623,57 @@ $(document).ready(function() {
 
         // Fill modal with data
         $('#view_nomor').text(response.nomor_bom);
-        $('#view_proyek').text(response.proyek.nama_proyek);
+        $('#view_proyek').text(response.proyek ? response.proyek.nama_proyek : '-');
         $('#view_tanggal').text(response.tanggal_formatted);
-        $('#view_revisi').text(response.revisi.jenis_revisi);
+        $('#view_revisi').text(response.revisi ? response.revisi.jenis_revisi : '-');
         $('#view_kategori').text(response.kategori);
+        $('#view_status').html(response.status_badge || response.status);
+        $('#view_created_by').html(response.created_by ? response.created_by.nama + '<br><small class="text-muted">' + (response.created_by.nip || '') + '</small>' : '-');
+
+        // Show approval history if exists
+        var historyHtml = '';
+        var hasHistory = false;
+
+        if (response.approved_by_1) {
+          historyHtml += `
+            <tr class="table-success">
+              <td>Approval 1</td>
+              <td>${response.approved_by_1.nama}<br><small>${response.approved_by_1.nip || ''}</small></td>
+              <td>${new Date(response.approved_by_1_at).toLocaleDateString('id-ID')} ${new Date(response.approved_by_1_at).toLocaleTimeString('id-ID')}</td>
+              <td>${response.approved_by_1_note || '-'}</td>
+            </tr>
+          `;
+          hasHistory = true;
+        }
+
+        if (response.approved_by_2) {
+          historyHtml += `
+            <tr class="table-success">
+              <td>Final Approval</td>
+              <td>${response.approved_by_2.nama}<br><small>${response.approved_by_2.nip || ''}</small></td>
+              <td>${new Date(response.approved_by_2_at).toLocaleDateString('id-ID')} ${new Date(response.approved_by_2_at).toLocaleTimeString('id-ID')}</td>
+              <td>${response.approved_by_2_note || '-'}</td>
+            </tr>
+          `;
+          hasHistory = true;
+        }
+
+        if (response.rejected_by) {
+          historyHtml += `
+            <tr class="table-danger">
+              <td>Rejected</td>
+              <td>${response.rejected_by.nama}<br><small>${response.rejected_by.nip || ''}</small></td>
+              <td>${new Date(response.rejected_at).toLocaleDateString('id-ID')} ${new Date(response.rejected_at).toLocaleTimeString('id-ID')}</td>
+              <td>${response.rejected_note || '-'}</td>
+            </tr>
+          `;
+          hasHistory = true;
+        }
+
+        if (hasHistory) {
+          $('#approval_history_body').html(historyHtml);
+          $('#approval_history').show();
+        }
 
         // Fill items table
         var itemsHtml = '';
@@ -365,11 +681,10 @@ $(document).ready(function() {
           response.item_bom.forEach(function(item, index) {
             itemsHtml += `
               <tr>
-                <td>${item.rev_no || '-'}</td>
                 <td>${index + 1}</td>
                 <td>${item.kode_material.kode_material}</td>
                 <td>${item.kode_material.nama_material}</td>
-                <td>${item.qty || 0}</td>
+                <td>${parseFloat(item.qty).toLocaleString()}</td>
                 <td>${item.satuan || '-'}</td>
                 <td>${item.kode_material.spesifikasi || '-'}</td>
                 <td>${item.keterangan || '-'}</td>
@@ -377,7 +692,7 @@ $(document).ready(function() {
             `;
           });
         } else {
-          itemsHtml = '<tr><td colspan="8" class="text-center">Tidak ada item</td></tr>';
+          itemsHtml = '<tr><td colspan="7" class="text-center">Tidak ada item</td></tr>';
         }
         $('#view_items').html(itemsHtml);
       },
@@ -392,13 +707,258 @@ $(document).ready(function() {
     });
   });
 
+  // Submit BOM for approval
+  $(document).on('click', '.submit-btn', function() {
+    var bomId = $(this).data('bom-id');
+    var bomNomor = $(this).closest('tr').find('td:eq(1) strong').text();
+    
+    Swal.fire({
+      title: 'Konfirmasi Submit',
+      html: `Submit BOM <strong>${bomNomor}</strong> untuk proses approval?<br><br>BOM akan masuk ke status <span class="badge badge-warning">PENDING APPROVAL 1</span>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, Submit!',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          url: `/bom/${bomId}/submit`,
+          type: 'POST',
+          data: {
+            '_token': '{{ csrf_token() }}'
+          },
+          success: function(response) {
+            if (response.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: response.message,
+                timer: 2000,
+                showConfirmButton: false
+              }).then(() => {
+                location.reload();
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: response.message
+              });
+            }
+          },
+          error: function(xhr) {
+            var message = 'Gagal submit BOM.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              message = xhr.responseJSON.message;
+            }
+            Swal.fire({
+              icon: 'error',
+              title: 'Error!',
+              text: message
+            });
+          }
+        });
+      }
+    });
+  });
+
+  // Approve Level 1
+  $(document).on('click', '.approve1-btn', function() {
+    currentBomId = $(this).data('bom-id');
+    currentAction = 'approve1';
+    var bomNomor = $(this).closest('tr').find('td:eq(1) strong').text();
+    
+    $('#approvalModalLabel').text('Approve BOM Level 1');
+    $('#approvalButtonText').text('Approve Level 1');
+    $('#approval_nomor').val(bomNomor);
+    $('#approval_note').val('');
+    $('#approvalModal').modal('show');
+  });
+
+  // Approve Level 2
+  $(document).on('click', '.approve2-btn', function() {
+    currentBomId = $(this).data('bom-id');
+    currentAction = 'approve2';
+    var bomNomor = $(this).closest('tr').find('td:eq(1) strong').text();
+    
+    $('#approvalModalLabel').text('Final Approve BOM');
+    $('#approvalButtonText').text('Final Approve');
+    $('#approval_nomor').val(bomNomor);
+    $('#approval_note').val('');
+    $('#approvalModal').modal('show');
+  });
+
+  // Confirm Approval
+  $('#confirmApproval').on('click', function() {
+    if (currentBomId && currentAction) {
+      var note = $('#approval_note').val();
+      var url = currentAction === 'approve1' ? `/bom/${currentBomId}/approve-1` : `/bom/${currentBomId}/approve-2`;
+      var level = currentAction === 'approve1' ? '1' : '2';
+      
+      // Show confirmation
+      Swal.fire({
+        title: 'Konfirmasi Approval',
+        text: `Approve BOM level ${level}? Tindakan ini tidak dapat dibatalkan.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: `Ya, Approve Level ${level}!`,
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Disable button to prevent double click
+          $('#confirmApproval').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+          
+          $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+              '_token': '{{ csrf_token() }}',
+              'note': note
+            },
+            success: function(response) {
+              $('#approvalModal').modal('hide');
+              
+              if (response.success) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Berhasil!',
+                  text: response.message,
+                  timer: 3000,
+                  showConfirmButton: false
+                }).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Gagal!',
+                  text: response.message
+                });
+              }
+            },
+            error: function(xhr) {
+              $('#approvalModal').modal('hide');
+              var message = 'Gagal approve BOM.';
+              if (xhr.responseJSON && xhr.responseJSON.message) {
+                message = xhr.responseJSON.message;
+              }
+              Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: message
+              });
+            },
+            complete: function() {
+              // Re-enable button
+              $('#confirmApproval').prop('disabled', false).html('<i class="fas fa-check"></i> <span id="approvalButtonText">Approve</span>');
+            }
+          });
+        }
+      });
+    }
+  });
+
+  // Reject BOM
+  $(document).on('click', '.reject-btn', function() {
+    currentBomId = $(this).data('bom-id');
+    var bomNomor = $(this).closest('tr').find('td:eq(1) strong').text();
+    
+    $('#reject_nomor').val(bomNomor);
+    $('#reject_note').val('');
+    $('#rejectModal').modal('show');
+  });
+
+  // Confirm Reject
+  $('#confirmReject').on('click', function() {
+    var note = $('#reject_note').val().trim();
+    
+    if (!note) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Peringatan!',
+        text: 'Alasan penolakan harus diisi'
+      });
+      $('#reject_note').focus();
+      return;
+    }
+
+    if (currentBomId) {
+      // Show confirmation
+      Swal.fire({
+        title: 'Konfirmasi Penolakan',
+        text: 'Reject BOM ini? BOM akan dikembalikan ke pembuat untuk diperbaiki.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Reject!',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Disable button to prevent double click
+          $('#confirmReject').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+          
+          $.ajax({
+            url: `/bom/${currentBomId}/reject`,
+            type: 'POST',
+            data: {
+              '_token': '{{ csrf_token() }}',
+              'note': note
+            },
+            success: function(response) {
+              $('#rejectModal').modal('hide');
+              
+              if (response.success) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'BOM Berhasil Di-reject!',
+                  text: 'BOM telah dikembalikan ke pembuat untuk diperbaiki.',
+                  timer: 3000,
+                  showConfirmButton: false
+                }).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Gagal!',
+                  text: response.message
+                });
+              }
+            },
+            error: function(xhr) {
+              $('#rejectModal').modal('hide');
+              var message = 'Gagal reject BOM.';
+              if (xhr.responseJSON && xhr.responseJSON.message) {
+                message = xhr.responseJSON.message;
+              }
+              Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: message
+              });
+            },
+            complete: function() {
+              // Re-enable button
+              $('#confirmReject').prop('disabled', false).html('<i class="fas fa-times"></i> Reject BOM');
+            }
+          });
+        }
+      });
+    }
+  });
+
   // Delete BOM
   var deleteId = null;
   $(document).on('click', '.delete-btn', function() {
     deleteId = $(this).data('bom-id');
     var bomNomor = $(this).data('bom-nomor');
     var $row = $(this).closest('tr');
-    var proyekNama = $row.find('td:eq(2)').text();
+    var proyekNama = $row.find('td:eq(2) strong').text();
     
     // Fill confirmation modal
     $('#delete_nomor').text(bomNomor);
@@ -452,10 +1012,42 @@ $(document).ready(function() {
     }
   });
 
-  // Clear deleteId when modal is closed
+  // Clear variables when modals are closed
+  $('#approvalModal, #rejectModal').on('hidden.bs.modal', function() {
+    currentBomId = null;
+    currentAction = null;
+  });
+
   $('#deleteModal').on('hidden.bs.modal', function() {
     deleteId = null;
   });
 });
 </script>
+
+@if(session('success'))
+<script>
+$(document).ready(function() {
+  Swal.fire({
+    icon: 'success',
+    title: 'Berhasil!',
+    text: '{{ session('success') }}',
+    timer: 3000,
+    showConfirmButton: false
+  });
+});
+</script>
+@endif
+
+@if(session('error'))
+<script>
+$(document).ready(function() {
+  Swal.fire({
+    icon: 'error',
+    title: 'Error!',
+    text: '{{ session('error') }}',
+    showConfirmButton: true
+  });
+});
+</script>
+@endif
 @endpush

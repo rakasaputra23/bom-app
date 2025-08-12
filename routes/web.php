@@ -87,7 +87,7 @@ Route::middleware(['auth', 'permission'])->group(function () {
     });
 
     // ==========================
-    // ⚙️ BOM
+    // ⚙️ BOM ROUTES - IMPROVED
     // ==========================
     Route::prefix('bom')->group(function () {
         Route::get('/', [BillOfMaterialController::class, 'index'])->name('bom.index');
@@ -97,6 +97,20 @@ Route::middleware(['auth', 'permission'])->group(function () {
         Route::get('/{id}/edit', [BillOfMaterialController::class, 'edit'])->name('bom.edit');
         Route::put('/{id}', [BillOfMaterialController::class, 'update'])->name('bom.update');
         Route::delete('/{id}', [BillOfMaterialController::class, 'destroy'])->name('bom.destroy');
+        
+
+        // Approval workflow routes
+        Route::post('/{id}/submit', [BillOfMaterialController::class, 'submit'])->name('bom.submit');
+        Route::post('/{id}/approve-1', [BillOfMaterialController::class, 'approve1'])->name('bom.approve.1');
+        Route::post('/{id}/approve-2', [BillOfMaterialController::class, 'approve2'])->name('bom.approve.2');
+        Route::post('/{id}/reject', [BillOfMaterialController::class, 'reject'])->name('bom.reject');
+        
+        // Additional routes
+        Route::get('/pending/approvals', [BillOfMaterialController::class, 'pendingApprovals'])->name('bom.pending.approvals');
+        Route::get('/ajax/materials', [BillOfMaterialController::class, 'getMaterials'])->name('bom.materials');
+        Route::get('/report/generate', [BillOfMaterialController::class, 'generateReport'])->name('bom.report.generate');
+        Route::get('/statistics/data', [BillOfMaterialController::class, 'getStatistics'])->name('bom.statistics');
+        
     });
 
     // ==========================

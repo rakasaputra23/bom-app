@@ -16,14 +16,105 @@ class BillOfMaterial extends Model
         'kategori',
         'proyek_id',
         'revisi_id',
-        'tanggal'
+        'tanggal',
+        'created_by',
+        'status',
+        'approved_by_1',
+        'approved_by_1_at',
+        'approved_by_1_note',
+        'approved_by_2',
+        'approved_by_2_at',
+        'approved_by_2_note',
+        'rejected_by',
+        'rejected_at',
+        'rejected_note'
     ];
 
     protected $casts = [
-        'tanggal' => 'date'
+        'tanggal' => 'date',
+        'approved_by_1_at' => 'datetime',
+        'approved_by_2_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        // PERBAIKAN: Pastikan semua field user ID di-cast sebagai integer
+        'created_by' => 'integer',
+        'approved_by_1' => 'integer',
+        'approved_by_2' => 'integer',
+        'rejected_by' => 'integer',
     ];
 
-    public $timestamps = false;
+    // Status constants
+    const STATUS_DRAFT = 'DRAFT';
+    const STATUS_PENDING_APPROVAL_1 = 'PENDING_APPROVAL_1';
+    const STATUS_PENDING_APPROVAL_2 = 'PENDING_APPROVAL_2';
+    const STATUS_APPROVED = 'APPROVED';
+    const STATUS_REJECTED = 'REJECTED';
+
+    // Available categories
+    public static function getAvailableCategories()
+    {
+        return [
+            'JIG' => 'JIG',
+            'TOOL DAN MAL' => 'TOOL DAN MAL',
+            'TOOLS' => 'TOOLS',
+            'CONSUMABLE TOOLS' => 'CONSUMABLE TOOLS',
+            'SPECIAL PROCESS' => 'SPECIAL PROCESS'
+        ];
+    }
+
+    /**
+     * PERBAIKAN: Mutator untuk memastikan created_by selalu integer
+     */
+    public function setCreatedByAttribute($value)
+    {
+        // Pastikan value adalah integer, bukan string/NIP
+        if (is_numeric($value)) {
+            $this->attributes['created_by'] = (int) $value;
+        } else {
+            throw new \InvalidArgumentException('created_by harus berupa ID user (integer), bukan NIP');
+        }
+    }
+
+    /**
+     * PERBAIKAN: Mutator untuk memastikan approved_by_1 selalu integer
+     */
+    public function setApprovedBy1Attribute($value)
+    {
+        if ($value === null) {
+            $this->attributes['approved_by_1'] = null;
+        } elseif (is_numeric($value)) {
+            $this->attributes['approved_by_1'] = (int) $value;
+        } else {
+            throw new \InvalidArgumentException('approved_by_1 harus berupa ID user (integer), bukan NIP');
+        }
+    }
+
+    /**
+     * PERBAIKAN: Mutator untuk memastikan approved_by_2 selalu integer
+     */
+    public function setApprovedBy2Attribute($value)
+    {
+        if ($value === null) {
+            $this->attributes['approved_by_2'] = null;
+        } elseif (is_numeric($value)) {
+            $this->attributes['approved_by_2'] = (int) $value;
+        } else {
+            throw new \InvalidArgumentException('approved_by_2 harus berupa ID user (integer), bukan NIP');
+        }
+    }
+
+    /**
+     * PERBAIKAN: Mutator untuk memastikan rejected_by selalu integer
+     */
+    public function setRejectedByAttribute($value)
+    {
+        if ($value === null) {
+            $this->attributes['rejected_by'] = null;
+        } elseif (is_numeric($value)) {
+            $this->attributes['rejected_by'] = (int) $value;
+        } else {
+            throw new \InvalidArgumentException('rejected_by harus berupa ID user (integer), bukan NIP');
+        }
+    }
 
     /**
      * Relasi dengan proyek
@@ -50,26 +141,347 @@ class BillOfMaterial extends Model
     }
 
     /**
-     * Accessor untuk format nomor BOM
+     * Relasi dengan user yang membuat
      */
-    public function getNomorBomAttribute($value)
+    public function createdBy()
     {
-        return $value;
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /**
-     * Scope untuk filter berdasarkan kategori
+     * Relasi dengan approver 1
      */
-    public function scopeByKategori($query, $kategori)
+    public function approvedBy1()
     {
-        return $query->where('kategori', $kategori);
+        return $this->belongsTo(User::class, 'approved_by_1');
     }
 
     /**
-     * Scope untuk filter berdasarkan proyek
+     * Relasi dengan approver 2
      */
-    public function scopeByProyek($query, $proyekId)
+    public function approvedBy2()
     {
-        return $query->where('proyek_id', $proyekId);
+        return $this->belongsTo(User::class, 'approved_by_2');
+    }
+
+    /**
+     * Relasi dengan user yang reject
+     */
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    /**
+     * Scope untuk filter berdasarkan status
+     */
+    public function scopeByStatus($query, $status)
+    {
+        return $query->where('status', $status);
+    }
+
+    /**
+     * Scope untuk BOM yang perlu approval level 1
+     */
+    public function scopePendingApproval1($query)
+    {
+        return $query->where('status', self::STATUS_PENDING_APPROVAL_1);
+    }
+
+    /**
+     * Scope untuk BOM yang perlu approval level 2
+     */
+    public function scopePendingApproval2($query)
+    {
+        return $query->where('status', self::STATUS_PENDING_APPROVAL_2);
+    }
+
+    /**
+     * Scope untuk BOM yang sudah approved
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('status', self::STATUS_APPROVED);
+    }
+
+    /**
+     * Check if BOM can be edited
+     */
+    public function canBeEdited()
+    {
+        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_REJECTED]);
+    }
+
+    /**
+     * Check if BOM can be submitted for approval
+     */
+    public function canBeSubmitted()
+    {
+        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_REJECTED]);
+    }
+
+    /**
+     * Check if BOM can be approved by level 1
+     */
+    public function canBeApprovedBy1()
+    {
+        return $this->status === self::STATUS_PENDING_APPROVAL_1;
+    }
+
+    /**
+     * Check if BOM can be approved by level 2
+     */
+    public function canBeApprovedBy2()
+    {
+        return $this->status === self::STATUS_PENDING_APPROVAL_2;
+    }
+
+    /**
+     * Get status badge HTML
+     */
+    public function getStatusBadgeAttribute()
+    {
+        $badges = [
+            self::STATUS_DRAFT => '<span class="badge badge-secondary">Draft</span>',
+            self::STATUS_PENDING_APPROVAL_1 => '<span class="badge badge-warning">Menunggu Approval 1</span>',
+            self::STATUS_PENDING_APPROVAL_2 => '<span class="badge badge-info">Menunggu Approval 2</span>',
+            self::STATUS_APPROVED => '<span class="badge badge-success">Approved</span>',
+            self::STATUS_REJECTED => '<span class="badge badge-danger">Rejected</span>',
+        ];
+
+        return $badges[$this->status] ?? '<span class="badge badge-secondary">Unknown</span>';
+    }
+
+    /**
+     * Get status text
+     */
+    public function getStatusTextAttribute()
+    {
+        $texts = [
+            self::STATUS_DRAFT => 'Draft',
+            self::STATUS_PENDING_APPROVAL_1 => 'Menunggu Approval 1',
+            self::STATUS_PENDING_APPROVAL_2 => 'Menunggu Approval 2',
+            self::STATUS_APPROVED => 'Approved',
+            self::STATUS_REJECTED => 'Rejected',
+        ];
+
+        return $texts[$this->status] ?? 'Unknown';
+    }
+
+    /**
+     * Submit BOM for approval
+     */
+    public function submitForApproval()
+    {
+        if ($this->canBeSubmitted()) {
+            $this->status = self::STATUS_PENDING_APPROVAL_1;
+            // Reset approval data when resubmitting
+            $this->approved_by_1 = null;
+            $this->approved_by_1_at = null;
+            $this->approved_by_1_note = null;
+            $this->approved_by_2 = null;
+            $this->approved_by_2_at = null;
+            $this->approved_by_2_note = null;
+            $this->rejected_by = null;
+            $this->rejected_at = null;
+            $this->rejected_note = null;
+            $this->save();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Approve by level 1
+     * PERBAIKAN: Validasi input dan logging untuk debugging
+     */
+    public function approveBy1($userId, $note = null)
+    {
+        // PERBAIKAN: Validasi userId adalah integer
+        if (!is_numeric($userId)) {
+            throw new \InvalidArgumentException("User ID untuk approval harus berupa integer, diterima: " . gettype($userId) . " dengan nilai: " . $userId);
+        }
+
+        $userId = (int) $userId;
+
+        // PERBAIKAN: Log untuk debugging
+        \Log::info("Attempting to approve BOM ID {$this->id} by user ID {$userId}");
+
+        if ($this->canBeApprovedBy1()) {
+            $this->status = self::STATUS_PENDING_APPROVAL_2;
+            $this->approved_by_1 = $userId;
+            $this->approved_by_1_at = now();
+            $this->approved_by_1_note = $note;
+            
+            // PERBAIKAN: Validasi sebelum save
+            $this->validate();
+            $this->save();
+            
+            \Log::info("BOM ID {$this->id} successfully approved by user ID {$userId}");
+            return true;
+        }
+        
+        \Log::warning("BOM ID {$this->id} cannot be approved in current status: {$this->status}");
+        return false;
+    }
+
+    /**
+     * Approve by level 2 (Final Approval)
+     * PERBAIKAN: Validasi input dan logging untuk debugging
+     */
+    public function approveBy2($userId, $note = null)
+    {
+        // PERBAIKAN: Validasi userId adalah integer
+        if (!is_numeric($userId)) {
+            throw new \InvalidArgumentException("User ID untuk approval harus berupa integer, diterima: " . gettype($userId) . " dengan nilai: " . $userId);
+        }
+
+        $userId = (int) $userId;
+
+        // PERBAIKAN: Log untuk debugging
+        \Log::info("Attempting to final approve BOM ID {$this->id} by user ID {$userId}");
+
+        if ($this->canBeApprovedBy2()) {
+            $this->status = self::STATUS_APPROVED;
+            $this->approved_by_2 = $userId;
+            $this->approved_by_2_at = now();
+            $this->approved_by_2_note = $note;
+            
+            // PERBAIKAN: Validasi sebelum save
+            $this->validate();
+            $this->save();
+            
+            \Log::info("BOM ID {$this->id} successfully final approved by user ID {$userId}");
+            return true;
+        }
+        
+        \Log::warning("BOM ID {$this->id} cannot be final approved in current status: {$this->status}");
+        return false;
+    }
+
+    /**
+     * Reject BOM
+     * PERBAIKAN: Validasi input dan logging untuk debugging
+     */
+    public function reject($userId, $note = null)
+    {
+        // PERBAIKAN: Validasi userId adalah integer
+        if (!is_numeric($userId)) {
+            throw new \InvalidArgumentException("User ID untuk rejection harus berupa integer, diterima: " . gettype($userId) . " dengan nilai: " . $userId);
+        }
+
+        $userId = (int) $userId;
+
+        // PERBAIKAN: Log untuk debugging
+        \Log::info("Attempting to reject BOM ID {$this->id} by user ID {$userId}");
+
+        if (in_array($this->status, [self::STATUS_PENDING_APPROVAL_1, self::STATUS_PENDING_APPROVAL_2])) {
+            $this->status = self::STATUS_REJECTED;
+            $this->rejected_by = $userId;
+            $this->rejected_at = now();
+            $this->rejected_note = $note;
+            
+            // PERBAIKAN: Validasi sebelum save
+            $this->validate();
+            $this->save();
+            
+            \Log::info("BOM ID {$this->id} successfully rejected by user ID {$userId}");
+            return true;
+        }
+        
+        \Log::warning("BOM ID {$this->id} cannot be rejected in current status: {$this->status}");
+        return false;
+    }
+
+    /**
+     * PERBAIKAN: Validasi data sebelum save
+     */
+    public function validate()
+    {
+        // Validasi bahwa semua user ID adalah integer atau null
+        $userFields = ['created_by', 'approved_by_1', 'approved_by_2', 'rejected_by'];
+        
+        foreach ($userFields as $field) {
+            $value = $this->attributes[$field] ?? null;
+            if ($value !== null && !is_int($value) && !ctype_digit($value)) {
+                throw new \InvalidArgumentException("Field {$field} harus berupa integer (user ID), bukan: " . gettype($value));
+            }
+        }
+    }
+
+    /**
+     * Get approval history
+     */
+    public function getApprovalHistoryAttribute()
+    {
+        $history = [];
+        
+        if ($this->approved_by_1) {
+            $history[] = [
+                'level' => 'Approval 1',
+                'approver' => $this->approvedBy1,
+                'date' => $this->approved_by_1_at,
+                'note' => $this->approved_by_1_note,
+                'type' => 'approval'
+            ];
+        }
+        
+        if ($this->approved_by_2) {
+            $history[] = [
+                'level' => 'Final Approval',
+                'approver' => $this->approvedBy2,
+                'date' => $this->approved_by_2_at,
+                'note' => $this->approved_by_2_note,
+                'type' => 'approval'
+            ];
+        }
+        
+        if ($this->rejected_by) {
+            $history[] = [
+                'level' => 'Rejected',
+                'approver' => $this->rejectedBy,
+                'date' => $this->rejected_at,
+                'note' => $this->rejected_note,
+                'type' => 'rejection'
+            ];
+        }
+        
+        return collect($history)->sortBy('date');
+    }
+
+    /**
+     * Check if user can submit this BOM
+     */
+    public function canBeSubmittedBy($userId)
+    {
+        return $this->created_by === (int) $userId && $this->canBeSubmitted();
+    }
+
+    /**
+     * Check if BOM is in pending state
+     */
+    public function isPending()
+    {
+        return in_array($this->status, [self::STATUS_PENDING_APPROVAL_1, self::STATUS_PENDING_APPROVAL_2]);
+    }
+
+    /**
+     * Get next approval level required
+     */
+    public function getNextApprovalLevel()
+    {
+        switch ($this->status) {
+            case self::STATUS_DRAFT:
+            case self::STATUS_REJECTED:
+                return 'submit';
+            case self::STATUS_PENDING_APPROVAL_1:
+                return 'approval_1';
+            case self::STATUS_PENDING_APPROVAL_2:
+                return 'approval_2';
+            case self::STATUS_APPROVED:
+                return 'completed';
+            default:
+                return 'unknown';
+        }
     }
 }
