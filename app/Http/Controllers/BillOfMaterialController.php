@@ -125,7 +125,7 @@ class BillOfMaterialController extends Controller
         // Validasi input
         $validator = Validator::make($request->all(), [
             'nomor_bom' => 'required|string|max:50|unique:bill_of_material,nomor_bom',
-            'kategori' => 'required|in:JIG,TOOL DAN MAL,TOOLS,CONSUMABLE TOOLS,SPECIAL PROCESS',
+            'kategori' => 'required|in:JIG,TOOL,MAL,TOOLS,CONSUMABLE TOOLS,SPECIAL PROCESS',
             'proyek_id' => 'required|exists:proyek,id',
             'revisi_id' => 'required|exists:revisi,id',
             'tanggal' => 'required|date',
@@ -179,11 +179,11 @@ class BillOfMaterialController extends Controller
             // Simpan Bill of Material dengan status yang sesuai dan created_by
             $billOfMaterial = BillOfMaterial::create([
                 'nomor_bom' => $request->nomor_bom,
+                'created_by' => $currentUserId, // PERBAIKAN: Menggunakan fungsi helper
                 'kategori' => $request->kategori,
                 'proyek_id' => $request->proyek_id,
                 'revisi_id' => $request->revisi_id,
                 'tanggal' => $request->tanggal,
-                'created_by' => $currentUserId, // PERBAIKAN: Menggunakan fungsi helper
                 'status' => $status
             ]);
 
@@ -218,24 +218,51 @@ class BillOfMaterialController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show($id)
-    {
-        try {
-            $bom = BillOfMaterial::with(['proyek', 'revisi', 'itemBom.kodeMaterial.uom', 'createdBy', 'approvedBy1', 'approvedBy2', 'rejectedBy'])->findOrFail($id);
-            
-            // Format tanggal
-            $bom->tanggal_formatted = date('d/m/Y', strtotime($bom->tanggal));
-            
-            return response()->json($bom);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Data tidak ditemukan'
-            ], 404);
+ * Display the specified resource.
+ */
+public function show($id)
+{
+    try {
+        $bom = BillOfMaterial::with([
+            'proyek', 
+            'revisi', 
+            'itemBom.kodeMaterial.uom', 
+            'createdBy', 
+            'approvedBy1', 
+            'approvedBy2', 
+            'rejectedBy'
+        ])->findOrFail($id);
+        
+        // Format tanggal
+        $bom->tanggal_formatted = date('d/m/Y', strtotime($bom->tanggal));
+        
+        // Pastikan semua relasi approval tersedia dalam response
+        $response = $bom->toArray();
+        
+        // Tambahkan informasi approval yang mungkin diperlukan
+        if ($bom->approvedBy1) {
+            $response['approvedBy1'] = $bom->approvedBy1->toArray();
         }
+        
+        if ($bom->approvedBy2) {
+            $response['approvedBy2'] = $bom->approvedBy2->toArray();
+        }
+        
+        if ($bom->rejectedBy) {
+            $response['rejectedBy'] = $bom->rejectedBy->toArray();
+        }
+        
+        // Tambahkan status badge
+        $response['status_badge'] = $bom->status_badge;
+        
+        return response()->json($response);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => true,
+            'message' => 'Data tidak ditemukan'
+        ], 404);
     }
+}
 
     /**
      * Show the form for editing the specified resource.
@@ -316,7 +343,7 @@ class BillOfMaterialController extends Controller
         // Validasi input
         $validator = Validator::make($request->all(), [
             'nomor_bom' => 'required|string|max:50|unique:bill_of_material,nomor_bom,' . $id,
-            'kategori' => 'required|in:JIG,TOOL DAN MAL,TOOLS,CONSUMABLE TOOLS,SPECIAL PROCESS',
+            'kategori' => 'required|in:JIG,TOOL,MAL,TOOLS,CONSUMABLE TOOLS,SPECIAL PROCESS',
             'proyek_id' => 'required|exists:proyek,id',
             'revisi_id' => 'required|exists:revisi,id',
             'tanggal' => 'required|date',
@@ -386,55 +413,74 @@ class BillOfMaterialController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        try {
-            DB::beginTransaction();
-            
-            $bom = BillOfMaterial::findOrFail($id);
-            
-            // Check if BOM can be deleted (only DRAFT or REJECTED)
-            if (!$bom->canBeEdited()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'BOM dengan status ' . $bom->status_text . ' tidak dapat dihapus'
-                ], 400);
-            }
-            
-            // PERBAIKAN: Menggunakan fungsi helper untuk mendapatkan user ID
-            $currentUserId = $this->getCurrentUserId();
-            
-            // Check permission
-            if ($bom->created_by !== $currentUserId && !Auth::user()->can('bom.destroy')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Anda tidak memiliki akses untuk menghapus BOM ini'
-                ], 403);
-            }
-            
-            // Hapus semua item BOM yang terkait
-            ItemBom::where('bill_of_material_id', $bom->id)->delete();
-            
-            // Hapus BOM
-            $bom->delete();
-            
-            DB::commit();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'BOM berhasil dihapus'
-            ]);
-            
-        } catch (\Exception $e) {
-            DB::rollback();
+ * Remove the specified resource from storage.
+ */
+public function destroy($id)
+{
+    try {
+        DB::beginTransaction();
+        
+        $bom = BillOfMaterial::findOrFail($id);
+        
+        // PERUBAHAN: Hanya cek status PENDING_APPROVAL untuk mencegah penghapusan
+        // BOM yang sedang dalam proses approval tidak boleh dihapus
+        if (in_array($bom->status, [
+            BillOfMaterial::STATUS_PENDING_APPROVAL_1, 
+            BillOfMaterial::STATUS_PENDING_APPROVAL_2
+        ])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus BOM: ' . $e->getMessage()
-            ], 500);
+                'message' => 'BOM yang sedang dalam proses approval tidak dapat dihapus'
+            ], 400);
         }
+        
+        // PERBAIKAN: Menggunakan fungsi helper untuk mendapatkan user ID
+        $currentUserId = $this->getCurrentUserId();
+        
+        // Check permission - hanya creator atau user dengan permission khusus yang bisa hapus
+        if ($bom->created_by !== $currentUserId && !Auth::user()->can('bom.destroy')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk menghapus BOM ini'
+            ], 403);
+        }
+        
+        // Konfirmasi khusus untuk BOM yang sudah APPROVED
+        if ($bom->status === BillOfMaterial::STATUS_APPROVED) {
+            // Bisa ditambahkan log audit untuk tracking penghapusan BOM approved
+            \Log::info('Approved BOM deleted', [
+                'bom_id' => $bom->id,
+                'nomor_bom' => $bom->nomor_bom,
+                'deleted_by' => $currentUserId,
+                'deleted_at' => now()
+            ]);
+        }
+        
+        // Hapus semua item BOM yang terkait
+        ItemBom::where('bill_of_material_id', $bom->id)->delete();
+        
+        // Hapus BOM
+        $bom->delete();
+        
+        DB::commit();
+        
+        $message = $bom->status === BillOfMaterial::STATUS_APPROVED 
+            ? 'BOM yang sudah di-approve berhasil dihapus' 
+            : 'BOM berhasil dihapus';
+            
+        return response()->json([
+            'success' => true,
+            'message' => $message
+        ]);
+        
+    } catch (\Exception $e) {
+        DB::rollback();
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menghapus BOM: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Get pending approvals for current user
@@ -713,6 +759,8 @@ class BillOfMaterialController extends Controller
             ], 500);
         }
     }
+
+    
 
     /**
      * Get BOM statistics

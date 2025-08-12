@@ -95,12 +95,6 @@
         <i class="fas fa-plus"></i> Buat BOM Baru
       </a>
     @endif
-    @if(Auth::user()->can('bom.approve.1') || Auth::user()->can('bom.approve.2'))
-      <a href="{{ route('bom.pending.approvals') }}" class="btn btn-warning">
-        <i class="fas fa-clock"></i> BOM Menunggu Approval
-        <span class="badge badge-light" id="pending-count">0</span>
-      </a>
-    @endif
   </div>
   <div class="col-md-6 text-right">
     <button type="button" class="btn btn-info" id="refreshData">
@@ -254,8 +248,8 @@
                 @endif
 
                 <!-- Delete Button - Only for DRAFT/REJECTED and creator -->
-                @if(in_array($bom->status, ['DRAFT', 'REJECTED']) && ($bom->created_by === Auth::id() || Auth::user()->can('bom.destroy')))
-                  <button class="btn btn-sm btn-danger delete-btn" title="Hapus" data-bom-id="{{ $bom->id }}" data-bom-nomor="{{ $bom->nomor_bom }}">
+                @if(in_array($bom->status, ['DRAFT', 'REJECTED','APPROVED']) && ($bom->created_by === Auth::id() || Auth::user()->can('bom.destroy')))
+                  <button class="btn btn-sm btn-danger delete-btn" title="Hapus" data-bom-id="{{ $bom->id }}" data-bom-nomor="{{ $bom->nomor_bom }}" data-bom-status="{{ $bom->status }}">
                     <i class="fas fa-trash"></i> Hapus
                   </button>
                 @endif
@@ -513,20 +507,8 @@ $(document).ready(function() {
   var currentBomId = null;
   var currentAction = null;
 
-  // View BOM
-  $(document).on('click', '.view-btn', function() {
-    var bomId = $(this).data('bom-id');
-    
-    // Show loading
-    $('#viewModal .modal-body').html(`
-      <div class="text-center py-4">
-        <i class="fas fa-spinner fa-spin fa-3x"></i>
-        <p>Memuat data...</p>
-      </div>
-    `);
-    $('#viewModal').modal('show');
-
-    // Get data via AJAX
+  // FIXED: View BOM function - moved outside and properly separated
+  function loadBomDetail(bomId) {
     $.ajax({
       url: `/bom/${bomId}`,
       type: 'GET',
@@ -634,11 +616,11 @@ $(document).ready(function() {
         var historyHtml = '';
         var hasHistory = false;
 
-        if (response.approved_by_1) {
+        if (response.approvedBy1) {
           historyHtml += `
             <tr class="table-success">
               <td>Approval 1</td>
-              <td>${response.approved_by_1.nama}<br><small>${response.approved_by_1.nip || ''}</small></td>
+              <td>${response.approvedBy1.nama}<br><small>${response.approvedBy1.nip || ''}</small></td>
               <td>${new Date(response.approved_by_1_at).toLocaleDateString('id-ID')} ${new Date(response.approved_by_1_at).toLocaleTimeString('id-ID')}</td>
               <td>${response.approved_by_1_note || '-'}</td>
             </tr>
@@ -646,11 +628,11 @@ $(document).ready(function() {
           hasHistory = true;
         }
 
-        if (response.approved_by_2) {
+        if (response.approvedBy2) {
           historyHtml += `
             <tr class="table-success">
               <td>Final Approval</td>
-              <td>${response.approved_by_2.nama}<br><small>${response.approved_by_2.nip || ''}</small></td>
+              <td>${response.approvedBy2.nama}<br><small>${response.approvedBy2.nip || ''}</small></td>
               <td>${new Date(response.approved_by_2_at).toLocaleDateString('id-ID')} ${new Date(response.approved_by_2_at).toLocaleTimeString('id-ID')}</td>
               <td>${response.approved_by_2_note || '-'}</td>
             </tr>
@@ -658,11 +640,11 @@ $(document).ready(function() {
           hasHistory = true;
         }
 
-        if (response.rejected_by) {
+        if (response.rejectedBy) {
           historyHtml += `
             <tr class="table-danger">
               <td>Rejected</td>
-              <td>${response.rejected_by.nama}<br><small>${response.rejected_by.nip || ''}</small></td>
+              <td>${response.rejectedBy.nama}<br><small>${response.rejectedBy.nip || ''}</small></td>
               <td>${new Date(response.rejected_at).toLocaleDateString('id-ID')} ${new Date(response.rejected_at).toLocaleTimeString('id-ID')}</td>
               <td>${response.rejected_note || '-'}</td>
             </tr>
@@ -675,24 +657,48 @@ $(document).ready(function() {
           $('#approval_history').show();
         }
 
-        // Fill items table
+        // Fill items table - FIXED VERSION
         var itemsHtml = '';
         if (response.item_bom && response.item_bom.length > 0) {
-          response.item_bom.forEach(function(item, index) {
-            itemsHtml += `
-              <tr>
-                <td>${index + 1}</td>
-                <td>${item.kode_material.kode_material}</td>
-                <td>${item.kode_material.nama_material}</td>
-                <td>${parseFloat(item.qty).toLocaleString()}</td>
-                <td>${item.satuan || '-'}</td>
-                <td>${item.kode_material.spesifikasi || '-'}</td>
-                <td>${item.keterangan || '-'}</td>
-              </tr>
-            `;
-          });
+            response.item_bom.forEach(function(item, index) {
+                // Perbaikan logika qty dan satuan sesuai dengan create blade
+                let qty = 0;
+                let satuan = '-';
+                
+                // Jika item memiliki qty tersimpan, gunakan itu
+                if (item.qty !== null && item.qty !== undefined && item.qty !== 0) {
+                    qty = parseFloat(item.qty);
+                } 
+                // Jika tidak ada qty tersimpan tapi ada UOM, gunakan qty dari UOM
+                else if (item.kode_material && item.kode_material.uom && item.kode_material.uom.qty) {
+                    qty = parseFloat(item.kode_material.uom.qty);
+                }
+                // Default fallback
+                else {
+                    qty = 1;
+                }
+                
+                // Untuk satuan, prioritas: satuan tersimpan di item > satuan dari UOM > default
+                if (item.satuan && item.satuan.trim() !== '') {
+                    satuan = item.satuan;
+                } else if (item.kode_material && item.kode_material.uom && item.kode_material.uom.satuan) {
+                    satuan = item.kode_material.uom.satuan;
+                }
+                
+                itemsHtml += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.kode_material ? item.kode_material.kode_material : '-'}</td>
+                        <td>${item.kode_material ? item.kode_material.nama_material : '-'}</td>
+                        <td>${qty.toLocaleString('id-ID')}</td>
+                        <td>${satuan}</td>
+                        <td>${item.kode_material && item.kode_material.spesifikasi ? item.kode_material.spesifikasi : '-'}</td>
+                        <td>${item.keterangan || '-'}</td>
+                    </tr>
+                `;
+            });
         } else {
-          itemsHtml = '<tr><td colspan="7" class="text-center">Tidak ada item</td></tr>';
+            itemsHtml = '<tr><td colspan="7" class="text-center">Tidak ada item</td></tr>';
         }
         $('#view_items').html(itemsHtml);
       },
@@ -705,6 +711,23 @@ $(document).ready(function() {
         `);
       }
     });
+  }
+
+  // View BOM - now properly separated
+  $(document).on('click', '.view-btn', function() {
+    var bomId = $(this).data('bom-id');
+    
+    // Show loading
+    $('#viewModal .modal-body').html(`
+      <div class="text-center py-4">
+        <i class="fas fa-spinner fa-spin fa-3x"></i>
+        <p>Memuat data...</p>
+      </div>
+    `);
+    $('#viewModal').modal('show');
+
+    // Load detail
+    loadBomDetail(bomId);
   });
 
   // Submit BOM for approval

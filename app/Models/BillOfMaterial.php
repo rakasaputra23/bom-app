@@ -54,7 +54,8 @@ class BillOfMaterial extends Model
     {
         return [
             'JIG' => 'JIG',
-            'TOOL DAN MAL' => 'TOOL DAN MAL',
+            'MAL' => 'MAL',
+            'TOOL' => 'TOOL',
             'TOOLS' => 'TOOLS',
             'CONSUMABLE TOOLS' => 'CONSUMABLE TOOLS',
             'SPECIAL PROCESS' => 'SPECIAL PROCESS'
@@ -237,36 +238,37 @@ class BillOfMaterial extends Model
     }
 
     /**
-     * Get status badge HTML
-     */
-    public function getStatusBadgeAttribute()
-    {
-        $badges = [
-            self::STATUS_DRAFT => '<span class="badge badge-secondary">Draft</span>',
-            self::STATUS_PENDING_APPROVAL_1 => '<span class="badge badge-warning">Menunggu Approval 1</span>',
-            self::STATUS_PENDING_APPROVAL_2 => '<span class="badge badge-info">Menunggu Approval 2</span>',
-            self::STATUS_APPROVED => '<span class="badge badge-success">Approved</span>',
-            self::STATUS_REJECTED => '<span class="badge badge-danger">Rejected</span>',
-        ];
+ * Status badge accessor
+ */
+public function getStatusBadgeAttribute()
+{
+    $badges = [
+        'DRAFT' => '<span class="badge badge-secondary">Draft</span>',
+        'PENDING_APPROVAL_1' => '<span class="badge badge-warning">Pending Approval 1</span>',
+        'PENDING_APPROVAL_2' => '<span class="badge badge-info">Pending Approval 2</span>',
+        'APPROVED' => '<span class="badge badge-success">Approved</span>',
+        'REJECTED' => '<span class="badge badge-danger">Rejected</span>',
+    ];
+    
+    return $badges[$this->status] ?? '<span class="badge badge-light">' . $this->status . '</span>';
+}
 
-        return $badges[$this->status] ?? '<span class="badge badge-secondary">Unknown</span>';
-    }
+/**
+ * Status text accessor
+ */
+public function getStatusTextAttribute()
+{
+    $texts = [
+        'DRAFT' => 'Draft',
+        'PENDING_APPROVAL_1' => 'Menunggu Approval 1',
+        'PENDING_APPROVAL_2' => 'Menunggu Approval 2', 
+        'APPROVED' => 'Approved',
+        'REJECTED' => 'Rejected',
+    ];
+    
+    return $texts[$this->status] ?? $this->status;
+}
 
-    /**
-     * Get status text
-     */
-    public function getStatusTextAttribute()
-    {
-        $texts = [
-            self::STATUS_DRAFT => 'Draft',
-            self::STATUS_PENDING_APPROVAL_1 => 'Menunggu Approval 1',
-            self::STATUS_PENDING_APPROVAL_2 => 'Menunggu Approval 2',
-            self::STATUS_APPROVED => 'Approved',
-            self::STATUS_REJECTED => 'Rejected',
-        ];
-
-        return $texts[$this->status] ?? 'Unknown';
-    }
 
     /**
      * Submit BOM for approval
