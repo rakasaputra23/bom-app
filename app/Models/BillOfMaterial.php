@@ -267,7 +267,7 @@ class BillOfMaterial extends Model
      */
     public function canBeSubmitted()
     {
-        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_REJECTED]);
+        return in_array($this->status, [self::STATUS_DRAFT]);
     }
 
     /**
@@ -525,7 +525,6 @@ class BillOfMaterial extends Model
     {
         switch ($this->status) {
             case self::STATUS_DRAFT:
-            case self::STATUS_REJECTED:
                 return 'submit';
             case self::STATUS_PENDING_APPROVAL_1:
                 return 'approval_1';
