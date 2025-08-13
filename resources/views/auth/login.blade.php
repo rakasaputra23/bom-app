@@ -22,6 +22,10 @@
 
   <!-- Custom CSS -->
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body, html {
       height: 100vh;
       width: 100vw;
@@ -29,11 +33,11 @@
       padding: 0;
       font-family: 'Source Sans Pro', sans-serif;
       background-color: #f4f6f9;
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
     .login-page {
-      height: 100vh;
+      min-height: 100vh;
       width: 100vw;
       display: flex;
       flex-direction: row;
@@ -41,12 +45,12 @@
       background-color: #f4f6f9;
     }
 
-    /* Left Side - Illustration */
+    /* Left Side - Illustration - Responsif */
     .login-left {
-      flex: 2;
+      flex: 2.2;
       min-width: 65%;
       width: 65%;
-      height: 100vh;
+      min-height: 100vh;
       position: relative;
       display: flex;
       align-items: center;
@@ -66,7 +70,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.2); /* Overlay lebih ringan */
+      background: rgba(0, 0, 0, 0.2);
       z-index: 1;
     }
 
@@ -74,34 +78,37 @@
       position: relative;
       z-index: 2;
       text-align: center;
-      max-width: 400px;
+      max-width: 500px;
       padding: 2rem;
+      width: 100%;
     }
 
+    /* Logo di Left Side - Transparan dan lebih besar */
     .logo-illustration-large {
-      width: 200px;
-      height: 200px;
+      width: auto;
+      height: auto;
       margin: 0 auto;
-      background: transparent; /* Hapus background putih */
-      border-radius: 20px;
+      background: transparent;
+      backdrop-filter: none;
+      border-radius: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
-      /* Hapus box-shadow dan backdrop-filter */
+      overflow: visible;
+      box-shadow: none;
+      border: none;
     }
 
     .logo-illustration-large img {
-      height: 150px;
+      height: 80px;
       width: auto;
-      max-width: 90%;
-      filter: none;
-      /* Logo PNG transparan akan terlihat natural */
+      max-width: none;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
     }
 
     .welcome-text {
       color: white;
-      font-size: 1.8rem;
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
       font-weight: 600;
       margin-bottom: 0.5rem;
       margin-top: 1.5rem;
@@ -110,37 +117,38 @@
 
     .welcome-subtitle {
       color: white;
-      font-size: 1rem;
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
       opacity: 0.9;
       margin-bottom: 1rem;
       text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      font-weight: 500;
     }
 
     .welcome-description {
       color: white;
-      font-size: 0.9rem;
+      font-size: clamp(0.85rem, 2vw, 1rem);
       opacity: 0.8;
-      line-height: 1.5;
+      line-height: 1.6;
       text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
 
-    /* Right Side - Login Form */
+    /* Right Side - Login Form - Responsif */
     .login-right {
       flex: 1;
       min-width: 35%;
       width: 35%;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
-      background: #ffffff; /* Background putih sepenuhnya */
+      padding: 1rem;
+      background: #ffffff;
       box-sizing: border-box;
     }
 
     .login-box {
       width: 100%;
-      max-width: 350px;
+      max-width: 400px;
       animation: fadeInRight 0.8s ease-out;
     }
 
@@ -152,14 +160,14 @@
       box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
       overflow: hidden;
       width: 100%;
-      max-width: 400px;
+      max-width: 100%;
     }
 
     .card-header {
       background: linear-gradient(135deg, #007bff, #0056b3);
       border: none;
       text-align: center;
-      padding: 2.5rem 1.5rem 2rem;
+      padding: 2rem 1.5rem 1.8rem;
       position: relative;
       border-radius: 15px 15px 0 0;
     }
@@ -182,7 +190,7 @@
     }
 
     .login-logo img {
-      height: 60px;
+      height: 55px;
       margin-bottom: 0.75rem;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
       max-width: 100%;
@@ -196,20 +204,20 @@
 
     .brand-bom {
       font-family: 'Source Sans Pro', sans-serif;
-      font-size: 1.75rem;
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
       font-weight: 700;
       letter-spacing: 2px;
     }
 
     .brand-system {
       font-family: 'Pacifico', cursive;
-      font-size: 1rem;
+      font-size: clamp(0.75rem, 2vw, 0.9rem);
       font-weight: 400;
       opacity: 0.9;
     }
 
     .card-body {
-      padding: 2rem 1.5rem 1.5rem;
+      padding: 1.8rem 1.5rem 1.2rem;
     }
 
     .login-box-msg {
@@ -217,7 +225,7 @@
       text-align: center;
       color: #6c757d;
       font-weight: 400;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
 
     .input-group {
@@ -234,8 +242,8 @@
       border-radius: 0.25rem;
       background-color: #fff;
       transition: all 0.15s ease-in-out;
-      height: calc(2.25rem + 2px);
-      font-size: 0.9rem;
+      height: calc(2.5rem + 2px);
+      font-size: clamp(0.85rem, 2vw, 0.9rem);
     }
 
     .form-control:focus {
@@ -250,6 +258,7 @@
       border-radius: 0.25rem;
       width: 45px;
       justify-content: center;
+      font-size: clamp(0.8rem, 1.5vw, 0.9rem);
     }
 
     .password-toggle-btn {
@@ -270,10 +279,11 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      padding: 0.75rem;
+      padding: 0.8rem;
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+      font-size: clamp(0.85rem, 2vw, 0.9rem);
     }
 
     .btn-primary:hover {
@@ -294,7 +304,7 @@
     .forgot-password {
       color: #007bff;
       text-decoration: none;
-      font-size: 0.875rem;
+      font-size: clamp(0.75rem, 1.5vw, 0.85rem);
       transition: color 0.3s ease;
       font-weight: 500;
     }
@@ -309,7 +319,7 @@
       border-radius: 8px;
       border: none;
       margin-bottom: 1.5rem;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
 
     .alert-danger {
@@ -334,7 +344,7 @@
 
     .invalid-feedback {
       color: #dc3545;
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       font-weight: 500;
     }
 
@@ -372,51 +382,129 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Responsive Design */
+    .card-footer {
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+      padding: 1rem 1.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #6c757d;
+    }
+
+    /* Enhanced Responsive Design */
+    @media (max-width: 1400px) {
+      .login-left {
+        min-width: 62%;
+        width: 62%;
+      }
+      
+      .login-right {
+        min-width: 38%;
+        width: 38%;
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .login-left {
+        min-width: 60%;
+        width: 60%;
+      }
+      
+      .login-right {
+        min-width: 40%;
+        width: 40%;
+      }
+    }
+
+    @media (max-width: 992px) {
+      .login-left {
+        min-width: 55%;
+        width: 55%;
+      }
+      
+      .login-right {
+        min-width: 45%;
+        width: 45%;
+      }
+      
+      .illustration-content {
+        padding: 1.5rem;
+        max-width: 400px;
+      }
+      
+      .login-box {
+        max-width: 350px;
+      }
+      
+      .card-body, .card-header {
+        padding-left: 1.3rem;
+        padding-right: 1.3rem;
+      }
+    }
+
     @media (max-width: 768px) {
       .login-page {
         flex-direction: column;
       }
       
       .login-left {
-        min-height: 200px;
-        min-width: auto;
+        min-height: 40vh;
+        min-width: 100%;
         width: 100%;
         flex: none;
       }
       
       .login-right {
         flex: 1;
-        min-width: auto;
+        min-width: 100%;
         width: 100%;
-        height: auto;
+        min-height: 60vh;
         padding: 1.5rem;
       }
       
       .illustration-content {
         padding: 1rem;
-        max-width: 300px;
+        max-width: 100%;
       }
       
       .logo-illustration-large {
-        width: 100px;
-        height: 100px;
+        width: auto;
+        height: auto;
         margin-bottom: 1rem;
       }
       
       .logo-illustration-large img {
-        height: 60px;
+        height: 65px;
       }
       
-      .welcome-text {
-        font-size: 1.5rem;
+      .login-box {
+        max-width: 100%;
+        width: 100%;
+      }
+      
+      .form-control {
+        height: calc(2.75rem + 2px);
+        font-size: 16px; /* Prevents zoom on iOS */
+      }
+      
+      .input-group-text {
+        width: 50px;
       }
     }
 
     @media (max-width: 576px) {
+      .login-left {
+        min-height: 35vh;
+      }
+      
+      .login-right {
+        min-height: 65vh;
+        padding: 1rem;
+      }
+      
       .login-box {
         width: 95%;
-        max-width: 350px;
+        max-width: 320px;
         margin: 1rem;
       }
       
@@ -425,21 +513,122 @@
         padding-right: 1rem;
       }
 
-      .brand-bom {
-        font-size: 1.5rem;
-      }
-      
-      .login-left {
-        min-height: 150px;
+      .card-header {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
       }
       
       .logo-illustration-large {
-        width: 80px;
-        height: 80px;
+        width: auto;
+        height: auto;
       }
       
       .logo-illustration-large img {
-        height: 50px;
+        height: 55px;
+      }
+      
+      .illustration-content {
+        padding: 0.75rem;
+      }
+      
+      .btn-primary {
+        padding: 1rem 0.7rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-left {
+        min-height: 30vh;
+      }
+      
+      .login-right {
+        min-height: 70vh;
+        padding: 0.5rem;
+      }
+      
+      .login-box {
+        margin: 0.5rem;
+        width: calc(100% - 1rem);
+      }
+      
+      .logo-illustration-large {
+        width: auto;
+        height: auto;
+      }
+      
+      .logo-illustration-large img {
+        height: 45px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .card-body {
+        padding: 1rem 0.8rem;
+      }
+      
+      .card-header {
+        padding: 1.2rem 0.8rem 1rem;
+      }
+      
+      .illustration-content {
+        padding: 0.5rem;
+      }
+    }
+
+    /* Landscape orientation for mobile devices */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .login-page {
+        flex-direction: row;
+      }
+      
+      .login-left {
+        min-width: 45%;
+        width: 45%;
+        min-height: 100vh;
+      }
+      
+      .login-right {
+        min-width: 55%;
+        width: 55%;
+        min-height: 100vh;
+        padding: 1rem;
+      }
+      
+      .illustration-content {
+        padding: 0.5rem;
+      }
+      
+      .logo-illustration-large {
+        width: auto;
+        height: auto;
+        margin-bottom: 0.5rem;
+      }
+      
+      .logo-illustration-large img {
+        height: 35px;
+      }
+      
+      .welcome-text {
+        font-size: 1.1rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.25rem;
+      }
+      
+      .welcome-subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+      }
+      
+      .welcome-description {
+        font-size: 0.7rem;
+      }
+      
+      .card-header {
+        padding: 1rem 1.5rem 0.8rem;
+      }
+      
+      .card-body {
+        padding: 1rem 1.5rem 0.8rem;
       }
     }
 
@@ -476,19 +665,6 @@
       opacity: 1;
     }
 
-    .input-group-text {
-      font-size: 0.9rem;
-    }
-
-    .card-footer {
-      background-color: #f8f9fa;
-      border-top: 1px solid #dee2e6;
-      padding: 1rem 1.5rem;
-      text-align: center;
-      font-size: 0.85rem;
-      color: #6c757d;
-    }
-
     /* Additional focus styles */
     .input-group:focus-within .input-group-text {
       background-color: #007bff;
@@ -519,6 +695,13 @@
       to {
         transform: scale(4);
         opacity: 0;
+      }
+    }
+
+    /* Print styles */
+    @media print {
+      .login-page {
+        display: none;
       }
     }
   </style>
