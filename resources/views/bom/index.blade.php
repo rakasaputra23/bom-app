@@ -97,6 +97,9 @@
     @endif
   </div>
   <div class="col-md-6 text-right">
+    <button type="button" class="btn btn-secondary" id="clearFilters">
+      <i class="fas fa-eraser"></i> Clear Filter
+    </button>
     <button type="button" class="btn btn-info" id="refreshData">
       <i class="fas fa-sync-alt"></i> Refresh Data
     </button>
@@ -135,10 +138,11 @@
           <select class="form-control" id="filter_status">
             <option value="">Semua Status</option>
             <option value="DRAFT">Draft</option>
-            <option value="PENDING_APPROVAL_1">Menunggu Approval 1</option>
-            <option value="PENDING_APPROVAL_2">Menunggu Approval 2</option>
+            <option value="Pending Approval 1">Pending Approval 1</option>
+            <option value="Pending Approval 2">Pending Approval 2</option>
             <option value="APPROVED">Approved</option>
             <option value="REJECTED">Rejected</option>
+            <!-- Alternative values if the above don't work -->
           </select>
         </div>
       </div>
@@ -146,6 +150,58 @@
         <div class="form-group">
           <label>Cari Pembuat</label>
           <input type="text" class="form-control" id="search_creator" placeholder="Cari berdasarkan pembuat...">
+        </div>
+      </div>
+    </div>
+    <!-- New Row for Date Filters -->
+    <div class="row">
+      <div class="col-md-3">
+        <div class="form-group">
+          <label>Filter Tanggal Mulai</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="date_from" placeholder="dd/mm/yyyy" readonly>
+            <div class="input-group-append">
+              <span class="input-group-text">
+                <i class="fas fa-calendar-alt"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label>Filter Tanggal Akhir</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="date_to" placeholder="dd/mm/yyyy" readonly>
+            <div class="input-group-append">
+              <span class="input-group-text">
+                <i class="fas fa-calendar-alt"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label>Filter Rentang Tanggal</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="date_range" placeholder="Pilih rentang tanggal..." readonly>
+            <div class="input-group-append">
+              <span class="input-group-text">
+                <i class="fas fa-calendar-range"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <div>
+            <button type="button" class="btn btn-primary btn-block" id="applyDateFilter">
+              <i class="fas fa-filter"></i> Terapkan Filter Tanggal
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -403,12 +459,28 @@
 <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
 <!-- SweetAlert2 -->
 <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
+<!-- Date Range Picker -->
+<link rel="stylesheet" href="{{ asset('plugins/daterangepicker/daterangepicker.css') }}">
+<!-- Tempus Dominus Bootstrap 4 -->
+<link rel="stylesheet" href="{{ asset('plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css') }}">
 <style>
 .btn-group-vertical .btn {
   margin-bottom: 2px;
 }
 .btn-group-vertical .btn:last-child {
   margin-bottom: 0;
+}
+
+/* Date filter styling */
+.date-filter-active {
+  background-color: #e3f2fd !important;
+  border: 2px solid #2196f3 !important;
+}
+
+.date-range-display {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
 }
 </style>
 @endpush
@@ -421,6 +493,11 @@
 <script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
 <!-- SweetAlert2 -->
 <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+<!-- Date Range Picker -->
+<script src="{{ asset('plugins/moment/moment.min.js') }}"></script>
+<script src="{{ asset('plugins/daterangepicker/daterangepicker.js') }}"></script>
+<!-- Tempus Dominus Bootstrap 4 -->
+<script src="{{ asset('plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js') }}"></script>
 
 <script>
 $(document).ready(function() {
@@ -458,7 +535,259 @@ $(document).ready(function() {
     ]
   });
 
-  // Search functionality
+  // ===== NEW DATE FILTER FUNCTIONALITY =====
+  
+  // Initialize date pickers
+  $('#date_from').datetimepicker({
+    format: 'DD/MM/YYYY',
+    locale: 'id'
+  });
+
+  $('#date_to').datetimepicker({
+    format: 'DD/MM/YYYY',
+    locale: 'id'
+  });
+
+  // Initialize date range picker
+  $('#date_range').daterangepicker({
+    locale: {
+      format: 'DD/MM/YYYY',
+      separator: ' - ',
+      applyLabel: 'Terapkan',
+      cancelLabel: 'Batal',
+      fromLabel: 'Dari',
+      toLabel: 'Sampai',
+      customRangeLabel: 'Custom',
+      weekLabel: 'W',
+      daysOfWeek: ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
+      monthNames: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+      firstDay: 1
+    },
+    opens: 'left',
+    drops: 'down',
+    ranges: {
+      'Hari Ini': [moment(), moment()],
+      'Kemarin': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+      '7 Hari Terakhir': [moment().subtract(6, 'days'), moment()],
+      '30 Hari Terakhir': [moment().subtract(29, 'days'), moment()],
+      'Bulan Ini': [moment().startOf('month'), moment().endOf('month')],
+      'Bulan Lalu': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+      '3 Bulan Terakhir': [moment().subtract(3, 'months').startOf('month'), moment().endOf('month')],
+      'Tahun Ini': [moment().startOf('year'), moment().endOf('year')]
+    }
+  });
+
+  // Sync individual date inputs with date range
+  $('#date_from').on('dp.change', function (e) {
+    if (e.date && $('#date_to').val()) {
+      updateDateRangeFromIndividual();
+    }
+  });
+
+  $('#date_to').on('dp.change', function (e) {
+    if (e.date && $('#date_from').val()) {
+      updateDateRangeFromIndividual();
+    }
+  });
+
+  function updateDateRangeFromIndividual() {
+    var dateFrom = $('#date_from').val();
+    var dateTo = $('#date_to').val();
+    
+    if (dateFrom && dateTo) {
+      $('#date_range').val(dateFrom + ' - ' + dateTo);
+      $('#date_range').data('daterangepicker').setStartDate(moment(dateFrom, 'DD/MM/YYYY'));
+      $('#date_range').data('daterangepicker').setEndDate(moment(dateTo, 'DD/MM/YYYY'));
+    }
+  }
+
+  // Sync date range with individual inputs
+  $('#date_range').on('apply.daterangepicker', function(ev, picker) {
+    $('#date_from').val(picker.startDate.format('DD/MM/YYYY'));
+    $('#date_to').val(picker.endDate.format('DD/MM/YYYY'));
+  });
+
+  // Custom search function for status handling
+  $.fn.dataTable.ext.search.push(
+    function(settings, data, dataIndex) {
+      // Only apply to our specific table for status filter
+      if (settings.nTable.id !== 'bomTable') {
+        return true;
+      }
+
+      var filterStatus = $('#filter_status').val();
+      
+      if (!filterStatus) {
+        return true; // No status filter applied
+      }
+
+      // Get status from table (column index 5 - "Status")
+      var rowStatus = data[5];
+      
+      if (!rowStatus) {
+        return false;
+      }
+
+      // Remove HTML tags and get clean text
+      var cleanStatus = $('<div>').html(rowStatus).text().trim();
+      
+      // Check various possible status formats
+      var statusMatches = [
+        filterStatus,
+        filterStatus.toLowerCase(),
+        filterStatus.toUpperCase(),
+        filterStatus.replace('_', ' '),
+        filterStatus.replace('PENDING_APPROVAL_1', 'Pending Approval 1'),
+        filterStatus.replace('PENDING_APPROVAL_2', 'Pending Approval 2')
+      ];
+
+      // Check if any variation matches
+      return statusMatches.some(function(status) {
+        return cleanStatus.toLowerCase().includes(status.toLowerCase()) ||
+               rowStatus.toLowerCase().includes(status.toLowerCase());
+      });
+    }
+  );
+
+  // Custom date filter function for DataTables
+  $.fn.dataTable.ext.search.push(
+    function(settings, data, dataIndex) {
+      // Only apply to our specific table for date filter
+      if (settings.nTable.id !== 'bomTable') {
+        return true;
+      }
+
+      var dateFrom = $('#date_from').val();
+      var dateTo = $('#date_to').val();
+      
+      if (!dateFrom && !dateTo) {
+        return true; // No date filter applied
+      }
+
+      // Get date from table (column index 3 - "Tgl. Terbit")
+      var rowDate = data[3]; // Format: dd/mm/yyyy
+      
+      if (!rowDate || rowDate === '-') {
+        return false;
+      }
+
+      // Convert row date to moment object
+      var rowMoment = moment(rowDate, 'DD/MM/YYYY');
+      
+      if (!rowMoment.isValid()) {
+        return false;
+      }
+
+      var fromMoment = dateFrom ? moment(dateFrom, 'DD/MM/YYYY') : null;
+      var toMoment = dateTo ? moment(dateTo, 'DD/MM/YYYY') : null;
+
+      // Check date range
+      if (fromMoment && toMoment) {
+        return rowMoment.isBetween(fromMoment, toMoment, 'day', '[]');
+      } else if (fromMoment) {
+        return rowMoment.isSameOrAfter(fromMoment, 'day');
+      } else if (toMoment) {
+        return rowMoment.isSameOrBefore(toMoment, 'day');
+      }
+
+      return true;
+    }
+  );
+
+  // Apply date filter
+  $('#applyDateFilter').on('click', function() {
+    var dateFrom = $('#date_from').val();
+    var dateTo = $('#date_to').val();
+    
+    if (!dateFrom && !dateTo) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Peringatan!',
+        text: 'Silakan pilih rentang tanggal terlebih dahulu'
+      });
+      return;
+    }
+
+    // Validate date range
+    if (dateFrom && dateTo) {
+      var fromMoment = moment(dateFrom, 'DD/MM/YYYY');
+      var toMoment = moment(dateTo, 'DD/MM/YYYY');
+      
+      if (fromMoment.isAfter(toMoment)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: 'Tanggal mulai tidak boleh lebih besar dari tanggal akhir'
+        });
+        return;
+      }
+    }
+
+    // Apply the filter
+    table.draw();
+    
+    // Visual feedback
+    $('#date_from, #date_to, #date_range').addClass('date-filter-active');
+    
+    // Show applied filter info
+    var filterText = '';
+    if (dateFrom && dateTo) {
+      filterText = `Filter tanggal: ${dateFrom} - ${dateTo}`;
+    } else if (dateFrom) {
+      filterText = `Filter tanggal dari: ${dateFrom}`;
+    } else if (dateTo) {
+      filterText = `Filter tanggal sampai: ${dateTo}`;
+    }
+    
+    // Add filter indicator
+    if (!$('.date-range-display').length) {
+      $('.card-body').prepend(`<div class="alert alert-info date-range-display"><i class="fas fa-filter"></i> ${filterText}</div>`);
+    } else {
+      $('.date-range-display').html(`<i class="fas fa-filter"></i> ${filterText}`);
+    }
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Filter Diterapkan!',
+      text: filterText,
+      timer: 2000,
+      showConfirmButton: false
+    });
+  });
+
+  // Clear all filters function
+  $('#clearFilters').on('click', function() {
+    // Clear search inputs
+    $('#search_nomor').val('');
+    $('#search_proyek').val('');
+    $('#search_creator').val('');
+    $('#filter_status').val('');
+    
+    // Clear date filters
+    $('#date_from').val('');
+    $('#date_to').val('');
+    $('#date_range').val('');
+    
+    // Remove visual feedback
+    $('#date_from, #date_to, #date_range').removeClass('date-filter-active');
+    $('.date-range-display').remove();
+    
+    // Clear DataTable searches and filters
+    table.search('').columns().search('').draw();
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'Filter Dibersihkan!',
+      text: 'Semua filter telah direset',
+      timer: 1500,
+      showConfirmButton: false
+    });
+  });
+
+  // ===== END NEW DATE FILTER FUNCTIONALITY =====
+
+  // Enhanced search functionality with better status handling
   $('#search_nomor').on('keyup', function() {
     table.column(1).search(this.value).draw();
   });
@@ -468,7 +797,8 @@ $(document).ready(function() {
   });
 
   $('#filter_status').on('change', function() {
-    table.column(5).search(this.value).draw();
+    // Trigger the custom search function by redrawing the table
+    table.draw();
   });
 
   $('#search_creator').on('keyup', function() {

@@ -25,10 +25,6 @@
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <img src="{{ asset('dist/img/user2-160x160.jpg') }}" 
-               class="img-circle elevation-2 mr-1" 
-               alt="User Image" 
-               style="width: 25px; height: 25px;">
           {{ $user->nama }}
           @if($user->group)
             <small class="text-muted">({{ $user->group->nama }})</small>

@@ -14,10 +14,10 @@
   @endphp
   
   <a href="{{ route($logoRoute) }}" class="brand-link">
-    <img src="{{ asset('dist/img/AdminLTELogo.png') }}" 
-         alt="BOM Logo" 
-         class="brand-image img-circle elevation-3" 
-         style="opacity: .8">
+    <img src="{{ asset('dist/img/logo-login.png') }}" 
+         alt="Logo INKA" 
+         class="brand-image elevation-3" 
+         style="opacity: 1; width: 33px; height: 33px; object-fit: contain; border-radius: 50%; background-color: white; padding: 2px;">
     <span class="brand-text font-weight-light">BOM System</span>
   </a>
 
