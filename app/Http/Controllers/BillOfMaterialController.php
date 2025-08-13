@@ -46,7 +46,7 @@ class BillOfMaterialController extends Controller
 
         $billOfMaterials = BillOfMaterial::with(['proyek', 'revisi', 'itemBom.kodeMaterial.uom', 'createdBy', 'approvedBy1', 'approvedBy2', 'rejectedBy'])
             ->orderBy('tanggal', 'desc')
-            ->paginate(10);
+            ->get();
 
         return view('bom.index', compact('billOfMaterials'));
     }
@@ -124,7 +124,7 @@ class BillOfMaterialController extends Controller
     {
         // Validasi input
         $validator = Validator::make($request->all(), [
-            'nomor_bom' => 'required|string|max:50|unique:bill_of_material,nomor_bom',
+            'nomor_bom' => 'required|string|max:50',
             'kategori' => 'required|in:JIG,TOOL,MAL,TOOLS,CONSUMABLE TOOLS,SPECIAL PROCESS',
             'proyek_id' => 'required|exists:proyek,id',
             'revisi_id' => 'required|exists:revisi,id',
@@ -136,7 +136,6 @@ class BillOfMaterialController extends Controller
             'items.*.keterangan' => 'nullable|string|max:255'
         ], [
             'nomor_bom.required' => 'Nomor BOM harus diisi',
-            'nomor_bom.unique' => 'Nomor BOM sudah ada',
             'kategori.required' => 'Kategori harus dipilih',
             'kategori.in' => 'Kategori tidak valid',
             'proyek_id.required' => 'Proyek harus dipilih',
@@ -329,156 +328,105 @@ public function show($id)
     }
 
     /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
-    {
-        $billOfMaterial = BillOfMaterial::findOrFail($id);
+ * Update the specified resource in storage.
+ */
+public function update(Request $request, $id)
+{
+    $billOfMaterial = BillOfMaterial::findOrFail($id);
 
-        // Check permission to edit
-        if (!$billOfMaterial->canBeEdited()) {
-            return redirect()->back()
-                ->with('error', 'BOM dengan status ' . $billOfMaterial->status_text . ' tidak dapat diedit');
-        }
+    // Check permission to edit
+    if (!$billOfMaterial->canBeEdited()) {
+        return redirect()->back()
+            ->with('error', 'BOM dengan status ' . $billOfMaterial->status_text . ' tidak dapat diedit');
+    }
 
-        // PERBAIKAN: Menggunakan fungsi helper untuk mendapatkan user ID
-        $currentUserId = $this->getCurrentUserId();
+    $currentUserId = $this->getCurrentUserId();
+    
+    // Check if user is the creator or has permission
+    if ($billOfMaterial->created_by !== $currentUserId && !Auth::user()->can('bom.edit')) {
+        return redirect()->back()
+            ->with('error', 'Anda tidak memiliki akses untuk mengedit BOM ini');
+    }
+
+    // Validasi input - HILANGKAN validasi unique untuk nomor_bom
+    $validator = Validator::make($request->all(), [
+        'nomor_bom' => 'required|string|max:50', // Tidak ada unique lagi
+        'kategori' => 'required|in:JIG,TOOL,MAL,TOOLS,CONSUMABLE TOOLS,SPECIAL PROCESS',
+        'proyek_id' => 'required|exists:proyek,id',
+        'revisi_id' => 'required|exists:revisi,id',
+        'tanggal' => 'required|date',
+        'items' => 'required|array|min:1',
+        'items.*.material_id' => 'required|exists:kode_material,id',
+        'items.*.qty' => 'required|numeric|min:0.01',
+        'items.*.satuan' => 'required|string|max:20',
+        'items.*.keterangan' => 'nullable|string|max:255'
+    ]);
+
+    if ($validator->fails()) {
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
+    }
+
+    DB::beginTransaction();
+
+    try {
+        $submitForApproval = $request->has('submit_for_approval') && $request->input('submit_for_approval') == 'true';
         
-        // Check if user is the creator or has permission
-        if ($billOfMaterial->created_by !== $currentUserId && !Auth::user()->can('bom.edit')) {
-            return redirect()->back()
-                ->with('error', 'Anda tidak memiliki akses untuk mengedit BOM ini');
-        }
-
-        // Validasi input
-        $validator = Validator::make($request->all(), [
-            'nomor_bom' => 'required|string|max:50',
-            'kategori' => 'required|in:JIG,TOOL,MAL,TOOLS,CONSUMABLE TOOLS,SPECIAL PROCESS',
-            'proyek_id' => 'required|exists:proyek,id',
-            'revisi_id' => 'required|exists:revisi,id',
-            'tanggal' => 'required|date',
-            'items' => 'required|array|min:1',
-            'items.*.material_id' => 'required|exists:kode_material,id',
-            'items.*.qty' => 'required|numeric|min:0.01',
-            'items.*.satuan' => 'required|string|max:20',
-            'items.*.keterangan' => 'nullable|string|max:255'
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        DB::beginTransaction();
-
-        try {
-            // Tentukan action berdasarkan input
-            $submitForApproval = $request->has('submit_for_approval') && $request->input('submit_for_approval') == 'true';
+        if ($billOfMaterial->status === BillOfMaterial::STATUS_REJECTED) {
             
-            if ($submitForApproval) {
-                // LOGIKA KHUSUS: Hanya untuk BOM REJECTED yang membuat file baru saat Update & Submit
-                if ($billOfMaterial->status === BillOfMaterial::STATUS_REJECTED) {
-                    // BUAT BOM BARU - Khusus untuk BOM yang REJECTED
-                    
-                    // Validasi: tidak boleh ada BOM aktif (non-REJECTED) dengan nomor yang sama
-                    $existingActiveBom = BillOfMaterial::where('nomor_bom', $request->nomor_bom)
-                        ->where('id', '!=', $id)
-                        ->where('status', '!=', BillOfMaterial::STATUS_REJECTED)
-                        ->first();
-                    
-                    if ($existingActiveBom) {
-                        DB::rollback();
-                        return redirect()->back()
-                            ->withErrors(['nomor_bom' => 'Nomor BOM sudah digunakan pada BOM aktif lainnya'])
-                            ->withInput();
-                    }
-                    
-                    // Buat BOM baru dengan status PENDING_APPROVAL_1
-                    $newBillOfMaterial = BillOfMaterial::create([
-                        'nomor_bom' => $request->nomor_bom,
-                        'created_by' => $currentUserId,
-                        'kategori' => $request->kategori,
-                        'proyek_id' => $request->proyek_id,
-                        'revisi_id' => $request->revisi_id,
-                        'tanggal' => $request->tanggal,
-                        'status' => BillOfMaterial::STATUS_PENDING_APPROVAL_1
+            // BOM REJECTED - SELALU BUAT BOM BARU (file lama tetap ada)
+            $newStatus = $submitForApproval 
+                ? BillOfMaterial::STATUS_PENDING_APPROVAL_1 
+                : BillOfMaterial::STATUS_DRAFT;
+
+            // Buat BOM baru (duplikat nomor diizinkan)
+            $newBillOfMaterial = BillOfMaterial::create([
+                'nomor_bom' => $request->nomor_bom, // Nomor boleh sama dengan yang lain
+                'created_by' => $currentUserId,
+                'kategori' => $request->kategori,
+                'proyek_id' => $request->proyek_id,
+                'revisi_id' => $request->revisi_id,
+                'tanggal' => $request->tanggal,
+                'status' => $newStatus
+            ]);
+
+            // Simpan Item BOM untuk BOM baru
+            foreach ($request->items as $item) {
+                if (!empty($item['material_id'])) {
+                    ItemBom::create([
+                        'bill_of_material_id' => $newBillOfMaterial->id,
+                        'kode_material_id' => $item['material_id'],
+                        'qty' => $item['qty'],
+                        'satuan' => $item['satuan'],
+                        'keterangan' => $item['keterangan'] ?? null
                     ]);
-
-                    // Simpan Item BOM untuk BOM baru
-                    foreach ($request->items as $item) {
-                        ItemBom::create([
-                            'bill_of_material_id' => $newBillOfMaterial->id,
-                            'kode_material_id' => $item['material_id'],
-                            'qty' => $item['qty'],
-                            'satuan' => $item['satuan'],
-                            'keterangan' => $item['keterangan'] ?? null
-                        ]);
-                    }
-
-                    // BOM lama tetap dengan status REJECTED sebagai history
-                    $message = 'BOM baru berhasil dibuat dan disubmit untuk approval. BOM lama dengan status REJECTED tetap tersimpan sebagai history.';
-                    
-                } else {
-                    // UPDATE BOM YANG ADA - Untuk status selain REJECTED (DRAFT, dll)
-                    
-                    // Validasi: tidak boleh ada BOM lain dengan nomor yang sama
-                    $existingBom = BillOfMaterial::where('nomor_bom', $request->nomor_bom)
-                        ->where('id', '!=', $id)
-                        ->where('status', '!=', BillOfMaterial::STATUS_REJECTED)
-                        ->first();
-                    
-                    if ($existingBom) {
-                        DB::rollback();
-                        return redirect()->back()
-                            ->withErrors(['nomor_bom' => 'Nomor BOM sudah digunakan pada BOM aktif lainnya'])
-                            ->withInput();
-                    }
-
-                    // Update BOM yang ada dengan status PENDING_APPROVAL_1
-                    $billOfMaterial->update([
-                        'nomor_bom' => $request->nomor_bom,
-                        'kategori' => $request->kategori,
-                        'proyek_id' => $request->proyek_id,
-                        'revisi_id' => $request->revisi_id,
-                        'tanggal' => $request->tanggal,
-                        'status' => BillOfMaterial::STATUS_PENDING_APPROVAL_1
-                    ]);
-
-                    // Delete existing items and add new ones
-                    ItemBom::where('bill_of_material_id', $billOfMaterial->id)->delete();
-
-                    // Simpan Item BOM baru
-                    foreach ($request->items as $item) {
-                        ItemBom::create([
-                            'bill_of_material_id' => $billOfMaterial->id,
-                            'kode_material_id' => $item['material_id'],
-                            'qty' => $item['qty'],
-                            'satuan' => $item['satuan'],
-                            'keterangan' => $item['keterangan'] ?? null
-                        ]);
-                    }
-
-                    $message = 'BOM berhasil diupdate dan disubmit untuk approval';
                 }
+            }
+
+            // File rejected tetap ada, tidak diubah
+            $message = $submitForApproval 
+                ? 'BOM baru berhasil dibuat dan disubmit untuk approval. BOM yang rejected tetap tersimpan sebagai history.'
+                : 'BOM baru berhasil dibuat sebagai draft. BOM yang rejected tetap tersimpan sebagai history.';
+                
+        } elseif ($billOfMaterial->status === BillOfMaterial::STATUS_DRAFT) {
+            
+            // BOM DRAFT - OVERWRITE FILE YANG ADA
+            if ($submitForApproval) {
+                // DRAFT -> SUBMIT: Update BOM yang ada
+                $billOfMaterial->update([
+                    'nomor_bom' => $request->nomor_bom,
+                    'kategori' => $request->kategori,
+                    'proyek_id' => $request->proyek_id,
+                    'revisi_id' => $request->revisi_id,
+                    'tanggal' => $request->tanggal,
+                    'status' => BillOfMaterial::STATUS_PENDING_APPROVAL_1
+                ]);
+
+                $message = 'BOM berhasil diupdate dan disubmit untuk approval';
                 
             } else {
-                // LOGIKA LAMA: Update sebagai Draft - Update BOM yang ada
-                
-                // Validasi: tidak boleh ada BOM aktif lain dengan nomor yang sama
-                $existingBom = BillOfMaterial::where('nomor_bom', $request->nomor_bom)
-                    ->where('id', '!=', $id)
-                    ->where('status', '!=', BillOfMaterial::STATUS_REJECTED)
-                    ->first();
-                
-                if ($existingBom) {
-                    DB::rollback();
-                    return redirect()->back()
-                        ->withErrors(['nomor_bom' => 'Nomor BOM sudah digunakan pada BOM aktif lainnya'])
-                        ->withInput();
-                }
-
-                // Update BOM yang ada dengan status DRAFT
+                // DRAFT -> SAVE AS DRAFT: Update BOM yang ada
                 $billOfMaterial->update([
                     'nomor_bom' => $request->nomor_bom,
                     'kategori' => $request->kategori,
@@ -488,11 +436,14 @@ public function show($id)
                     'status' => BillOfMaterial::STATUS_DRAFT
                 ]);
 
-                // Delete existing items and add new ones
-                ItemBom::where('bill_of_material_id', $billOfMaterial->id)->delete();
+                $message = 'BOM berhasil diupdate dengan status DRAFT';
+            }
 
-                // Simpan Item BOM baru
-                foreach ($request->items as $item) {
+            // Update items untuk BOM yang ada
+            ItemBom::where('bill_of_material_id', $billOfMaterial->id)->delete();
+
+            foreach ($request->items as $item) {
+                if (!empty($item['material_id'])) {
                     ItemBom::create([
                         'bill_of_material_id' => $billOfMaterial->id,
                         'kode_material_id' => $item['material_id'],
@@ -501,22 +452,24 @@ public function show($id)
                         'keterangan' => $item['keterangan'] ?? null
                     ]);
                 }
-
-                $message = 'BOM berhasil diupdate dengan status DRAFT';
             }
-
-            DB::commit();
-
-            return redirect()->route('bom.index')
-                ->with('success', $message);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
-                ->withInput();
+            
+        } else {
+            // Status lain tidak boleh diedit
+            throw new \Exception('BOM dengan status ' . $billOfMaterial->status . ' tidak dapat diedit');
         }
+
+        DB::commit();
+
+        return redirect()->route('bom.index')->with('success', $message);
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        return redirect()->back()
+            ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
+            ->withInput();
     }
+}
 
     /**
      * Remove the specified resource from storage.

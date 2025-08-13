@@ -437,7 +437,7 @@ $(document).ready(function() {
       }
     });
     
-    if (!hasValidItems) return 'Minimal harus ada 1 item dengan material dan quantity yang valid!';
+    if (!hasValidItems) return 'Minimal harus ada 1 item';
     if (!checkDuplicateMaterials()) return 'Terdapat material yang sama dipilih lebih dari sekali!';
     
     return null;
