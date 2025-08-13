@@ -304,7 +304,7 @@
                 @endif
 
                 <!-- Delete Button - Only for DRAFT/REJECTED and creator -->
-                @if(in_array($bom->status, ['DRAFT', 'REJECTED','APPROVED']) && ($bom->created_by === Auth::id() || Auth::user()->can('bom.destroy')))
+                @if(in_array($bom->status, ['DRAFT', 'REJECTED']) && ($bom->created_by === Auth::id() || Auth::user()->can('bom.destroy')))
                   <button class="btn btn-sm btn-danger delete-btn" title="Hapus" data-bom-id="{{ $bom->id }}" data-bom-nomor="{{ $bom->nomor_bom }}" data-bom-status="{{ $bom->status }}">
                     <i class="fas fa-trash"></i> Hapus
                   </button>

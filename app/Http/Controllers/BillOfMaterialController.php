@@ -413,74 +413,56 @@ public function show($id)
     }
 
     /**
- * Remove the specified resource from storage.
- */
-public function destroy($id)
-{
-    try {
-        DB::beginTransaction();
-        
-        $bom = BillOfMaterial::findOrFail($id);
-        
-        // PERUBAHAN: Hanya cek status PENDING_APPROVAL untuk mencegah penghapusan
-        // BOM yang sedang dalam proses approval tidak boleh dihapus
-        if (in_array($bom->status, [
-            BillOfMaterial::STATUS_PENDING_APPROVAL_1, 
-            BillOfMaterial::STATUS_PENDING_APPROVAL_2
-        ])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'BOM yang sedang dalam proses approval tidak dapat dihapus'
-            ], 400);
-        }
-        
-        // PERBAIKAN: Menggunakan fungsi helper untuk mendapatkan user ID
-        $currentUserId = $this->getCurrentUserId();
-        
-        // Check permission - hanya creator atau user dengan permission khusus yang bisa hapus
-        if ($bom->created_by !== $currentUserId && !Auth::user()->can('bom.destroy')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki akses untuk menghapus BOM ini'
-            ], 403);
-        }
-        
-        // Konfirmasi khusus untuk BOM yang sudah APPROVED
-        if ($bom->status === BillOfMaterial::STATUS_APPROVED) {
-            // Bisa ditambahkan log audit untuk tracking penghapusan BOM approved
-            \Log::info('Approved BOM deleted', [
-                'bom_id' => $bom->id,
-                'nomor_bom' => $bom->nomor_bom,
-                'deleted_by' => $currentUserId,
-                'deleted_at' => now()
-            ]);
-        }
-        
-        // Hapus semua item BOM yang terkait
-        ItemBom::where('bill_of_material_id', $bom->id)->delete();
-        
-        // Hapus BOM
-        $bom->delete();
-        
-        DB::commit();
-        
-        $message = $bom->status === BillOfMaterial::STATUS_APPROVED 
-            ? 'BOM yang sudah di-approve berhasil dihapus' 
-            : 'BOM berhasil dihapus';
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
             
-        return response()->json([
-            'success' => true,
-            'message' => $message
-        ]);
-        
-    } catch (\Exception $e) {
-        DB::rollback();
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal menghapus BOM: ' . $e->getMessage()
-        ], 500);
+            $bom = BillOfMaterial::findOrFail($id);
+            
+            // PERBAIKAN: Hanya BOM yang sudah APPROVED tidak boleh dihapus
+            // BOM yang sudah di-approve tidak dapat dihapus
+            if ($bom->status === BillOfMaterial::STATUS_APPROVED) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'BOM yang sudah di-approve tidak dapat dihapus'
+                ], 400);
+            }
+            
+            // PERBAIKAN: Menggunakan fungsi helper untuk mendapatkan user ID
+            $currentUserId = $this->getCurrentUserId();
+            
+            // Check permission - hanya creator atau user dengan permission khusus yang bisa hapus
+            if ($bom->created_by !== $currentUserId && !Auth::user()->can('bom.destroy')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk menghapus BOM ini'
+                ], 403);
+            }
+            
+            // Hapus semua item BOM yang terkait
+            ItemBom::where('bill_of_material_id', $bom->id)->delete();
+            
+            // Hapus BOM
+            $bom->delete();
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'BOM berhasil dihapus'
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus BOM: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
 
     /**
      * Get pending approvals for current user
