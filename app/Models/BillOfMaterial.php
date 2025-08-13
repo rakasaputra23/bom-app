@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class BillOfMaterial extends Model
 {
@@ -41,6 +42,54 @@ class BillOfMaterial extends Model
         'approved_by_2' => 'integer',
         'rejected_by' => 'integer',
     ];
+
+    // PERBAIKAN: Set timezone Indonesia untuk semua attribute tanggal
+    protected function serializeDate(\DateTimeInterface $date)
+    {
+        // Pastikan semua tanggal ditampilkan dalam timezone Indonesia
+        return Carbon::instance($date)->setTimezone('Asia/Jakarta');
+    }
+
+    // PERBAIKAN: Override accessor untuk semua datetime dengan timezone Indonesia
+    public function getUpdatedAtAttribute($value)
+    {
+        if ($value) {
+            return Carbon::parse($value)->setTimezone('Asia/Jakarta');
+        }
+        return null;
+    }
+
+    public function getCreatedAtAttribute($value)
+    {
+        if ($value) {
+            return Carbon::parse($value)->setTimezone('Asia/Jakarta');
+        }
+        return null;
+    }
+
+    public function getApprovedBy1AtAttribute($value)
+    {
+        if ($value) {
+            return Carbon::parse($value)->setTimezone('Asia/Jakarta');
+        }
+        return null;
+    }
+
+    public function getApprovedBy2AtAttribute($value)
+    {
+        if ($value) {
+            return Carbon::parse($value)->setTimezone('Asia/Jakarta');
+        }
+        return null;
+    }
+
+    public function getRejectedAtAttribute($value)
+    {
+        if ($value) {
+            return Carbon::parse($value)->setTimezone('Asia/Jakarta');
+        }
+        return null;
+    }
 
     // Status constants
     const STATUS_DRAFT = 'DRAFT';
@@ -238,37 +287,36 @@ class BillOfMaterial extends Model
     }
 
     /**
- * Status badge accessor
- */
-public function getStatusBadgeAttribute()
-{
-    $badges = [
-        'DRAFT' => '<span class="badge badge-secondary">Draft</span>',
-        'PENDING_APPROVAL_1' => '<span class="badge badge-warning">Pending Approval 1</span>',
-        'PENDING_APPROVAL_2' => '<span class="badge badge-info">Pending Approval 2</span>',
-        'APPROVED' => '<span class="badge badge-success">Approved</span>',
-        'REJECTED' => '<span class="badge badge-danger">Rejected</span>',
-    ];
-    
-    return $badges[$this->status] ?? '<span class="badge badge-light">' . $this->status . '</span>';
-}
+     * Status badge accessor
+     */
+    public function getStatusBadgeAttribute()
+    {
+        $badges = [
+            'DRAFT' => '<span class="badge badge-secondary">Draft</span>',
+            'PENDING_APPROVAL_1' => '<span class="badge badge-warning">Pending Approval 1</span>',
+            'PENDING_APPROVAL_2' => '<span class="badge badge-info">Pending Approval 2</span>',
+            'APPROVED' => '<span class="badge badge-success">Approved</span>',
+            'REJECTED' => '<span class="badge badge-danger">Rejected</span>',
+        ];
+        
+        return $badges[$this->status] ?? '<span class="badge badge-light">' . $this->status . '</span>';
+    }
 
-/**
- * Status text accessor
- */
-public function getStatusTextAttribute()
-{
-    $texts = [
-        'DRAFT' => 'Draft',
-        'PENDING_APPROVAL_1' => 'Menunggu Approval 1',
-        'PENDING_APPROVAL_2' => 'Menunggu Approval 2', 
-        'APPROVED' => 'Approved',
-        'REJECTED' => 'Rejected',
-    ];
-    
-    return $texts[$this->status] ?? $this->status;
-}
-
+    /**
+     * Status text accessor
+     */
+    public function getStatusTextAttribute()
+    {
+        $texts = [
+            'DRAFT' => 'Draft',
+            'PENDING_APPROVAL_1' => 'Menunggu Approval 1',
+            'PENDING_APPROVAL_2' => 'Menunggu Approval 2', 
+            'APPROVED' => 'Approved',
+            'REJECTED' => 'Rejected',
+        ];
+        
+        return $texts[$this->status] ?? $this->status;
+    }
 
     /**
      * Submit BOM for approval
@@ -312,7 +360,8 @@ public function getStatusTextAttribute()
         if ($this->canBeApprovedBy1()) {
             $this->status = self::STATUS_PENDING_APPROVAL_2;
             $this->approved_by_1 = $userId;
-            $this->approved_by_1_at = now();
+            // PERBAIKAN: Pastikan menggunakan timezone Indonesia
+            $this->approved_by_1_at = Carbon::now('Asia/Jakarta');
             $this->approved_by_1_note = $note;
             
             // PERBAIKAN: Validasi sebelum save
@@ -346,7 +395,8 @@ public function getStatusTextAttribute()
         if ($this->canBeApprovedBy2()) {
             $this->status = self::STATUS_APPROVED;
             $this->approved_by_2 = $userId;
-            $this->approved_by_2_at = now();
+            // PERBAIKAN: Pastikan menggunakan timezone Indonesia
+            $this->approved_by_2_at = Carbon::now('Asia/Jakarta');
             $this->approved_by_2_note = $note;
             
             // PERBAIKAN: Validasi sebelum save
@@ -380,7 +430,8 @@ public function getStatusTextAttribute()
         if (in_array($this->status, [self::STATUS_PENDING_APPROVAL_1, self::STATUS_PENDING_APPROVAL_2])) {
             $this->status = self::STATUS_REJECTED;
             $this->rejected_by = $userId;
-            $this->rejected_at = now();
+            // PERBAIKAN: Pastikan menggunakan timezone Indonesia
+            $this->rejected_at = Carbon::now('Asia/Jakarta');
             $this->rejected_note = $note;
             
             // PERBAIKAN: Validasi sebelum save
