@@ -339,218 +339,63 @@
         }
     @endphp
     
-    <!-- Halaman Pertama -->
-    <div class="main-container content-page">
-        <!-- Header Section -->
-        <div class="header">
-            <div class="header-left">
-                @if($logoPath && file_exists($logoPath))
-                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents($logoPath)) }}" class="logo" alt="Logo">
-                @else
-                    <div class="logo-text">QINKA<br>Multi Solusi</div>
-                @endif
-            </div>
-            <div class="header-center">
-                <h1>BILL OF MATERIAL</h1>
-                <h2>{{ strtoupper($bom->kategori ?? 'JIG, TOOL DAN MAL / TOOLS / CONSUMABLE TOOLS / SPECIAL PROCESS') }}</h2>
-            </div>
-            <div class="header-right">
-                <div class="info-field">
-                    <span class="info-label">Nomor</span>: {{ $bom->nomor_bom ?? '' }}
-                </div>
-                <div class="info-field">
-                    <span class="info-label">Proyek</span>: {{ $bom->proyek ? $bom->proyek->nama_proyek : '' }}
-                </div>
-                <div class="info-field">
-                    <span class="info-label">Tgl. Terbit</span>: {{ $bom->tanggal ? date('d/m/Y', strtotime($bom->tanggal)) : '' }}
-                </div>
-                <div class="info-field">
-                    <span class="info-label">Revisi</span>: {{ $bom->revisi ? $bom->revisi->jenis_revisi . ' - ' . $bom->revisi->keterangan : 'Tidak ada revisi' }}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Main Table -->
-        <table class="main-table">
-            <thead>
-                <tr>
-                    <th class="col-rev">REV</th>
-                    <th class="col-no">NO.</th>
-                    <th class="col-kode">KODE MATERIAL</th>
-                    <th class="col-deskripsi">DESKRIPSI MATERIAL</th>
-                    <th class="col-qty">QTY</th>
-                    <th class="col-satuan">SATUAN</th>
-                    <th class="col-spesifikasi">SPESIFIKASI</th>
-                    <th class="col-keterangan">KETERANGAN</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php
-                    $currentPageItems = $bom->itemBom ? $bom->itemBom->take($itemsPerPage) : collect([]);
-                @endphp
-                
-                @if($currentPageItems->count() > 0)
-                    @foreach($currentPageItems as $index => $item)
-                        <tr>
-                            <td></td>
-                            <td>{{ $index + 1 }}</td>
-                            <td class="text-left">{{ $item->kodeMaterial ? $item->kodeMaterial->kode_material : '' }}</td>
-                            <td class="text-left break-word">{{ $item->kodeMaterial ? $item->kodeMaterial->nama_material : '' }}</td>
-                            <td class="text-right">
-                                @php
-                                    $qty = 0;
-                                    if ($item->qty !== null && $item->qty !== 0) {
-                                        $qty = $item->qty;
-                                    } elseif ($item->kodeMaterial && $item->kodeMaterial->uom && $item->kodeMaterial->uom->qty) {
-                                        $qty = $item->kodeMaterial->uom->qty;
-                                    } else {
-                                        $qty = 1;
-                                    }
-                                    echo number_format($qty, 0, ',', '.');
-                                @endphp
-                            </td>
-                            <td>
-                                @php
-                                    $satuan = '';
-                                    if ($item->satuan && trim($item->satuan) !== '') {
-                                        $satuan = $item->satuan;
-                                    } elseif ($item->kodeMaterial && $item->kodeMaterial->uom && $item->kodeMaterial->uom->satuan) {
-                                        $satuan = $item->kodeMaterial->uom->satuan;
-                                    }
-                                    echo $satuan;
-                                @endphp
-                            </td>
-                            <td class="text-left break-word">{{ $item->kodeMaterial && $item->kodeMaterial->spesifikasi ? $item->kodeMaterial->spesifikasi : '' }}</td>
-                            <td class="text-left break-word">{{ $item->keterangan ?: '' }}</td>
-                        </tr>
-                    @endforeach
-                @endif
-                
-                <!-- Fill remaining rows to maintain consistent layout -->
-                @for($i = $currentPageItems->count(); $i < 20; $i++)
-                    <tr class="empty-row">
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                    </tr>
-                @endfor
-            </tbody>
-        </table>
-        
-        <!-- Signature Section untuk halaman pertama atau satu-satunya halaman -->
-        @if($totalPages == 1)
-            <div class="signature-section">
-                <div class="signature-row">
-                    <div class="signature-col">
-                        <div class="signature-date">Tanggal: {{ $bom->created_at ? date('d/m/Y', strtotime($bom->created_at)) : '' }}</div>
-                        <div class="signature-title">Disiapkan oleh:</div>
-                        <div class="signature-space"></div>
-                        <div class="signature-name-line">
-                            @if($bom->createdBy)
-                                ( {{ $bom->createdBy->nama }} )
-                            @else
-                                ( _________________________ )
-                            @endif
-                        </div>
-                        @if($bom->createdBy && $bom->createdBy->nip)
-                            <div class="signature-nip left">{{ $bom->createdBy->nip }}</div>
-                        @endif
-                    </div>
-                    
-                    <div class="signature-col">
-                        <div class="signature-date">Tanggal: {{ $bom->approved_by_1_at ? date('d/m/Y', strtotime($bom->approved_by_1_at)) : '' }}</div>
-                        <div class="signature-title">Diperiksa oleh:</div>
-                        <div class="signature-space"></div>
-                        <div class="signature-name-line center">
-                            @if($bom->approvedBy1)
-                                ( {{ $bom->approvedBy1->nama }} )
-                            @else
-                                ( _________________________ )
-                            @endif
-                        </div>
-                        @if($bom->approvedBy1 && $bom->approvedBy1->nip)
-                            <div class="signature-nip">{{ $bom->approvedBy1->nip }}</div>
-                        @endif
-                    </div>
-                    
-                    <div class="signature-col">
-                        <div class="signature-date right">Tanggal: {{ $bom->approved_by_2_at ? date('d/m/Y', strtotime($bom->approved_by_2_at)) : '' }}</div>
-                        <div class="signature-title right">Disahkan oleh:</div>
-                        <div class="signature-space"></div>
-                        <div class="signature-name-line right">
-                            @if($bom->approvedBy2)
-                                ( {{ $bom->approvedBy2->nama }} )
-                            @else
-                                ( _________________________ )
-                            @endif
-                        </div>
-                        @if($bom->approvedBy2 && $bom->approvedBy2->nip)
-                            <div class="signature-nip right">{{ $bom->approvedBy2->nip }}</div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        @endif
-    </div>
-    
-    <!-- Halaman-halaman berikutnya jika data lebih dari 20 item -->
-    @if($totalItems > 20)
-        @for($page = 2; $page <= $totalPages; $page++)
+    @for($page = 1; $page <= $totalPages; $page++)
+        @if($page > 1)
             <div class="page-break"></div>
-            <div class="main-container content-page">
-                <!-- Header untuk halaman selanjutnya -->
-                <div class="header">
-                    <div class="header-left">
-                        @if($logoPath && file_exists($logoPath))
-                            <img src="data:image/png;base64,{{ base64_encode(file_get_contents($logoPath)) }}" class="logo" alt="Logo">
-                        @else
-                            <div class="logo-text">QINKA<br>Multi Solusi</div>
-                        @endif
+        @endif
+        
+        <div class="main-container content-page">
+            <!-- Header Section untuk setiap halaman -->
+            <div class="header">
+                <div class="header-left">
+                    @if($logoPath && file_exists($logoPath))
+                        <img src="data:image/png;base64,{{ base64_encode(file_get_contents($logoPath)) }}" class="logo" alt="Logo">
+                    @else
+                        <div class="logo-text">QINKA<br>Multi Solusi</div>
+                    @endif
+                </div>
+                <div class="header-center">
+                    <h1>BILL OF MATERIAL</h1>
+                    <h2>{{ strtoupper($bom->kategori ?? 'JIG, TOOL DAN MAL / TOOLS / CONSUMABLE TOOLS / SPECIAL PROCESS') }}</h2>
+                </div>
+                <div class="header-right">
+                    <div class="info-field">
+                        <span class="info-label">Nomor</span>: {{ $bom->nomor_bom ?? '' }}
                     </div>
-                    <div class="header-center">
-                        <h1>BILL OF MATERIAL</h1>
-                        <h2>{{ strtoupper($bom->kategori ?? 'JIG, TOOL DAN MAL / TOOLS / CONSUMABLE TOOLS / SPECIAL PROCESS') }}</h2>
+                    <div class="info-field">
+                        <span class="info-label">Proyek</span>: {{ $bom->proyek ? $bom->proyek->nama_proyek : '' }}
                     </div>
-                    <div class="header-right">
-                        <div class="info-field">
-                            <span class="info-label">Nomor</span>: {{ $bom->nomor_bom ?? '' }}
-                        </div>
-                        <div class="info-field">
-                            <span class="info-label">Proyek</span>: {{ $bom->proyek ? $bom->proyek->kode_proyek : '' }}
-                        </div>
-                        <div class="info-field">
-                            <span class="info-label">Tgl. Terbit</span>: {{ $bom->tanggal ? date('d/m/Y', strtotime($bom->tanggal)) : '' }}
-                        </div>
-                        <div class="info-field">
-                            <span class="info-label">Revisi List</span>: {{ $bom->revisi ? $bom->revisi->jenis_revisi : '' }}
-                        </div>
+                    <div class="info-field">
+                        <span class="info-label">Tgl. Terbit</span>: {{ $bom->tanggal ? date('d/m/Y', strtotime($bom->tanggal)) : '' }}
+                    </div>
+                    <div class="info-field">
+                        <span class="info-label">Revisi</span>: {{ $bom->revisi ? $bom->revisi->jenis_revisi . ' - ' . $bom->revisi->keterangan : 'Tidak ada revisi' }}
                     </div>
                 </div>
-                
-                <table class="main-table">
-                    <thead>
-                        <tr>
-                            <th class="col-rev">REV</th>
-                            <th class="col-no">NO.</th>
-                            <th class="col-kode">KODE MATERIAL</th>
-                            <th class="col-deskripsi">DESKRIPSI MATERIAL</th>
-                            <th class="col-qty">QTY</th>
-                            <th class="col-satuan">SATUAN</th>
-                            <th class="col-spesifikasi">SPESIFIKASI</th>
-                            <th class="col-keterangan">KETERANGAN</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php
-                            $startIndex = ($page - 1) * $itemsPerPage;
-                            $pageItems = $bom->itemBom->slice($startIndex, $itemsPerPage);
-                        @endphp
-                        
+            </div>
+            
+            <!-- Main Table -->
+            <table class="main-table">
+                <thead>
+                    <tr>
+                        <th class="col-rev">REV</th>
+                        <th class="col-no">NO.</th>
+                        <th class="col-kode">KODE MATERIAL</th>
+                        <th class="col-deskripsi">DESKRIPSI MATERIAL</th>
+                        <th class="col-qty">QTY</th>
+                        <th class="col-satuan">SATUAN</th>
+                        <th class="col-spesifikasi">SPESIFIKASI</th>
+                        <th class="col-keterangan">KETERANGAN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $startIndex = ($page - 1) * $itemsPerPage;
+                        $allItems = $bom->itemBom ? $bom->itemBom->values()->all() : [];
+                        $pageItems = array_slice($allItems, $startIndex, $itemsPerPage);
+                    @endphp
+                    
+                    @if(count($pageItems) > 0)
                         @foreach($pageItems as $index => $item)
                             <tr>
                                 <td></td>
@@ -585,83 +430,112 @@
                                 <td class="text-left break-word">{{ $item->keterangan ?: '' }}</td>
                             </tr>
                         @endforeach
-                        
-                        @for($i = $pageItems->count(); $i < 20; $i++)
-                            <tr class="empty-row">
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                            </tr>
-                        @endfor
-                    </tbody>
-                </table>
-                
-                <!-- Signature section hanya di halaman terakhir -->
-                @if($page == $totalPages)
-                    <div class="signature-section">
-                        <div class="signature-row">
-                            <div class="signature-col">
-                                <div class="signature-date">Tanggal: {{ $bom->created_at ? date('d/m/Y', strtotime($bom->created_at)) : '' }}</div>
-                                <div class="signature-title">Disiapkan oleh:</div>
-                                <div class="signature-space"></div>
-                                <div class="signature-name-line">
-                                    @if($bom->createdBy)
-                                        ( {{ $bom->createdBy->nama }} )
-                                    @else
-                                        ( _________________________ )
-                                    @endif
-                                </div>
-                                @if($bom->createdBy && $bom->createdBy->nip)
-                                    <div class="signature-nip left">{{ $bom->createdBy->nip }}</div>
-                                @endif
-                            </div>
-                            
-                            <div class="signature-col">
-                                <div class="signature-date">Tanggal: {{ $bom->approved_by_1_at ? date('d/m/Y', strtotime($bom->approved_by_1_at)) : '' }}</div>
-                                <div class="signature-title">Diperiksa oleh:</div>
-                                <div class="signature-space"></div>
-                                <div class="signature-name-line center">
-                                    @if($bom->approvedBy1)
-                                        ( {{ $bom->approvedBy1->nama }} )
-                                    @else
-                                        ( _________________________ )
-                                    @endif
-                                </div>
-                                @if($bom->approvedBy1 && $bom->approvedBy1->nip)
-                                    <div class="signature-nip">{{ $bom->approvedBy1->nip }}</div>
-                                @endif
-                            </div>
-                            
-                            <div class="signature-col">
-                                <div class="signature-date right">Tanggal: {{ $bom->approved_by_2_at ? date('d/m/Y', strtotime($bom->approved_by_2_at)) : '' }}</div>
-                                <div class="signature-title right">Disahkan oleh:</div>
-                                <div class="signature-space"></div>
-                                <div class="signature-name-line right">
-                                    @if($bom->approvedBy2)
-                                        ( {{ $bom->approvedBy2->nama }} )
-                                    @else
-                                        ( _________________________ )
-                                    @endif
-                                </div>
-                                @if($bom->approvedBy2 && $bom->approvedBy2->nip)
-                                    <div class="signature-nip right">{{ $bom->approvedBy2->nip }}</div>
-                                @endif
-                            </div>
+                    @endif
+                    
+                    <!-- Fill remaining rows to maintain consistent layout -->
+                    @for($i = count($pageItems); $i < 20; $i++)
+                        <tr class="empty-row">
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                        </tr>
+                    @endfor
+                </tbody>
+            </table>
+            
+            <!-- Signature Section untuk setiap halaman -->
+            <div class="signature-section">
+                <div class="signature-row">
+                    <div class="signature-col">
+                        <div class="signature-date">
+                            @if($page == $totalPages)
+                                Tanggal: {{ $bom->created_at ? date('d/m/Y', strtotime($bom->created_at)) : '' }}
+                            @else
+                                Tanggal:
+                            @endif
                         </div>
+                        <div class="signature-title">Disiapkan oleh:</div>
+                        <div class="signature-space"></div>
+                        <div class="signature-name-line">
+                            @if($page == $totalPages)
+                                @if($bom->createdBy)
+                                    ( {{ $bom->createdBy->nama }} )
+                                @else
+                                    ( _________________________ )
+                                @endif
+                            @else
+                                ( _________________________ )
+                            @endif
+                        </div>
+                        @if($page == $totalPages && $bom->createdBy && $bom->createdBy->nip)
+                            <div class="signature-nip left">{{ $bom->createdBy->nip }}</div>
+                        @endif
                     </div>
-                @endif
+                    
+                    <div class="signature-col">
+                        <div class="signature-date">
+                            @if($page == $totalPages)
+                                Tanggal: {{ $bom->approved_by_1_at ? date('d/m/Y', strtotime($bom->approved_by_1_at)) : '' }}
+                            @else
+                                Tanggal:
+                            @endif
+                        </div>
+                        <div class="signature-title">Diperiksa oleh:</div>
+                        <div class="signature-space"></div>
+                        <div class="signature-name-line center">
+                            @if($page == $totalPages)
+                                @if($bom->approvedBy1)
+                                    ( {{ $bom->approvedBy1->nama }} )
+                                @else
+                                    ( _________________________ )
+                                @endif
+                            @else
+                                ( _________________________ )
+                            @endif
+                        </div>
+                        @if($page == $totalPages && $bom->approvedBy1 && $bom->approvedBy1->nip)
+                            <div class="signature-nip">{{ $bom->approvedBy1->nip }}</div>
+                        @endif
+                    </div>
+                    
+                    <div class="signature-col">
+                        <div class="signature-date right">
+                            @if($page == $totalPages)
+                                Tanggal: {{ $bom->approved_by_2_at ? date('d/m/Y', strtotime($bom->approved_by_2_at)) : '' }}
+                            @else
+                                Tanggal:
+                            @endif
+                        </div>
+                        <div class="signature-title right">Disahkan oleh:</div>
+                        <div class="signature-space"></div>
+                        <div class="signature-name-line right">
+                            @if($page == $totalPages)
+                                @if($bom->approvedBy2)
+                                    ( {{ $bom->approvedBy2->nama }} )
+                                @else
+                                    ( _________________________ )
+                                @endif
+                            @else
+                                ( _________________________ )
+                            @endif
+                        </div>
+                        @if($page == $totalPages && $bom->approvedBy2 && $bom->approvedBy2->nip)
+                            <div class="signature-nip right">{{ $bom->approvedBy2->nip }}</div>
+                        @endif
+                    </div>
+                </div>
             </div>
-        @endfor
-    @endif
-    
-    <!-- Page Number - Fixed position di pojok kanan bawah -->
-    <div class="page-number">
-        Halaman 1 of {{ $totalPages }}
-    </div>
+        </div>
+        
+        <!-- Page Number untuk setiap halaman -->
+        <div class="page-number">
+            Halaman {{ $page }} of {{ $totalPages }}
+        </div>
+    @endfor
 </body>
 </html>
