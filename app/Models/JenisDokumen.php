@@ -47,4 +47,10 @@ class JenisDokumen extends Model
                 return [$item->id => $item->display_name];
             });
     }
+
+    // Additional method untuk validasi sebelum delete (tidak mengubah fungsi existing)
+    public function canBeDeleted()
+    {
+        return $this->billOfMaterials()->count() === 0;
+    }
 }

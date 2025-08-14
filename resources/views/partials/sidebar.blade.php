@@ -84,8 +84,8 @@
         @endphp
         
         @if($canAccessMasterData)
-        <li class="nav-item {{ request()->routeIs('master.*') || request()->routeIs('kode-material.*') || request()->routeIs('revisi.*') || request()->routeIs('proyek.*') || request()->routeIs('uom.*') ? 'menu-open' : '' }}">
-          <a href="#" class="nav-link {{ request()->routeIs('master.*') || request()->routeIs('kode-material.*') || request()->routeIs('revisi.*') || request()->routeIs('proyek.*') || request()->routeIs('uom.*') ? 'active' : '' }}">
+        <li class="nav-item {{ request()->routeIs('master.*') || request()->routeIs('kode-material.*') || request()->routeIs('revisi.*') || request()->routeIs('proyek.*') || request()->routeIs('uom.*') || request()->routeIs('jenis-dokumen.*') ? 'menu-open' : '' }}">
+          <a href="#" class="nav-link {{ request()->routeIs('master.*') || request()->routeIs('kode-material.*') || request()->routeIs('revisi.*') || request()->routeIs('proyek.*') || request()->routeIs('uom.*') || request()->routeIs('jenis-dokumen.*') ? 'active' : '' }}">
             <i class="nav-icon fas fa-database"></i>
             <p>
               Master Data
@@ -129,6 +129,16 @@
                  class="nav-link {{ request()->routeIs('uom.*') ? 'active' : '' }}">
                 <i class="far fa-circle nav-icon"></i>
                 <p>UOM</p>
+              </a>
+            </li>
+            @endif
+
+            @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('jenis-dokumen.index'))
+            <li class="nav-item">
+              <a href="{{ route('jenis-dokumen.index') }}" 
+                 class="nav-link {{ request()->routeIs('jenis-dokumen.*') ? 'active' : '' }}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Jenis Dokumen</p>
               </a>
             </li>
             @endif

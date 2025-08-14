@@ -310,6 +310,7 @@ class UserGroupController extends Controller
                 if (strpos($route, 'uom') !== false) return 'Master UOM';
                 if (strpos($route, 'proyek') !== false) return 'Master Proyek';
                 if (strpos($route, 'revisi') !== false) return 'Master Revisi';
+                if (strpos($route, 'jenis-dokumen') !== false) return 'Master Jenis Dokumen';
                 if (strpos($route, 'profile') !== false) return 'Profile Management';
                 return 'General';
             });

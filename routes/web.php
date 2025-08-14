@@ -11,6 +11,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserGroupController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\JenisDokumenController;
 
 // ==========================
 // 🔐 AUTH ROUTES
@@ -83,6 +84,15 @@ Route::middleware(['auth', 'permission'])->group(function () {
             Route::put('/{revisi}', [RevisiController::class, 'update'])->name('revisi.update');
             Route::delete('/{revisi}', [RevisiController::class, 'destroy'])->name('revisi.destroy');
         });
+
+        Route::prefix('jenis-dokumen')->group(function () {
+        Route::get('/', [JenisDokumenController::class, 'index'])->name('jenis-dokumen.index');
+        Route::get('/data', [JenisDokumenController::class, 'getData'])->name('jenis-dokumen.getData');
+        Route::post('/', [JenisDokumenController::class, 'store'])->name('jenis-dokumen.store');
+        Route::get('/{jenisDokumen}', [JenisDokumenController::class, 'show'])->name('jenis-dokumen.show');
+        Route::put('/{jenisDokumen}', [JenisDokumenController::class, 'update'])->name('jenis-dokumen.update');
+        Route::delete('/{jenisDokumen}', [JenisDokumenController::class, 'destroy'])->name('jenis-dokumen.destroy');
+    });
 
     });
 
