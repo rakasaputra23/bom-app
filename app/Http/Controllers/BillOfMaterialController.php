@@ -7,6 +7,7 @@ use App\Models\ItemBom;
 use App\Models\KodeMaterial;
 use App\Models\Proyek;
 use App\Models\Revisi;
+use App\Models\JenisDokumen; 
 use App\Models\Uom;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -55,67 +56,88 @@ class BillOfMaterialController extends Controller
      * Show the form for creating a new resource.
      */
     public function create()
-    {
-        // Generate nomor BOM otomatis
-        $nomorBom = $this->generateNomorBom();
+{
+    // Generate nomor BOM otomatis (fallback)
+    $nomorBom = 'Auto Generate';
 
-        // Ambil semua data proyek dengan kode dan nama
-        $proyeks = Proyek::select('id', 'kode_proyek', 'nama_proyek')
-            ->orderBy('kode_proyek')
-            ->get()
-            ->map(function ($proyek) {
-                $proyek->display_name = $proyek->kode_proyek . ' - ' . $proyek->nama_proyek;
-                return $proyek;
-            });
+    // Ambil data jenis dokumen
+    $jenisDokumens = JenisDokumen::where('is_active', 1)
+        ->orderBy('kode_dokumen')
+        ->get()
+        ->map(function ($jenisDokumen) {
+            $jenisDokumen->display_name = $jenisDokumen->kode_dokumen . ' - ' . $jenisDokumen->nama_dokumen;
+            return $jenisDokumen;
+        });
 
-        // Ambil semua data revisi
-        $revisis = Revisi::select('id', 'jenis_revisi', 'keterangan')
-            ->orderBy('jenis_revisi')
-            ->get()
-            ->map(function ($revisi) {
-                $revisi->nama_revisi = $revisi->jenis_revisi . (!empty($revisi->keterangan) ? ' - ' . $revisi->keterangan : '');
-                return $revisi;
-            });
+    // Ambil semua data proyek dengan kode dan nama
+    $proyeks = Proyek::select('id', 'kode_proyek', 'nama_proyek')
+        ->orderBy('kode_proyek')
+        ->get()
+        ->map(function ($proyek) {
+            $proyek->display_name = $proyek->kode_proyek . ' - ' . $proyek->nama_proyek;
+            return $proyek;
+        });
 
-        // Ambil semua data material dengan relasi UOM
-        $materials = KodeMaterial::with('uom')
-            ->select('id', 'kode_material', 'nama_material', 'spesifikasi', 'uom_id')
-            ->orderBy('kode_material')
-            ->get()
-            ->map(function ($material) {
-                $material->satuan = $material->uom ? $material->uom->satuan : '';
-                $material->qty_uom = $material->uom ? $material->uom->qty : 0;
-                $material->display_name = $material->kode_material . ' - ' . $material->nama_material;
-                return $material;
-            });
+    // Ambil semua data revisi
+    $revisis = Revisi::select('id', 'jenis_revisi', 'keterangan')
+        ->orderBy('jenis_revisi')
+        ->get()
+        ->map(function ($revisi) {
+            $revisi->nama_revisi = $revisi->jenis_revisi . (!empty($revisi->keterangan) ? ' - ' . $revisi->keterangan : '');
+            return $revisi;
+        });
 
-        return view('bom.create', compact('proyeks', 'revisis', 'materials', 'nomorBom'));
+    // Ambil semua data material dengan relasi UOM
+    $materials = KodeMaterial::with('uom')
+        ->select('id', 'kode_material', 'nama_material', 'spesifikasi', 'uom_id')
+        ->orderBy('kode_material')
+        ->get()
+        ->map(function ($material) {
+            $material->satuan = $material->uom ? $material->uom->satuan : '';
+            $material->qty_uom = $material->uom ? $material->uom->qty : 0;
+            $material->display_name = $material->kode_material . ' - ' . $material->nama_material;
+            return $material;
+        });
+
+    // PERBAIKAN: Pastikan semua data dikirim ke view
+        return view('bom.create', compact('proyeks', 'revisis', 'materials', 'nomorBom', 'jenisDokumens'));
     }
-
     /**
-     * Generate nomor BOM otomatis
-     */
-    private function generateNomorBom()
-    {
-        $year = date('Y');
-        $month = date('m');
-        
-        // Format: BOM/YYYY/MM/XXXX
-        $prefix = "BOM/{$year}/{$month}";
-        
-        // Cari nomor terakhir untuk bulan ini
-        $lastBom = BillOfMaterial::where('nomor_bom', 'like', "{$prefix}/%")
-            ->orderBy('nomor_bom', 'desc')
-            ->first();
-        
-        $counter = 1;
-        if ($lastBom) {
-            $parts = explode('/', $lastBom->nomor_bom);
-            $counter = intval(end($parts)) + 1;
-        }
-        
-        return $prefix . '/' . str_pad($counter, 4, '0', STR_PAD_LEFT);
+ * Generate nomor BOM via AJAX
+ */
+public function generateNomorBom(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'proyek_id' => 'required|exists:proyek,id',
+        'jenis_dokumen_id' => 'required|exists:jenis_dokumen,id'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Data proyek atau jenis dokumen tidak valid'
+        ], 400);
     }
+
+    try {
+        $nomorBom = BillOfMaterial::generateNomorBom(
+            $request->proyek_id,
+            $request->jenis_dokumen_id
+        );
+
+        return response()->json([
+            'success' => true,
+            'nomor_bom' => $nomorBom
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal generate nomor BOM: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
 
     /**
      * Store a newly created resource in storage.
@@ -124,7 +146,7 @@ class BillOfMaterialController extends Controller
     {
         // Validasi input
         $validator = Validator::make($request->all(), [
-            'nomor_bom' => 'required|string|max:50',
+            'jenis_dokumen_id' => 'required|exists:jenis_dokumen,id', // Tambahan validasi
             'kategori' => 'required|in:JIG,TOOL,MAL,TOOLS,CONSUMABLE TOOLS,SPECIAL PROCESS',
             'proyek_id' => 'required|exists:proyek,id',
             'revisi_id' => 'required|exists:revisi,id',
@@ -135,7 +157,8 @@ class BillOfMaterialController extends Controller
             'items.*.satuan' => 'required|string|max:20',
             'items.*.keterangan' => 'nullable|string|max:255'
         ], [
-            'nomor_bom.required' => 'Nomor BOM harus diisi',
+            'jenis_dokumen_id.required' => 'Jenis dokumen harus dipilih',
+            'jenis_dokumen_id.exists' => 'Jenis dokumen tidak valid',
             'kategori.required' => 'Kategori harus dipilih',
             'kategori.in' => 'Kategori tidak valid',
             'proyek_id.required' => 'Proyek harus dipilih',
@@ -164,6 +187,11 @@ class BillOfMaterialController extends Controller
         DB::beginTransaction();
 
         try {
+            // Generate nomor BOM berdasarkan proyek dan jenis dokumen yang dipilih
+            $nomorBom = BillOfMaterial::generateNomorBom(
+                $request->proyek_id, 
+                $request->jenis_dokumen_id
+            );
             // Tentukan status berdasarkan action
             $status = BillOfMaterial::STATUS_DRAFT;
             $submitForApproval = $request->has('submit_for_approval') && $request->input('submit_for_approval') == 'true';
@@ -177,9 +205,10 @@ class BillOfMaterialController extends Controller
 
             // Simpan Bill of Material dengan status yang sesuai dan created_by
             $billOfMaterial = BillOfMaterial::create([
-                'nomor_bom' => $request->nomor_bom,
+                'nomor_bom' => $nomorBom, // Menggunakan nomor yang di-generate
                 'created_by' => $currentUserId, // PERBAIKAN: Menggunakan fungsi helper
                 'kategori' => $request->kategori,
+                'jenis_dokumen_id' => $request->jenis_dokumen_id,
                 'proyek_id' => $request->proyek_id,
                 'revisi_id' => $request->revisi_id,
                 'tanggal' => $request->tanggal,
@@ -225,6 +254,7 @@ public function show($id)
         $bom = BillOfMaterial::with([
             'proyek', 
             'revisi', 
+            'jenisDokumen',
             'itemBom.kodeMaterial.uom', 
             'createdBy', 
             'approvedBy1', 

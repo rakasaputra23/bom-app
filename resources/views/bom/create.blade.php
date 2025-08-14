@@ -21,7 +21,7 @@
 <!-- Info Alert -->
 <div class="alert alert-info">
   <i class="fas fa-info-circle"></i>
-  <strong>Informasi:</strong> BOM yang dibuat akan memiliki status <strong>DRAFT</strong>. Anda dapat memilih untuk menyimpan sebagai draft atau langsung submit untuk proses approval.
+  <strong>Informasi:</strong> BOM yang dibuat akan memiliki status <strong>DRAFT</strong>. Nomor BOM akan di-generate otomatis berdasarkan proyek dan jenis dokumen yang dipilih. Format: 401/IMS/[JENIS_DOKUMEN]-[KODE_PROYEK]/[TAHUN]/[NOMOR_URUT]
 </div>
 
 <!-- Form Tambah -->
@@ -48,16 +48,62 @@
       
       <div class="row">
         <div class="form-group col-md-3">
+          <label for="proyek_id">Proyek <span class="text-danger">*</span></label>
+          <select class="form-control select2 @error('proyek_id') is-invalid @enderror" 
+                  id="proyek_id" name="proyek_id" required style="width: 100%;">
+            <option value="">Pilih Proyek</option>
+            @if(isset($proyeks) && $proyeks->count() > 0)
+              @foreach($proyeks as $proyek)
+                <option value="{{ $proyek->id }}" {{ old('proyek_id') == $proyek->id ? 'selected' : '' }}>
+                  {{ $proyek->kode_proyek }} - {{ $proyek->nama_proyek }}
+                </option>
+              @endforeach
+            @else
+              <option value="" disabled>Data proyek tidak ditemukan</option>
+            @endif
+          </select>
+          @error('proyek_id')
+            <div class="invalid-feedback">{{ $message }}</div>
+          @enderror
+          @if(!isset($proyeks) || $proyeks->count() == 0)
+            <small class="text-danger">Peringatan: Data proyek belum tersedia. Hubungi administrator.</small>
+          @endif
+        </div>
+        
+        <div class="form-group col-md-3">
+          <label for="jenis_dokumen_id">Jenis Dokumen <span class="text-danger">*</span></label>
+          <select class="form-control select2 @error('jenis_dokumen_id') is-invalid @enderror" 
+                  id="jenis_dokumen_id" name="jenis_dokumen_id" required style="width: 100%;">
+            <option value="">Pilih Jenis Dokumen</option>
+            @if(isset($jenisDokumens) && $jenisDokumens->count() > 0)
+              @foreach($jenisDokumens as $jenisDokumen)
+                <option value="{{ $jenisDokumen->id }}" {{ old('jenis_dokumen_id') == $jenisDokumen->id ? 'selected' : '' }}>
+                  {{ $jenisDokumen->kode_dokumen }} - {{ $jenisDokumen->nama_dokumen }}
+                </option>
+              @endforeach
+            @else
+              <option value="" disabled>Data jenis dokumen tidak ditemukan</option>
+            @endif
+          </select>
+          @error('jenis_dokumen_id')
+            <div class="invalid-feedback">{{ $message }}</div>
+          @enderror
+          @if(!isset($jenisDokumens) || $jenisDokumens->count() == 0)
+            <small class="text-danger">Peringatan: Data jenis dokumen belum tersedia. Hubungi administrator.</small>
+          @endif
+        </div>
+        
+        <div class="form-group col-md-3">
           <label for="nomor_bom">Nomor BOM <span class="text-danger">*</span></label>
-          <input type="text" class="form-control @error('nomor_bom') is-invalid @enderror" 
-                 id="nomor_bom" name="nomor_bom" placeholder="Nomor BOM" 
-                 value="{{ old('nomor_bom', $nomorBom) }}" 
+          <input type="text" class="form-control bg-light @error('nomor_bom') is-invalid @enderror" 
+                 id="nomor_bom" name="nomor_bom" placeholder="Pilih proyek dan jenis dokumen untuk generate nomor" 
+                 value="Auto Generate" 
                  readonly>
           @error('nomor_bom')
             <div class="invalid-feedback">{{ $message }}</div>
           @enderror
-          <small class="form-text text-muted">Nomor otomatis tergenerate</small>
         </div>
+        
         <div class="form-group col-md-3">
           <label for="kategori">Kategori <span class="text-danger">*</span></label>
           <select class="form-control @error('kategori') is-invalid @enderror" 
@@ -71,21 +117,9 @@
             <div class="invalid-feedback">{{ $message }}</div>
           @enderror
         </div>
-        <div class="form-group col-md-3">
-          <label for="proyek_id">Proyek <span class="text-danger">*</span></label>
-          <select class="form-control select2 @error('proyek_id') is-invalid @enderror" 
-                  id="proyek_id" name="proyek_id" required style="width: 100%;">
-            <option value="">Pilih Proyek</option>
-            @foreach($proyeks as $proyek)
-              <option value="{{ $proyek->id }}" {{ old('proyek_id') == $proyek->id ? 'selected' : '' }}>
-                {{ $proyek->display_name }}
-              </option>
-            @endforeach
-          </select>
-          @error('proyek_id')
-            <div class="invalid-feedback">{{ $message }}</div>
-          @enderror
-        </div>
+      </div>
+      
+      <div class="row">
         <div class="form-group col-md-3">
           <label for="revisi_id">Revisi <span class="text-danger">*</span></label>
           <select class="form-control select2 @error('revisi_id') is-invalid @enderror" 
@@ -101,10 +135,7 @@
             <div class="invalid-feedback">{{ $message }}</div>
           @enderror
         </div>
-      </div>
-      
-      <div class="row">
-        <div class="form-group col-md-4">
+        <div class="form-group col-md-3">
           <label for="tanggal">Tanggal <span class="text-danger">*</span></label>
           <input type="date" class="form-control @error('tanggal') is-invalid @enderror" 
                  id="tanggal" name="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}" required>
@@ -112,16 +143,30 @@
             <div class="invalid-feedback">{{ $message }}</div>
           @enderror
         </div>
-        <div class="form-group col-md-4">
+        <div class="form-group col-md-6">
           <label>Dibuat Oleh</label>
-          <input type="text" class="form-control" 
+          <input type="text" class="form-control bg-light" 
                  value="{{ Auth::user()->nama ?? Auth::user()->name }} ({{ Auth::user()->nip ?? Auth::user()->email }})" readonly>
           <small class="form-text text-muted">Pembuat BOM otomatis tercatat</small>
         </div>
-        <div class="form-group col-md-4">
-          <label>Status Awal</label>
-          <input type="text" class="form-control" value="DRAFT" readonly>
-          <small class="form-text text-muted">Status akan berubah sesuai pilihan aksi</small>
+      </div>
+      
+      <!-- Preview Nomor BOM -->
+      <div class="row">
+        <div class="col-12">
+          <div class="alert alert-light border" id="nomorPreview" style="display: none;">
+            <h6 class="text-primary mb-2">
+              <i class="fas fa-eye"></i> Preview Nomor BOM:
+            </h6>
+            <div class="row">
+              <div class="col-md-8">
+                <h4 class="mb-0" id="previewNomor" style="font-family: monospace; color: #28a745;"></h4>
+              </div>
+              <div class="col-md-4 text-right">
+                <small class="text-muted">Format: 401/IMS/[DOKUMEN]-[PROYEK]/[TAHUN]/[URUT]</small>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -203,7 +248,7 @@
           <div class="card card-outline card-info collapsed-card">
             <div class="card-header">
               <h3 class="card-title">
-                <i class="fas fa-question-circle"></i> Flow Approval BOM
+                <i class="fas fa-question-circle"></i> Informasi Generate Nomor BOM
               </h3>
               <div class="card-tools">
                 <button type="button" class="btn btn-tool" data-card-widget="collapse">
@@ -214,24 +259,27 @@
             <div class="card-body">
               <div class="row">
                 <div class="col-md-6">
-                  <h6><strong>Status BOM:</strong></h6>
+                  <h6><strong>Format Nomor BOM:</strong></h6>
+                  <p class="text-monospace">401/IMS/[JENIS_DOKUMEN]-[KODE_PROYEK]/[TAHUN]/[NOMOR_URUT]</p>
                   <ul class="list-unstyled">
-                    <li><span class="badge badge-secondary">DRAFT</span> - BOM baru dibuat, dapat diedit</li>
-                    <li><span class="badge badge-warning">PENDING APPROVAL 1</span> - Menunggu persetujuan level 1</li>
-                    <li><span class="badge badge-info">PENDING APPROVAL 2</span> - Menunggu persetujuan level 2</li>
-                    <li><span class="badge badge-success">APPROVED</span> - BOM telah disetujui dan dipublish</li>
-                    <li><span class="badge badge-danger">REJECTED</span> - BOM ditolak, dapat diperbaiki</li>
+                    <li><strong>401:</strong> Kode Unit (otomatis)</li>
+                    <li><strong>IMS:</strong> Nama Perusahaan (otomatis)</li>
+                    <li><strong>JENIS_DOKUMEN:</strong> Dari pilihan jenis dokumen</li>
+                    <li><strong>KODE_PROYEK:</strong> Dari proyek yang dipilih</li>
+                    <li><strong>TAHUN:</strong> Tahun pembuatan BOM</li>
+                    <li><strong>NOMOR_URUT:</strong> Auto increment per kombinasi</li>
                   </ul>
                 </div>
                 <div class="col-md-6">
-                  <h6><strong>Flow Approval:</strong></h6>
-                  <ol>
-                    <li>User membuat BOM → Status: <span class="badge badge-secondary">DRAFT</span></li>
-                    <li>User submit BOM → Status: <span class="badge badge-warning">PENDING APPROVAL 1</span></li>
-                    <li>Approver 1 approve → Status: <span class="badge badge-info">PENDING APPROVAL 2</span></li>
-                    <li>Approver 2 approve → Status: <span class="badge badge-success">APPROVED</span></li>
-                    <li>Jika di-reject → Status: <span class="badge badge-danger">REJECTED</span> (dapat diperbaiki)</li>
-                  </ol>
+                  <h6><strong>Contoh Nomor BOM:</strong></h6>
+                  <ul>
+                    <li><code>401/IMS/BRM-E12/2025/01</code></li>
+                    <li><code>401/IMS/SPE-E12/2025/01</code></li>
+                    <li><code>401/IMS/BRM-E13/2025/01</code></li>
+                  </ul>
+                  <div class="alert alert-warning mt-3">
+                    <small><i class="fas fa-exclamation-triangle"></i> <strong>Penting:</strong> Pilih proyek dan jenis dokumen terlebih dahulu untuk melihat preview nomor BOM yang akan di-generate.</small>
+                  </div>
                 </div>
               </div>
             </div>
@@ -241,6 +289,7 @@
     </form>
   </div>
 </div>
+
 @endsection
 
 @push('styles')
@@ -251,7 +300,6 @@
 <link rel="stylesheet" href="{{ asset('plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') }}">
 <!-- Custom CSS untuk memperbaiki overlay SweetAlert2 -->
 <style>
-/* Pastikan backdrop SweetAlert2 memblokir semua interaksi */
 .swal2-container.swal2-backdrop-fix {
   z-index: 99999 !important;
 }
@@ -261,28 +309,41 @@
   pointer-events: all !important;
 }
 
-/* Pastikan elemen select2 tidak bisa di-hover saat modal aktif */
 .swal2-shown .select2-container,
 .swal2-shown .form-control,
 .swal2-shown .btn {
   pointer-events: none !important;
 }
 
-/* Pastikan modal SweetAlert2 tetap bisa diinteraksi */
 .swal2-shown .swal2-container * {
   pointer-events: auto !important;
 }
 
-/* Hilangkan highlight effect pada elemen yang tertutup modal */
 .swal2-shown .form-control:focus,
 .swal2-shown .select2-container--bootstrap4 .select2-selection--single:focus {
   box-shadow: none !important;
   border-color: #ced4da !important;
 }
 
-/* Pastikan backdrop menutupi semua elemen */
 .swal2-backdrop-show {
   background-color: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Loading style untuk preview nomor */
+#nomorPreview.loading {
+  opacity: 0.7;
+}
+
+#previewNomor.loading::after {
+  content: "Generating...";
+  animation: dots 1.5s steps(5, end) infinite;
+}
+
+@keyframes dots {
+  0%, 20% { content: "Generating"; }
+  40% { content: "Generating."; }
+  60% { content: "Generating.."; }
+  80% { content: "Generating..."; }
 }
 </style>
 @endpush
@@ -309,9 +370,63 @@ $(document).ready(function() {
 
   initSelect2('#proyek_id', 'Pilih Proyek');
   initSelect2('#revisi_id', 'Pilih Revisi');
+  initSelect2('#jenis_dokumen_id', 'Pilih Jenis Dokumen');
 
   // Add first item on load
   addNewItem();
+  
+  // Handler untuk generate nomor BOM ketika proyek dan jenis dokumen dipilih
+  function generateNomorBom() {
+    const proyekId = $('#proyek_id').val();
+    const jenisDokumenId = $('#jenis_dokumen_id').val();
+    
+    if (proyekId && jenisDokumenId) {
+      // Show loading
+      $('#nomorPreview').show().addClass('loading');
+      $('#previewNomor').addClass('loading').text('');
+      
+      $.ajax({
+        url: '{{ route("bom.generate-nomor") }}',
+        method: 'POST',
+        data: {
+          _token: '{{ csrf_token() }}',
+          proyek_id: proyekId,
+          jenis_dokumen_id: jenisDokumenId
+        },
+        success: function(response) {
+          if (response.success) {
+            $('#nomor_bom').val(response.nomor_bom);
+            $('#previewNomor').removeClass('loading').text(response.nomor_bom);
+            $('#nomorPreview').removeClass('loading');
+          } else {
+            showAlert('error', 'Error!', response.message || 'Gagal generate nomor BOM');
+            hideNomorPreview();
+          }
+        },
+        error: function(xhr) {
+          let message = 'Gagal generate nomor BOM';
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            message = xhr.responseJSON.message;
+          }
+          showAlert('error', 'Error!', message);
+          hideNomorPreview();
+        }
+      });
+    } else {
+      hideNomorPreview();
+    }
+  }
+  
+  function hideNomorPreview() {
+    $('#nomorPreview').hide().removeClass('loading');
+    $('#previewNomor').removeClass('loading').text('');
+    $('#nomor_bom').val('Auto Generate');
+  }
+  
+  // Event handlers untuk generate nomor
+  $('#proyek_id, #jenis_dokumen_id').on('change', function() {
+    generateNomorBom();
+  });
   
   // Material change handler
   $(document).on('change', '.material-select', function() {
@@ -424,6 +539,12 @@ $(document).ready(function() {
   
   // Form validation
   function validateForm() {
+    // Check if nomor BOM sudah di-generate
+    const nomorBom = $('#nomor_bom').val();
+    if (!nomorBom || nomorBom === 'Auto Generate') {
+      return 'Silakan pilih proyek dan jenis dokumen untuk generate nomor BOM';
+    }
+    
     const hasItems = $('#itemTable tbody tr').length > 0;
     if (!hasItems) return 'Minimal harus ada 1 item!';
     
@@ -437,7 +558,7 @@ $(document).ready(function() {
       }
     });
     
-    if (!hasValidItems) return 'Minimal harus ada 1 item';
+    if (!hasValidItems) return 'Minimal harus ada 1 item dengan material dan quantity yang valid';
     if (!checkDuplicateMaterials()) return 'Terdapat material yang sama dipilih lebih dari sekali!';
     
     return null;
@@ -521,13 +642,13 @@ $(document).ready(function() {
 
   // Reset form function
   function resetForm() {
-    $('#proyek_id, #revisi_id').val(null).trigger('change');
+    $('#proyek_id, #revisi_id, #jenis_dokumen_id').val(null).trigger('change');
     $('#itemTable tbody').empty();
     $('.is-invalid').removeClass('is-invalid');
     $('.invalid-feedback').remove();
     $('#bomForm')[0].reset();
-    $('#nomor_bom').val('{{ $nomorBom }}');
     $('#tanggal').val('{{ date('Y-m-d') }}');
+    hideNomorPreview();
     
     rowCounter = 0;
     addNewItem();
@@ -570,8 +691,8 @@ $(document).ready(() => {
     icon: 'success',
     title: 'Berhasil!',
     text: '{{ session('success') }}',
-    timer: 3000,
-    showConfirmButton: false,
+    timer: 5000,
+    showConfirmButton: true,
     allowOutsideClick: false,
     backdrop: true,
     heightAuto: false,

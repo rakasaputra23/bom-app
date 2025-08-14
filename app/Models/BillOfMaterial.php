@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\JenisDokumen;
 use Carbon\Carbon;
 
 class BillOfMaterial extends Model
@@ -15,6 +16,7 @@ class BillOfMaterial extends Model
     protected $fillable = [
         'nomor_bom',
         'kategori',
+        'jenis_dokumen_id',
         'proyek_id',
         'revisi_id',
         'tanggal',
@@ -98,6 +100,64 @@ class BillOfMaterial extends Model
     const STATUS_APPROVED = 'APPROVED';
     const STATUS_REJECTED = 'REJECTED';
 
+
+    
+// Method untuk generate nomor BOM otomatis
+    public static function generateNomorBom($proyekId, $jenisDokumenId)
+{
+    try {
+        // Get data proyek dan jenis dokumen
+        $proyek = \App\Models\Proyek::findOrFail($proyekId);
+        $jenisDokumen = \App\Models\JenisDokumen::findOrFail($jenisDokumenId);
+        
+        // 1. Nama Perusahaan - otomatis IMS
+        $namaPerusahaan = 'IMS';
+        
+        // 2. Jenis Dokumen - dari tabel jenis_dokumen
+        $jenisDokumenKode = $jenisDokumen->kode_dokumen;
+        
+        // 3. Kode Proyek - dari tabel proyek
+        $kodeProyek = $proyek->kode_proyek;
+        
+        // 4. Tahun - tahun pembuatan BOM
+        $tahun = date('Y');
+        
+        // 5. Nomor Urut - auto increment berdasarkan kombinasi proyek+jenis dokumen+tahun
+        $searchPrefix = "4%/IMS/{$jenisDokumenKode}-{$kodeProyek}/{$tahun}";
+        
+        // Cari nomor urut terakhir untuk kombinasi ini
+        $lastBom = static::where('nomor_bom', 'like', $searchPrefix)
+            ->orderBy('nomor_bom', 'desc')
+            ->first();
+        
+        $nomorUrut = 1; // Default nomor urut
+        if ($lastBom) {
+            // Extract nomor urut dari kode unit (4XX)
+            $parts = explode('/', $lastBom->nomor_bom);
+            if (count($parts) >= 4 && strlen($parts[0]) >= 2) { // 401/IMS/BRM-E12/2025
+                $kodeUnit = $parts[0]; // Ambil bagian pertama (4XX)
+                $lastNumber = intval(substr($kodeUnit, 1)); // Ambil XX dari 4XX
+                $nomorUrut = $lastNumber + 1;
+            }
+        }
+        
+        // 6. Kode Unit - 4 + nomor urut (4XX)
+        $kodeUnit = '4' . str_pad($nomorUrut, 2, '0', STR_PAD_LEFT);
+        
+        // Format akhir: 401/IMS/BRM-E12/2025
+        $nomorBom = "{$kodeUnit}/{$namaPerusahaan}/{$jenisDokumenKode}-{$kodeProyek}/{$tahun}";
+        
+        return $nomorBom;
+        
+    } catch (\Exception $e) {
+        // Log error untuk debugging
+        \Log::error('Error generating nomor BOM: ' . $e->getMessage());
+        
+        // Fallback ke format lama jika ada error
+        return static::generateFallbackNomorBom();
+    }
+}
+
     // Available categories
     public static function getAvailableCategories()
     {
@@ -172,6 +232,11 @@ class BillOfMaterial extends Model
     public function proyek()
     {
         return $this->belongsTo(Proyek::class, 'proyek_id');
+    }
+
+    public function jenisDokumen()
+    {
+        return $this->belongsTo(JenisDokumen::class, 'jenis_dokumen_id');
     }
 
     /**

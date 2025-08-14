@@ -110,6 +110,9 @@ Route::middleware(['auth', 'permission'])->group(function () {
         Route::get('/ajax/materials', [BillOfMaterialController::class, 'getMaterials'])->name('bom.materials');
         Route::get('/report/generate', [BillOfMaterialController::class, 'generateReport'])->name('bom.report.generate');
         Route::get('/statistics/data', [BillOfMaterialController::class, 'getStatistics'])->name('bom.statistics');
+          // AJAX Routes - PERBAIKAN PENTING
+        Route::post('/generate-nomor', [BillOfMaterialController::class, 'generateNomorBom'])->name('bom.generate-nomor');
+        Route::get('/materials/search', [BillOfMaterialController::class, 'getMaterials'])->name('materials.search');
         
     });
 

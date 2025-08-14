@@ -933,14 +933,35 @@ $(document).ready(function() {
           </div>
         `);
 
+        function formatNomorBomDisplay(nomorBom) {
+    if (!nomorBom) return '-';
+    
+    let nomorUrutInfo = '';
+    let parts = nomorBom.split('/');
+    
+    if (parts.length >= 4) {
+        // Format: 401/IMS/BRM-E12/2025 (nomor urut ada di kode unit)
+        let kodeUnit = parts[0]; // 401, 402, 403, dst
+        if (kodeUnit.length >= 3 && kodeUnit.startsWith('4')) {
+            let nomorUrut = kodeUnit.substring(1); // Ambil "01" dari "401"
+            nomorUrutInfo = `<br><small class="text-muted">Nomor Urut: ${nomorUrut}</small>`;
+        }
+    }
+    
+    return `<strong>${nomorBom}</strong>${nomorUrutInfo}`;
+}
+
         // Fill modal with data
-        $('#view_nomor').text(response.nomor_bom);
-        $('#view_proyek').text(response.proyek ? response.proyek.nama_proyek : '-');
+        $('#view_nomor').html(formatNomorBomDisplay(response.nomor_bom));
+        $('#view_proyek').html(response.proyek ? 
+            `<strong>${response.proyek.nama_proyek}</strong><br><small class="text-muted">${response.proyek.kode_proyek}</small>` : '-');
         $('#view_tanggal').text(response.tanggal_formatted);
         $('#view_revisi').text(response.revisi ? response.revisi.jenis_revisi : '-');
         $('#view_kategori').text(response.kategori);
         $('#view_status').html(response.status_badge || response.status);
-        $('#view_created_by').html(response.created_by ? response.created_by.nama + '<br><small class="text-muted">' + (response.created_by.nip || '') + '</small>' : '-');
+        $('#view_created_by').html(response.created_by ? 
+            response.created_by.nama + '<br><small class="text-muted">' + (response.created_by.nip || '') + '</small>' : '-');
+
 
         // Show approval history if exists
         var historyHtml = '';
@@ -987,50 +1008,50 @@ $(document).ready(function() {
           $('#approval_history').show();
         }
 
-        // Fill items table - FIXED VERSION
-        var itemsHtml = '';
-        if (response.item_bom && response.item_bom.length > 0) {
-            response.item_bom.forEach(function(item, index) {
-                // Perbaikan logika qty dan satuan sesuai dengan create blade
-                let qty = 0;
-                let satuan = '-';
-                
-                // Jika item memiliki qty tersimpan, gunakan itu
-                if (item.qty !== null && item.qty !== undefined && item.qty !== 0) {
-                    qty = parseFloat(item.qty);
-                } 
-                // Jika tidak ada qty tersimpan tapi ada UOM, gunakan qty dari UOM
-                else if (item.kode_material && item.kode_material.uom && item.kode_material.uom.qty) {
-                    qty = parseFloat(item.kode_material.uom.qty);
-                }
-                // Default fallback
-                else {
-                    qty = 1;
-                }
-                
-                // Untuk satuan, prioritas: satuan tersimpan di item > satuan dari UOM > default
-                if (item.satuan && item.satuan.trim() !== '') {
-                    satuan = item.satuan;
-                } else if (item.kode_material && item.kode_material.uom && item.kode_material.uom.satuan) {
-                    satuan = item.kode_material.uom.satuan;
-                }
-                
-                itemsHtml += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${item.kode_material ? item.kode_material.kode_material : '-'}</td>
-                        <td>${item.kode_material ? item.kode_material.nama_material : '-'}</td>
-                        <td>${qty.toLocaleString('id-ID')}</td>
-                        <td>${satuan}</td>
-                        <td>${item.kode_material && item.kode_material.spesifikasi ? item.kode_material.spesifikasi : '-'}</td>
-                        <td>${item.keterangan || '-'}</td>
-                    </tr>
-                `;
-            });
-        } else {
-            itemsHtml = '<tr><td colspan="7" class="text-center">Tidak ada item</td></tr>';
+        // Fill items table - FIXED VERSION sesuai create blade
+var itemsHtml = '';
+if (response.item_bom && response.item_bom.length > 0) {
+    response.item_bom.forEach(function(item, index) {
+        // Perbaikan logika qty dan satuan sesuai dengan create blade
+        let qty = 0;
+        let satuan = '-';
+        
+        // Jika item memiliki qty tersimpan, gunakan itu
+        if (item.qty !== null && item.qty !== undefined && item.qty !== 0) {
+            qty = parseFloat(item.qty);
+        } 
+        // Jika tidak ada qty tersimpan tapi ada UOM, gunakan qty dari UOM
+        else if (item.kode_material && item.kode_material.uom && item.kode_material.uom.qty) {
+            qty = parseFloat(item.kode_material.uom.qty);
         }
-        $('#view_items').html(itemsHtml);
+        // Default fallback
+        else {
+            qty = 1;
+        }
+        
+        // Untuk satuan, prioritas: satuan tersimpan di item > satuan dari UOM > default
+        if (item.satuan && item.satuan.trim() !== '') {
+            satuan = item.satuan;
+        } else if (item.kode_material && item.kode_material.uom && item.kode_material.uom.satuan) {
+            satuan = item.kode_material.uom.satuan;
+        }
+        
+        itemsHtml += `
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${item.kode_material ? item.kode_material.kode_material : '-'}</strong></td>
+                <td>${item.kode_material ? item.kode_material.nama_material : '-'}</td>
+                <td class="text-right"><strong>${qty.toLocaleString('id-ID')}</strong></td>
+                <td class="text-center"><span class="badge badge-light">${satuan}</span></td>
+                <td><small>${item.kode_material && item.kode_material.spesifikasi ? item.kode_material.spesifikasi : '-'}</small></td>
+                <td><small>${item.keterangan || '-'}</small></td>
+            </tr>
+        `;
+    });
+} else {
+    itemsHtml = '<tr><td colspan="7" class="text-center text-muted"><em>Tidak ada item</em></td></tr>';
+}
+$('#view_items').html(itemsHtml);
       },
       error: function(xhr) {
         $('#viewModal .modal-body').html(`
