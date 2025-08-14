@@ -346,24 +346,24 @@
       </div>
             <!-- Update modal footer di viewModal -->
       <div class="modal-footer">
-          <a href="#" 
-            class="btn btn-success" 
-            id="exportPdfBtn" 
-            target="_blank"
-            title="Export ke PDF">
-              <i class="fas fa-file-pdf"></i> Export PDF
-          </a>
-          <a href="#" 
-            class="btn btn-info" 
-            id="previewPdfBtn" 
-            target="_blank"
-            title="Preview PDF">
-              <i class="fas fa-eye"></i> Preview PDF
-          </a>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">
-              <i class="fas fa-times"></i> Tutup
-          </button>
-      </div>
+    <a href="#" 
+      class="btn btn-success" 
+      id="exportPdfBtn" 
+      target="_blank"
+      title="Export ke PDF">
+        <i class="fas fa-file-pdf"></i> Export PDF
+    </a>
+    <a href="#" 
+      class="btn btn-info" 
+      id="previewPdfBtn" 
+      target="_blank"
+      title="Preview PDF">
+        <i class="fas fa-eye"></i> Preview PDF
+    </a>
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+        <i class="fas fa-times"></i> Tutup
+    </button>
+</div>
     </div>
   </div>
 </div>
@@ -863,234 +863,234 @@ $(document).ready(function() {
   var currentAction = null;
 
   // FIXED: View BOM function - moved outside and properly separated
-  function loadBomDetail(bomId) {
-    $.ajax({
-      url: `/bom/${bomId}`,
-      type: 'GET',
-      dataType: 'json',
-      success: function(response) {
-        // Restore modal body structure
-        $('#viewModal .modal-body').html(`
-          <div class="container-fluid">
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label font-weight-bold">Nomor BOM</label>
-                  <div class="col-sm-8">
-                    <p class="form-control-plaintext" id="view_nomor"></p>
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label font-weight-bold">Proyek</label>
-                  <div class="col-sm-8">
-                    <p class="form-control-plaintext" id="view_proyek"></p>
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label font-weight-bold">Status</label>
-                  <div class="col-sm-8">
-                    <p class="form-control-plaintext" id="view_status"></p>
-                  </div>
+function loadBomDetail(bomId) {
+  $.ajax({
+    url: `/bom/${bomId}`,
+    type: 'GET',
+    dataType: 'json',
+    success: function(response) {
+      // Restore modal body structure
+      $('#viewModal .modal-body').html(`
+        <div class="container-fluid">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label font-weight-bold">Nomor BOM</label>
+                <div class="col-sm-8">
+                  <p class="form-control-plaintext" id="view_nomor"></p>
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label font-weight-bold">Tanggal</label>
-                  <div class="col-sm-8">
-                    <p class="form-control-plaintext" id="view_tanggal"></p>
-                  </div>
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label font-weight-bold">Proyek</label>
+                <div class="col-sm-8">
+                  <p class="form-control-plaintext" id="view_proyek"></p>
                 </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label font-weight-bold">Revisi</label>
-                  <div class="col-sm-8">
-                    <p class="form-control-plaintext" id="view_revisi"></p>
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label font-weight-bold">Dibuat Oleh</label>
-                  <div class="col-sm-8">
-                    <p class="form-control-plaintext" id="view_created_by"></p>
-                  </div>
+              </div>
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label font-weight-bold">Status</label>
+                <div class="col-sm-8">
+                  <p class="form-control-plaintext" id="view_status"></p>
                 </div>
               </div>
             </div>
-            <div id="approval_history" class="row mb-3" style="display: none;">
-              <div class="col-12">
-                <h5>History Approval</h5>
-                <div class="table-responsive">
-                  <table class="table table-sm table-bordered">
-                    <thead class="thead-light">
-                      <tr>
-                        <th>Level</th>
-                        <th>Approver</th>
-                        <th>Tanggal</th>
-                        <th>Keterangan</th>
-                      </tr>
-                    </thead>
-                    <tbody id="approval_history_body">
-                    </tbody>
-                  </table>
+            <div class="col-md-6">
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label font-weight-bold">Tanggal</label>
+                <div class="col-sm-8">
+                  <p class="form-control-plaintext" id="view_tanggal"></p>
                 </div>
               </div>
-            </div>
-            <div class="row mb-3">
-              <div class="col-md-12 text-center">
-                <h4 class="bg-light py-2" id="view_kategori"></h4>
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label font-weight-bold">Revisi</label>
+                <div class="col-sm-8">
+                  <p class="form-control-plaintext" id="view_revisi"></p>
+                </div>
               </div>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-bordered table-striped">
-                <thead class="bg-secondary">
-                  <tr>
-                    <th width="5%">NO</th>
-                    <th width="15%">KODE MATERIAL</th>
-                    <th width="25%">DESKRIPSI</th>
-                    <th width="10%">QTY</th>
-                    <th width="10%">SATUAN</th>
-                    <th width="15%">SPESIFIKASI</th>
-                    <th width="20%">KETERANGAN</th>
-                  </tr>
-                </thead>
-                <tbody id="view_items">
-                </tbody>
-              </table>
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label font-weight-bold">Dibuat Oleh</label>
+                <div class="col-sm-8">
+                  <p class="form-control-plaintext" id="view_created_by"></p>
+                </div>
+              </div>
             </div>
           </div>
-        `);
-
-        function formatNomorBomDisplay(nomorBom) {
-    if (!nomorBom) return '-';
-    
-    let nomorUrutInfo = '';
-    let parts = nomorBom.split('/');
-    
-    if (parts.length >= 4) {
-        // Format: 401/IMS/BRM-E12/2025 (nomor urut ada di kode unit)
-        let kodeUnit = parts[0]; // 401, 402, 403, dst
-        if (kodeUnit.length >= 3 && kodeUnit.startsWith('4')) {
-            let nomorUrut = kodeUnit.substring(1); // Ambil "01" dari "401"
-            nomorUrutInfo = `<br><small class="text-muted">Nomor Urut: ${nomorUrut}</small>`;
-        }
-    }
-    
-    return `<strong>${nomorBom}</strong>${nomorUrutInfo}`;
-
-    $('#exportPdfBtn').attr('href', `/bom/${bomId}/export-pdf`);
-    $('#previewPdfBtn').attr('href', `/bom/${bomId}/preview-pdf`);
-}
-
-        // Fill modal with data
-        $('#view_nomor').html(formatNomorBomDisplay(response.nomor_bom));
-        $('#view_proyek').html(response.proyek ? 
-            `<strong>${response.proyek.nama_proyek}</strong><br><small class="text-muted">${response.proyek.kode_proyek}</small>` : '-');
-        $('#view_tanggal').text(response.tanggal_formatted);
-        $('#view_revisi').text(response.revisi ? response.revisi.jenis_revisi : '-');
-        $('#view_kategori').text(response.kategori);
-        $('#view_status').html(response.status_badge || response.status);
-        $('#view_created_by').html(response.created_by ? 
-            response.created_by.nama + '<br><small class="text-muted">' + (response.created_by.nip || '') + '</small>' : '-');
-
-
-        // Show approval history if exists
-        var historyHtml = '';
-        var hasHistory = false;
-
-        if (response.approvedBy1) {
-          historyHtml += `
-            <tr class="table-success">
-              <td>Approval 1</td>
-              <td>${response.approvedBy1.nama}<br><small>${response.approvedBy1.nip || ''}</small></td>
-              <td>${new Date(response.approved_by_1_at).toLocaleDateString('id-ID')} ${new Date(response.approved_by_1_at).toLocaleTimeString('id-ID')}</td>
-              <td>${response.approved_by_1_note || '-'}</td>
-            </tr>
-          `;
-          hasHistory = true;
-        }
-
-        if (response.approvedBy2) {
-          historyHtml += `
-            <tr class="table-success">
-              <td>Final Approval</td>
-              <td>${response.approvedBy2.nama}<br><small>${response.approvedBy2.nip || ''}</small></td>
-              <td>${new Date(response.approved_by_2_at).toLocaleDateString('id-ID')} ${new Date(response.approved_by_2_at).toLocaleTimeString('id-ID')}</td>
-              <td>${response.approved_by_2_note || '-'}</td>
-            </tr>
-          `;
-          hasHistory = true;
-        }
-
-        if (response.rejectedBy) {
-          historyHtml += `
-            <tr class="table-danger">
-              <td>Rejected</td>
-              <td>${response.rejectedBy.nama}<br><small>${response.rejectedBy.nip || ''}</small></td>
-              <td>${new Date(response.rejected_at).toLocaleDateString('id-ID')} ${new Date(response.rejected_at).toLocaleTimeString('id-ID')}</td>
-              <td>${response.rejected_note || '-'}</td>
-            </tr>
-          `;
-          hasHistory = true;
-        }
-
-        if (hasHistory) {
-          $('#approval_history_body').html(historyHtml);
-          $('#approval_history').show();
-        }
-
-        // Fill items table - FIXED VERSION sesuai create blade
-var itemsHtml = '';
-if (response.item_bom && response.item_bom.length > 0) {
-    response.item_bom.forEach(function(item, index) {
-        // Perbaikan logika qty dan satuan sesuai dengan create blade
-        let qty = 0;
-        let satuan = '-';
-        
-        // Jika item memiliki qty tersimpan, gunakan itu
-        if (item.qty !== null && item.qty !== undefined && item.qty !== 0) {
-            qty = parseFloat(item.qty);
-        } 
-        // Jika tidak ada qty tersimpan tapi ada UOM, gunakan qty dari UOM
-        else if (item.kode_material && item.kode_material.uom && item.kode_material.uom.qty) {
-            qty = parseFloat(item.kode_material.uom.qty);
-        }
-        // Default fallback
-        else {
-            qty = 1;
-        }
-        
-        // Untuk satuan, prioritas: satuan tersimpan di item > satuan dari UOM > default
-        if (item.satuan && item.satuan.trim() !== '') {
-            satuan = item.satuan;
-        } else if (item.kode_material && item.kode_material.uom && item.kode_material.uom.satuan) {
-            satuan = item.kode_material.uom.satuan;
-        }
-        
-        itemsHtml += `
-            <tr>
-                <td>${index + 1}</td>
-                <td><strong>${item.kode_material ? item.kode_material.kode_material : '-'}</strong></td>
-                <td>${item.kode_material ? item.kode_material.nama_material : '-'}</td>
-                <td class="text-right"><strong>${qty.toLocaleString('id-ID')}</strong></td>
-                <td class="text-center"><span class="badge badge-light">${satuan}</span></td>
-                <td><small>${item.kode_material && item.kode_material.spesifikasi ? item.kode_material.spesifikasi : '-'}</small></td>
-                <td><small>${item.keterangan || '-'}</small></td>
-            </tr>
-        `;
-    });
-} else {
-    itemsHtml = '<tr><td colspan="7" class="text-center text-muted"><em>Tidak ada item</em></td></tr>';
-}
-$('#view_items').html(itemsHtml);
-      },
-      error: function(xhr) {
-        $('#viewModal .modal-body').html(`
-          <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
-            Gagal memuat data. Silakan coba lagi.
+          <div id="approval_history" class="row mb-3" style="display: none;">
+            <div class="col-12">
+              <h5>History Approval</h5>
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                  <thead class="thead-light">
+                    <tr>
+                      <th>Level</th>
+                      <th>Approver</th>
+                      <th>Tanggal</th>
+                      <th>Keterangan</th>
+                    </tr>
+                  </thead>
+                  <tbody id="approval_history_body">
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        `);
+          <div class="row mb-3">
+            <div class="col-md-12 text-center">
+              <h4 class="bg-light py-2" id="view_kategori"></h4>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+              <thead class="bg-secondary">
+                <tr>
+                  <th width="5%">NO</th>
+                  <th width="15%">KODE MATERIAL</th>
+                  <th width="25%">DESKRIPSI</th>
+                  <th width="10%">QTY</th>
+                  <th width="10%">SATUAN</th>
+                  <th width="15%">SPESIFIKASI</th>
+                  <th width="20%">KETERANGAN</th>
+                </tr>
+              </thead>
+              <tbody id="view_items">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `);
+
+      function formatNomorBomDisplay(nomorBom) {
+        if (!nomorBom) return '-';
+        
+        let nomorUrutInfo = '';
+        let parts = nomorBom.split('/');
+        
+        if (parts.length >= 4) {
+            // Format: 401/IMS/BRM-E12/2025 (nomor urut ada di kode unit)
+            let kodeUnit = parts[0]; // 401, 402, 403, dst
+            if (kodeUnit.length >= 3 && kodeUnit.startsWith('4')) {
+                let nomorUrut = kodeUnit.substring(1); // Ambil "01" dari "401"
+                nomorUrutInfo = `<br><small class="text-muted">Nomor Urut: ${nomorUrut}</small>`;
+            }
+        }
+        
+        return `<strong>${nomorBom}</strong>${nomorUrutInfo}`;
       }
-    });
-  }
+
+      // PERBAIKAN: Set URL untuk tombol export dan preview PDF
+      $('#exportPdfBtn').attr('href', `/bom/${bomId}/export-pdf`);
+      $('#previewPdfBtn').attr('href', `/bom/${bomId}/preview-pdf`);
+
+      // Fill modal with data
+      $('#view_nomor').html(formatNomorBomDisplay(response.nomor_bom));
+      $('#view_proyek').html(response.proyek ? 
+          `<strong>${response.proyek.nama_proyek}</strong><br><small class="text-muted">${response.proyek.kode_proyek}</small>` : '-');
+      $('#view_tanggal').text(response.tanggal_formatted);
+      $('#view_revisi').text(response.revisi ? response.revisi.jenis_revisi : '-');
+      $('#view_kategori').text(response.kategori);
+      $('#view_status').html(response.status_badge || response.status);
+      $('#view_created_by').html(response.created_by ? 
+          response.created_by.nama + '<br><small class="text-muted">' + (response.created_by.nip || '') + '</small>' : '-');
+
+      // Show approval history if exists
+      var historyHtml = '';
+      var hasHistory = false;
+
+      if (response.approvedBy1) {
+        historyHtml += `
+          <tr class="table-success">
+            <td>Approval 1</td>
+            <td>${response.approvedBy1.nama}<br><small>${response.approvedBy1.nip || ''}</small></td>
+            <td>${new Date(response.approved_by_1_at).toLocaleDateString('id-ID')} ${new Date(response.approved_by_1_at).toLocaleTimeString('id-ID')}</td>
+            <td>${response.approved_by_1_note || '-'}</td>
+          </tr>
+        `;
+        hasHistory = true;
+      }
+
+      if (response.approvedBy2) {
+        historyHtml += `
+          <tr class="table-success">
+            <td>Final Approval</td>
+            <td>${response.approvedBy2.nama}<br><small>${response.approvedBy2.nip || ''}</small></td>
+            <td>${new Date(response.approved_by_2_at).toLocaleDateString('id-ID')} ${new Date(response.approved_by_2_at).toLocaleTimeString('id-ID')}</td>
+            <td>${response.approved_by_2_note || '-'}</td>
+          </tr>
+        `;
+        hasHistory = true;
+      }
+
+      if (response.rejectedBy) {
+        historyHtml += `
+          <tr class="table-danger">
+            <td>Rejected</td>
+            <td>${response.rejectedBy.nama}<br><small>${response.rejectedBy.nip || ''}</small></td>
+            <td>${new Date(response.rejected_at).toLocaleDateString('id-ID')} ${new Date(response.rejected_at).toLocaleTimeString('id-ID')}</td>
+            <td>${response.rejected_note || '-'}</td>
+          </tr>
+        `;
+        hasHistory = true;
+      }
+
+      if (hasHistory) {
+        $('#approval_history_body').html(historyHtml);
+        $('#approval_history').show();
+      }
+
+      // PERBAIKAN: Fill items table - sesuai dengan logika export PDF
+      var itemsHtml = '';
+      if (response.item_bom && response.item_bom.length > 0) {
+          response.item_bom.forEach(function(item, index) {
+              // Logika qty dan satuan yang sama dengan export PDF
+              let qty = 0;
+              let satuan = '-';
+              
+              // Jika item memiliki qty tersimpan, gunakan itu
+              if (item.qty !== null && item.qty !== undefined && item.qty !== 0) {
+                  qty = parseFloat(item.qty);
+              } 
+              // Jika tidak ada qty tersimpan tapi ada UOM, gunakan qty dari UOM
+              else if (item.kode_material && item.kode_material.uom && item.kode_material.uom.qty) {
+                  qty = parseFloat(item.kode_material.uom.qty);
+              }
+              // Default fallback
+              else {
+                  qty = 1;
+              }
+              
+              // Untuk satuan, prioritas: satuan tersimpan di item > satuan dari UOM > default
+              if (item.satuan && item.satuan.trim() !== '') {
+                  satuan = item.satuan;
+              } else if (item.kode_material && item.kode_material.uom && item.kode_material.uom.satuan) {
+                  satuan = item.kode_material.uom.satuan;
+              }
+              
+              itemsHtml += `
+                  <tr>
+                      <td>${index + 1}</td>
+                      <td><strong>${item.kode_material ? item.kode_material.kode_material : '-'}</strong></td>
+                      <td>${item.kode_material ? item.kode_material.nama_material : '-'}</td>
+                      <td class="text-right"><strong>${qty.toLocaleString('id-ID')}</strong></td>
+                      <td class="text-center"><span class="badge badge-light">${satuan}</span></td>
+                      <td><small>${item.kode_material && item.kode_material.spesifikasi ? item.kode_material.spesifikasi : '-'}</small></td>
+                      <td><small>${item.keterangan || '-'}</small></td>
+                  </tr>
+              `;
+          });
+      } else {
+          itemsHtml = '<tr><td colspan="7" class="text-center text-muted"><em>Tidak ada item</em></td></tr>';
+      }
+      $('#view_items').html(itemsHtml);
+    },
+    error: function(xhr) {
+      $('#viewModal .modal-body').html(`
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-circle"></i>
+          Gagal memuat data. Silakan coba lagi.
+        </div>
+      `);
+    }
+  });
+}
 
   // View BOM - now properly separated
   $(document).on('click', '.view-btn', function() {

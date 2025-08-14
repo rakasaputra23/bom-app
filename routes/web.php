@@ -115,9 +115,9 @@ Route::middleware(['auth', 'permission'])->group(function () {
         Route::get('/materials/search', [BillOfMaterialController::class, 'getMaterials'])->name('materials.search');
 
         // BOM PDF Export routes
-        Route::get('bom/{id}/export-pdf', [BillOfMaterialController::class, 'exportPdf'])->name('bom.export-pdf');
-        Route::get('bom/{id}/preview-pdf', [BillOfMaterialController::class, 'previewPdf'])->name('bom.preview-pdf');
-        Route::post('bom/export-multiple-pdf', [BillOfMaterialController::class, 'exportMultiplePdf'])->name('bom.export-multiple-pdf');
+        Route::get('/{id}/export-pdf', [BillOfMaterialController::class, 'exportPdf'])->name('bom.export-pdf');
+        Route::get('/{id}/preview-pdf', [BillOfMaterialController::class, 'previewPdf'])->name('bom.preview-pdf');
+        Route::post('/export/multiple', [BillOfMaterialController::class, 'exportMultiplePdf'])->name('bom.export.multiple');
         
     });
 

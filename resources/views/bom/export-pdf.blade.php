@@ -1,6 +1,4 @@
-.signature-nip.right {
-            text-align: right;
-        }<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -19,13 +17,13 @@
         .signature-date.right {
             text-align: left;
             margin-right: 0px;
-            padding-left: 130px;
+            padding-left: 70px;
         }
         
         .signature-title.right {
             text-align: left;
             margin-right: 0px;
-            padding-left: 130px;
+            padding-left: 70px;
         }@page {
             margin: 8mm;
             size: A4 landscape;
@@ -65,18 +63,18 @@
         }
         
         .logo {
-            width: 120px;
+            width: 150px;
             height: auto;
-            max-height: 75px;
+            max-height: 90px;
         }
         
         .logo-text {
-            font-size: 16pt;
+            font-size: 18pt;
             font-weight: bold;
             color: #333;
             border: 2px dashed #666;
-            padding: 20px 5px;
-            width: 120px;
+            padding: 25px 8px;
+            width: 150px;
             text-align: center;
         }
         
@@ -90,7 +88,7 @@
         }
         
         .header-center h1 {
-            font-size: 24pt;
+            font-size: 28pt;
             font-weight: bold;
             margin: 0 0 8px 0;
             text-transform: uppercase;
@@ -98,7 +96,7 @@
         }
         
         .header-center h2 {
-            font-size: 14pt;
+            font-size: 24pt;
             font-weight: bold;
             margin: 0;
             text-transform: uppercase;
@@ -216,9 +214,8 @@
         }
         
         .signature-name-line.right {
-            text-align: right;
+            text-align: center;
             margin-left: 10px;
-            margin-right: 0px;
         }
         
         .page-number {
@@ -232,15 +229,15 @@
             z-index: 1000;
         }
         
-        /* Fixed Column widths - sejajarkan dengan header sections */
+        /* Adjusted Column widths - memperbesar spesifikasi dan menyesuaikan kolom lain */
         .col-rev { width: 4%; }
         .col-no { width: 4%; }
-        .col-kode { width: 12%; } /* Total header-left = 20% (4+4+12) */
-        .col-deskripsi { width: 34%; } /* Dikurangi sedikit dari 36% */
-        .col-qty { width: 7%; } /* Dikurangi dari 8% menjadi 7% */
-        .col-satuan { width: 7%; } /* Dikurangi dari 8% menjadi 7% */
-        .col-spesifikasi { width: 12%; } /* Diperlebar dari 8% menjadi 12% */
-        .col-keterangan { width: 20%; } /* Sejajar dengan header-right 20% */
+        .col-kode { width: 12%; } /* Tetap 12% */
+        .col-deskripsi { width: 30%; } /* Dikurangi dari 34% menjadi 30% */
+        .col-qty { width: 6%; } /* Dikurangi dari 7% menjadi 6% */
+        .col-satuan { width: 6%; } /* Dikurangi dari 7% menjadi 6% */
+        .col-spesifikasi { width: 18%; } /* Diperbesar dari 12% menjadi 18% */
+        .col-keterangan { width: 20%; } /* Kembalikan ke ukuran semula 20% */
         
         .empty-row {
             height: 16px;
@@ -287,11 +284,11 @@
             }
             
             .header-center h1 {
-                font-size: 20pt;
+                font-size: 24pt;
             }
             
             .header-center h2 {
-                font-size: 12pt;
+                font-size: 20pt;
             }
         }
         
@@ -303,16 +300,16 @@
             }
             
             .header-center h1 {
-                font-size: 18pt;
+                font-size: 22pt;
             }
             
             .header-center h2 {
-                font-size: 10pt;
+                font-size: 18pt;
             }
             
             .logo-text {
-                font-size: 14pt;
-                padding: 15px 3px;
+                font-size: 16pt;
+                padding: 20px 5px;
             }
         }
     </style>
