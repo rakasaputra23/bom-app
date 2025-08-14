@@ -944,7 +944,7 @@ public function update(Request $request, $id)
                 'isPhpEnabled' => true,
                 'isRemoteEnabled' => true,
                 'defaultFont' => 'DejaVu Sans',
-                'dpi' => 150,
+                'dpi' => 96,
                 'defaultPaperSize' => 'A4'
             ]);
             
