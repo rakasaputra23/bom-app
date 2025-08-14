@@ -267,6 +267,16 @@
                 <button class="btn btn-sm btn-info view-btn" title="Lihat Detail" data-bom-id="{{ $bom->id }}">
                   <i class="fas fa-eye"></i> Lihat
                 </button>
+
+                <!-- Export PDF Button - ADD THIS -->
+                @if(Auth::user()->can('bom.export'))
+                    <a href="{{ route('bom.export-pdf', $bom->id) }}" 
+                      class="btn btn-sm btn-success" 
+                      title="Export PDF" 
+                      target="_blank">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </a>
+                @endif
                 
                 <!-- Edit Button - Only for DRAFT/REJECTED and creator -->
                 @if($bom->canBeEdited() && ($bom->created_by === Auth::id() || Auth::user()->can('bom.edit')))
@@ -334,10 +344,25 @@
           <!-- Content will be loaded via AJAX -->
         </div>
       </div>
+            <!-- Update modal footer di viewModal -->
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-          <i class="fas fa-times"></i> Tutup
-        </button>
+          <a href="#" 
+            class="btn btn-success" 
+            id="exportPdfBtn" 
+            target="_blank"
+            title="Export ke PDF">
+              <i class="fas fa-file-pdf"></i> Export PDF
+          </a>
+          <a href="#" 
+            class="btn btn-info" 
+            id="previewPdfBtn" 
+            target="_blank"
+            title="Preview PDF">
+              <i class="fas fa-eye"></i> Preview PDF
+          </a>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+              <i class="fas fa-times"></i> Tutup
+          </button>
       </div>
     </div>
   </div>
@@ -949,6 +974,9 @@ $(document).ready(function() {
     }
     
     return `<strong>${nomorBom}</strong>${nomorUrutInfo}`;
+
+    $('#exportPdfBtn').attr('href', `/bom/${bomId}/export-pdf`);
+    $('#previewPdfBtn').attr('href', `/bom/${bomId}/preview-pdf`);
 }
 
         // Fill modal with data

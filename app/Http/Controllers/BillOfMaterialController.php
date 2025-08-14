@@ -10,6 +10,7 @@ use App\Models\Revisi;
 use App\Models\JenisDokumen; 
 use App\Models\Uom;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -878,4 +879,113 @@ public function update(Request $request, $id)
             ], 500);
         }
     }
+
+    public function exportPdf($id)
+{
+    try {
+        // Check permission
+        if (!Auth::user()->can('bom.show')) {
+            abort(403, 'Unauthorized');
+        }
+
+        $bom = BillOfMaterial::with([
+            'proyek',
+            'revisi', 
+            'createdBy',
+            'jenisDokumen', // PERBAIKAN: Ganti dari 'jenisRokumen' ke 'jenisDokumen'
+            'itemBom.kodeMaterial.uom',
+            'approvedBy1',
+            'approvedBy2',
+            'rejectedBy'
+        ])->findOrFail($id);
+
+        // Load PDF with custom options
+        $pdf = Pdf::loadView('bom.export-pdf', compact('bom'));
+        $pdf->setPaper('A4', 'portrait');
+        
+        // Set additional options for better rendering
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isPhpEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'DejaVu Sans'
+        ]);
+        
+        // Generate filename
+        $filename = 'BOM_' . str_replace(['/', ' ', '\\'], '_', $bom->nomor_bom) . '_' . date('Y-m-d') . '.pdf';
+        
+        // Return PDF download
+        return $pdf->download($filename);
+        
+    } catch (\Exception $e) {
+        \Log::error('BOM PDF Export Error: ' . $e->getMessage());
+        
+        return back()->with('error', 'Gagal mengexport PDF: ' . $e->getMessage());
+    }
+}
+
+public function previewPdf($id)
+{
+    try {
+        $bom = BillOfMaterial::with([
+            'proyek',
+            'revisi', 
+            'createdBy',
+            'jenisDokumen', // PERBAIKAN: Ganti dari 'jenisRokumen' ke 'jenisDokumen'
+            'itemBom.kodeMaterial.uom',
+            'approvedBy1',
+            'approvedBy2',
+            'rejectedBy'
+        ])->findOrFail($id);
+
+        $pdf = Pdf::loadView('bom.export-pdf', compact('bom'));
+        $pdf->setPaper('A4', 'portrait');
+        
+        // Return inline view instead of download
+        return $pdf->stream('BOM_' . $bom->nomor_bom . '.pdf');
+        
+    } catch (\Exception $e) {
+        return back()->with('error', 'Gagal preview PDF: ' . $e->getMessage());
+    }
+}
+
+// Add to controller
+public function exportMultiplePdf(Request $request)
+{
+    $ids = $request->input('bom_ids', []);
+    
+    if (empty($ids)) {
+        return back()->with('error', 'Pilih BOM yang akan di-export');
+    }
+    
+    $boms = BillOfMaterial::with([
+        'proyek', 'revisi', 'createdBy', 
+        'jenisDokumen', // PERBAIKAN: Tambahkan relasi jenisDokumen
+        'itemBom.kodeMaterial.uom'
+    ])->whereIn('id', $ids)->get();
+    
+    // Create ZIP file
+    $zip = new \ZipArchive();
+    $zipFileName = 'BOM_Export_' . date('Y-m-d_H-i-s') . '.zip';
+    $zipPath = storage_path('app/temp/' . $zipFileName);
+    
+    if (!file_exists(storage_path('app/temp'))) {
+        mkdir(storage_path('app/temp'), 0755, true);
+    }
+    
+    if ($zip->open($zipPath, \ZipArchive::CREATE) === TRUE) {
+        foreach ($boms as $bom) {
+            $pdf = Pdf::loadView('bom.export-pdf', compact('bom'));
+            $pdf->setPaper('A4', 'portrait');
+            
+            $pdfFileName = 'BOM_' . str_replace(['/', ' '], '_', $bom->nomor_bom) . '.pdf';
+            $zip->addFromString($pdfFileName, $pdf->output());
+        }
+        $zip->close();
+        
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
+    
+    return back()->with('error', 'Gagal membuat file export');
+}
 }

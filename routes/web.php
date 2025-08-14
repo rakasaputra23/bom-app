@@ -113,6 +113,11 @@ Route::middleware(['auth', 'permission'])->group(function () {
           // AJAX Routes - PERBAIKAN PENTING
         Route::post('/generate-nomor', [BillOfMaterialController::class, 'generateNomorBom'])->name('bom.generate-nomor');
         Route::get('/materials/search', [BillOfMaterialController::class, 'getMaterials'])->name('materials.search');
+
+        // BOM PDF Export routes
+        Route::get('bom/{id}/export-pdf', [BillOfMaterialController::class, 'exportPdf'])->name('bom.export-pdf');
+        Route::get('bom/{id}/preview-pdf', [BillOfMaterialController::class, 'previewPdf'])->name('bom.preview-pdf');
+        Route::post('bom/export-multiple-pdf', [BillOfMaterialController::class, 'exportMultiplePdf'])->name('bom.export-multiple-pdf');
         
     });
 
