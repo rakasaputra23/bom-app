@@ -268,14 +268,23 @@
                   <i class="fas fa-eye"></i> Lihat
                 </button>
 
-                <!-- Export PDF Button - ADD THIS -->
+                <!-- Export PDF Dropdown - IMPROVED -->
                 @if(Auth::user()->can('bom.export'))
-                    <a href="{{ route('bom.export-pdf', $bom->id) }}" 
-                      class="btn btn-sm btn-success" 
-                      title="Export PDF" 
-                      target="_blank">
-                        <i class="fas fa-file-pdf"></i> Export PDF
-                    </a>
+                    <div class="btn-group export-dropdown" role="group">
+                        <button type="button" class="btn btn-sm btn-success dropdown-toggle" 
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                title="Export Options">
+                            <i class="fas fa-file-pdf"></i> Export
+                        </button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item export-pdf-normal" href="#" data-bom-id="{{ $bom->id }}" data-bom-nomor="{{ $bom->nomor_bom }}">
+                                <i class="fas fa-file-pdf"></i> Export PDF Normal
+                            </a>
+                            <a class="dropdown-item export-pdf-qrcode" href="#" data-bom-id="{{ $bom->id }}" data-bom-nomor="{{ $bom->nomor_bom }}">
+                                <i class="fas fa-qrcode"></i> Export PDF with QR Code
+                            </a>
+                        </div>
+                    </div>
                 @endif
                 
                 <!-- Edit Button - Only for DRAFT/REJECTED and creator -->
@@ -344,26 +353,22 @@
           <!-- Content will be loaded via AJAX -->
         </div>
       </div>
-            <!-- Update modal footer di viewModal -->
+            <!-- IMPROVED Modal Footer - Ganti modal footer yang ada dengan ini -->
       <div class="modal-footer">
-    <a href="#" 
-      class="btn btn-success" 
-      id="exportPdfBtn" 
-      target="_blank"
-      title="Export ke PDF">
-        <i class="fas fa-file-pdf"></i> Export PDF
-    </a>
-    <a href="#" 
-      class="btn btn-info" 
-      id="previewPdfBtn" 
-      target="_blank"
-      title="Preview PDF">
-        <i class="fas fa-eye"></i> Preview PDF
-    </a>
-    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-        <i class="fas fa-times"></i> Tutup
-    </button>
-</div>
+          <div class="preview-buttons w-100 d-flex justify-content-start">
+              @if(Auth::user()->can('bom.show'))
+                  <button type="button" class="btn btn-info mr-2" id="previewPdfNormal" data-bom-id="" title="Preview PDF Normal">
+                      <i class="fas fa-eye"></i> Preview PDF Normal
+                  </button>
+                  <button type="button" class="btn btn-success mr-2" id="previewPdfQrCode" data-bom-id="" title="Preview PDF dengan QR Code">
+                      <i class="fas fa-qrcode"></i> Preview PDF with QR Code
+                  </button>
+              @endif
+          </div>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">
+              <i class="fas fa-times"></i> Tutup
+          </button>
+      </div>
     </div>
   </div>
 </div>
@@ -506,6 +511,60 @@
   font-size: 12px;
   color: #666;
   margin-top: 5px;
+}
+
+.export-dropdown .dropdown-menu {
+    min-width: 200px;
+    z-index: 9999;
+}
+
+.export-dropdown .dropdown-item {
+    padding: 8px 15px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.export-dropdown .dropdown-item i {
+    margin-right: 8px;
+    width: 16px;
+}
+
+.export-dropdown .dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.preview-buttons {
+    gap: 10px;
+}
+
+.preview-buttons .btn {
+    min-width: 140px;
+}
+
+@media (max-width: 768px) {
+    .preview-buttons {
+        flex-direction: column !important;
+    }
+    
+    .preview-buttons .btn {
+        width: 100% !important;
+        margin-bottom: 5px;
+        min-width: unset;
+    }
+    
+    .export-dropdown .dropdown-menu {
+        min-width: 180px;
+    }
+}
+
+/* Fix dropdown z-index issues */
+.table-responsive {
+    overflow: visible;
+}
+
+.export-dropdown.show .dropdown-menu {
+    display: block;
 }
 </style>
 @endpush
@@ -977,9 +1036,8 @@ function loadBomDetail(bomId) {
       }
 
       // PERBAIKAN: Set URL untuk tombol export dan preview PDF
-      $('#exportPdfBtn').attr('href', `/bom/${bomId}/export-pdf`);
-      $('#previewPdfBtn').attr('href', `/bom/${bomId}/preview-pdf`);
-
+      $('#previewPdfNormal').data('bom-id', response.id);
+      $('#previewPdfQrCode').data('bom-id', response.id); 
       // Fill modal with data
       $('#view_nomor').html(formatNomorBomDisplay(response.nomor_bom));
       $('#view_proyek').html(response.proyek ? 
@@ -1095,6 +1153,9 @@ function loadBomDetail(bomId) {
   // View BOM - now properly separated
   $(document).on('click', '.view-btn', function() {
     var bomId = $(this).data('bom-id');
+
+    $('#previewPdfNormal').data('bom-id', bomId);
+    $('#previewPdfQrCode').data('bom-id', bomId)
     
     // Show loading
     $('#viewModal .modal-body').html(`
@@ -1108,6 +1169,130 @@ function loadBomDetail(bomId) {
     // Load detail
     loadBomDetail(bomId);
   });
+
+  // Export PDF Normal from DataTable - FIXED
+$(document).on('click', '.export-pdf-normal', function(e) {
+    e.preventDefault();
+    var bomId = $(this).data('bom-id');
+    var bomNomor = $(this).data('bom-nomor');
+    
+    Swal.fire({
+        title: 'Export PDF Normal',
+        html: `Export BOM <strong>${bomNomor}</strong> ke PDF normal?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-download"></i> Export',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        allowOutsideClick: false,
+        preConfirm: () => {
+            return new Promise((resolve) => {
+                // FIXED: Menggunakan route yang benar sesuai controller
+                window.location.href = `{{ url('bom') }}/${bomId}/export-pdf`;
+                setTimeout(resolve, 1500);
+            });
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Export Berhasil!',
+                text: 'PDF normal sedang diunduh...',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+    });
+});
+
+// Export PDF with QR Code from DataTable - FIXED
+$(document).on('click', '.export-pdf-qrcode', function(e) {
+    e.preventDefault();
+    var bomId = $(this).data('bom-id');
+    var bomNomor = $(this).data('bom-nomor');
+    
+    Swal.fire({
+        title: 'Export PDF with QR Code',
+        html: `Export BOM <strong>${bomNomor}</strong> ke PDF dengan QR Code?<br><br><small class="text-muted">QR Code akan berisi informasi digital signature untuk validasi</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-qrcode"></i> Export with QR',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        allowOutsideClick: false,
+        preConfirm: () => {
+            return new Promise((resolve) => {
+                // FIXED: Menggunakan route yang benar sesuai controller
+                window.location.href = `{{ url('bom') }}/${bomId}/export-pdf-qrcode`;
+                setTimeout(resolve, 1500);
+            });
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Export Berhasil!',
+                text: 'PDF dengan QR Code sedang diunduh...',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+    });
+});
+
+// Preview PDF Normal from Modal - FIXED
+$('#previewPdfNormal').on('click', function() {
+    var bomId = $(this).data('bom-id');
+    
+    if (!bomId) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'ID BOM tidak ditemukan'
+        });
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Preview PDF Normal',
+        text: 'Membuka preview PDF normal...',
+        icon: 'info',
+        timer: 1500,
+        showConfirmButton: false
+    }).then(() => {
+        // FIXED: Menggunakan route yang benar sesuai controller
+        window.open(`{{ url('bom') }}/${bomId}/preview-pdf`, '_blank');
+    });
+});
+
+// Preview PDF with QR Code from Modal - FIXED
+$('#previewPdfQrCode').on('click', function() {
+    var bomId = $(this).data('bom-id');
+    
+    if (!bomId) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'ID BOM tidak ditemukan'
+        });
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Preview PDF with QR Code',
+        html: 'Membuka preview PDF dengan QR Code...<br><small class="text-muted">QR Code berisi signature digital</small>',
+        icon: 'info',
+        timer: 1500,
+        showConfirmButton: false
+    }).then(() => {
+        // FIXED: Menggunakan route yang benar sesuai controller
+        window.open(`{{ url('bom') }}/${bomId}/preview-pdf-qrcode`, '_blank');
+    });
+});
 
   // Submit BOM for approval
   $(document).on('click', '.submit-btn', function() {

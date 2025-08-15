@@ -8,6 +8,7 @@ use App\Models\KodeMaterial;
 use App\Models\Proyek;
 use App\Models\Revisi;
 use App\Models\JenisDokumen; 
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Models\Uom;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -32,6 +33,48 @@ class BillOfMaterialController extends Controller
         // Pastikan kita mengembalikan ID (integer), bukan NIP (string)
         return (int) $user->id;
     }
+
+    
+/**
+ * Enhanced Generate User QR Code with better error handling
+ */
+private function generateUserQrCode($user)
+{
+    if (!$user) {
+        return null;
+    }
+
+    try {
+        // Buat data untuk QR Code dengan format yang lebih terstruktur
+        $qrData = json_encode([
+            'type' => 'user_signature',
+            'nama' => $user->nama,
+            'nip' => $user->nip,
+            'generated_at' => now()->toISOString(),
+            'app' => config('app.name', 'BOM System')
+        ]);
+        
+        // Generate QR Code sebagai SVG string
+        $qrCode = QrCode::format('svg')
+            ->size(80)
+            ->margin(0)
+            ->errorCorrection('M') // Medium error correction
+            ->generate($qrData);
+        
+        // Convert SVG to base64 untuk embedding di PDF
+        $qrCodeBase64 = base64_encode($qrCode);
+        
+        return $qrCodeBase64;
+        
+    } catch (\Exception $e) {
+        \Log::error('QR Code generation error: ' . $e->getMessage(), [
+            'user_id' => $user->id ?? null,
+            'user_nama' => $user->nama ?? null
+        ]);
+        return null;
+    }
+}
+
 
     /**
      * Display a listing of the resource.
@@ -915,55 +958,230 @@ public function update(Request $request, $id)
         return $baseName . '.pdf';
     }
 
-    public function exportPdf($id)
-    {
-        try {
-            // Check permission
-            if (!Auth::user()->can('bom.export')) {
-                abort(403, 'Unauthorized - Anda tidak memiliki akses untuk export PDF');
-            }
-
-            $bom = BillOfMaterial::with([
-                'proyek',
-                'revisi', 
-                'createdBy',
-                'jenisDokumen',
-                'itemBom.kodeMaterial.uom',
-                'approvedBy1',
-                'approvedBy2',
-                'rejectedBy'
-            ])->findOrFail($id);
-
-            // Load PDF with custom options
-            $pdf = Pdf::loadView('bom.export-pdf', compact('bom'));
-            $pdf->setPaper('A4', 'portrait');
-            
-            // Set additional options for better rendering
-            $pdf->setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isPhpEnabled' => true,
-                'isRemoteEnabled' => true,
-                'defaultFont' => 'DejaVu Sans',
-                'dpi' => 96,
-                'defaultPaperSize' => 'A4'
-            ]);
-            
-            // Generate safe filename
-            $filename = $this->generateSafeFilename($bom, date('Y-m-d'));
-            
-            // Return PDF download
-            return $pdf->download($filename);
-            
-        } catch (\Exception $e) {
-            \Log::error('BOM PDF Export Error: ' . $e->getMessage(), [
-                'bom_id' => $id,
-                'user_id' => Auth::id(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return back()->with('error', 'Gagal mengexport PDF: ' . $e->getMessage());
-        }
+    /**
+ * Check if user can export BOM
+ */
+private function canExportBom($bom)
+{
+    // Check basic export permission
+    if (!Auth::user()->can('bom.export')) {
+        return false;
     }
+    
+    // Allow export for any status (remove restriction)
+    // Originally only allowed APPROVED, now allow all statuses
+    return true;
+    
+    // If you want to keep the restriction to only approved BOMs, use this instead:
+    // return $bom->status === BillOfMaterial::STATUS_APPROVED;
+}
+
+    /**
+ * Export PDF - Enhanced version
+ */
+public function exportPdf($id)
+{
+    try {
+        $bom = BillOfMaterial::with([
+            'proyek',
+            'revisi', 
+            'createdBy',
+            'jenisDokumen',
+            'itemBom.kodeMaterial.uom',
+            'approvedBy1',
+            'approvedBy2',
+            'rejectedBy'
+        ])->findOrFail($id);
+        
+        // Check permission
+        if (!$this->canExportBom($bom)) {
+            abort(403, 'Unauthorized - Anda tidak memiliki akses untuk export PDF atau BOM belum diapprove');
+        }
+
+        // Validasi items
+        if (!$bom->itemBom || $bom->itemBom->count() === 0) {
+            return back()->with('error', 'BOM tidak memiliki item untuk di-export');
+        }
+
+        // Log export activity
+        \Log::info('BOM PDF Export', [
+            'bom_id' => $id,
+            'user_id' => Auth::id(),
+            'export_type' => 'normal'
+        ]);
+
+        // Load PDF dengan template normal (tanpa QR Code)
+        $pdf = Pdf::loadView('bom.export-pdf', compact('bom'));
+        $pdf->setPaper('A4', 'portrait');
+        
+        // Set additional options for better rendering
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isPhpEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'DejaVu Sans',
+            'dpi' => 96, // Higher DPI for export
+            'defaultPaperSize' => 'A4'
+        ]);
+        
+        // Generate safe filename
+        $filename = $this->generateSafeFilename($bom, 'normal_' . date('Y-m-d_H-i-s'));
+        
+        // Return PDF download
+        return $pdf->download($filename);
+        
+    } catch (\Exception $e) {
+        \Log::error('BOM PDF Export Error: ' . $e->getMessage(), [
+            'bom_id' => $id,
+            'user_id' => Auth::id(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return back()->with('error', 'Gagal mengexport PDF: ' . $e->getMessage());
+    }
+}
+
+/**
+ * Export PDF with QR Code - Enhanced version
+ */
+public function exportPdfWithQrCode($id)
+{
+    try {
+        $bom = BillOfMaterial::with([
+            'proyek',
+            'revisi', 
+            'createdBy',
+            'jenisDokumen',
+            'itemBom.kodeMaterial.uom',
+            'approvedBy1',
+            'approvedBy2',
+            'rejectedBy'
+        ])->findOrFail($id);
+
+        // Check permission
+        if (!$this->canExportBom($bom)) {
+            abort(403, 'Unauthorized - Anda tidak memiliki akses untuk export PDF atau BOM belum diapprove');
+        }
+
+        // Validasi items
+        if (!$bom->itemBom || $bom->itemBom->count() === 0) {
+            return back()->with('error', 'BOM tidak memiliki item untuk di-export');
+        }
+
+        // Log export activity
+        \Log::info('BOM PDF Export with QR Code', [
+            'bom_id' => $id,
+            'user_id' => Auth::id(),
+            'export_type' => 'qrcode'
+        ]);
+
+        // Generate QR Codes for signatories
+        $createdByQrCode = $this->generateUserQrCode($bom->createdBy);
+        $approvedBy1QrCode = $this->generateUserQrCode($bom->approvedBy1);
+        $approvedBy2QrCode = $this->generateUserQrCode($bom->approvedBy2);
+
+        // Load PDF with QR codes
+        $pdf = Pdf::loadView('bom.export-pdf-qrcode', compact(
+            'bom', 
+            'createdByQrCode', 
+            'approvedBy1QrCode', 
+            'approvedBy2QrCode'
+        ));
+        $pdf->setPaper('A4', 'portrait');
+        
+        // Set additional options for better rendering
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isPhpEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'DejaVu Sans',
+            'dpi' => 96, // Higher DPI for export
+            'defaultPaperSize' => 'A4'
+        ]);
+        
+        // Generate safe filename with QR code suffix
+        $filename = $this->generateSafeFilename($bom, 'QRCode_' . date('Y-m-d_H-i-s'));
+        
+        // Return PDF download
+        return $pdf->download($filename);
+        
+    } catch (\Exception $e) {
+        \Log::error('BOM PDF with QR Code Export Error: ' . $e->getMessage(), [
+            'bom_id' => $id,
+            'user_id' => Auth::id(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return back()->with('error', 'Gagal mengexport PDF dengan QR Code: ' . $e->getMessage());
+    }
+}
+
+    /**
+ * Preview PDF with QR Code
+ */
+public function previewPdfWithQrCode($id)
+{
+    try {
+        // Check permission  
+        if (!Auth::user()->can('bom.show')) {
+            abort(403, 'Unauthorized - Anda tidak memiliki akses untuk preview PDF');
+        }
+
+        $bom = BillOfMaterial::with([
+            'proyek',
+            'revisi', 
+            'createdBy',
+            'jenisDokumen',
+            'itemBom.kodeMaterial.uom',
+            'approvedBy1',
+            'approvedBy2',
+            'rejectedBy'
+        ])->findOrFail($id);
+
+        // Validasi apakah BOM memiliki items
+        if (!$bom->itemBom || $bom->itemBom->count() === 0) {
+            return back()->with('error', 'BOM tidak memiliki item untuk di-preview');
+        }
+
+        // Generate QR Codes untuk preview
+        $createdByQrCode = $this->generateUserQrCode($bom->createdBy);
+        $approvedBy1QrCode = $this->generateUserQrCode($bom->approvedBy1);
+        $approvedBy2QrCode = $this->generateUserQrCode($bom->approvedBy2);
+
+        $pdf = Pdf::loadView('bom.export-pdf-qrcode', compact(
+            'bom', 
+            'createdByQrCode', 
+            'approvedBy1QrCode', 
+            'approvedBy2QrCode'
+        ));
+        $pdf->setPaper('A4', 'portrait');
+        
+        // Set options for preview
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isPhpEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'DejaVu Sans',
+            'dpi' => 96, // Lower DPI for preview (faster loading)
+            'defaultPaperSize' => 'A4'
+        ]);
+        
+        // Generate safe filename for preview
+        $filename = $this->generateSafeFilename($bom, 'preview_qrcode');
+        
+        // Return inline view instead of download
+        return $pdf->stream($filename);
+        
+    } catch (\Exception $e) {
+        \Log::error('BOM PDF Preview with QR Code Error: ' . $e->getMessage(), [
+            'bom_id' => $id,
+            'user_id' => Auth::id(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return back()->with('error', 'Gagal preview PDF dengan QR Code: ' . $e->getMessage());
+    }
+}
 
     public function previewPdf($id)
     {

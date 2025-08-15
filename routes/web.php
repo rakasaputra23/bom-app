@@ -125,9 +125,11 @@ Route::middleware(['auth', 'permission'])->group(function () {
         Route::get('/materials/search', [BillOfMaterialController::class, 'getMaterials'])->name('materials.search');
 
         // BOM PDF Export routes
-        Route::get('/{id}/export-pdf', [BillOfMaterialController::class, 'exportPdf'])->name('bom.export-pdf');
-        Route::get('/{id}/preview-pdf', [BillOfMaterialController::class, 'previewPdf'])->name('bom.preview-pdf');
-        Route::post('/export/multiple', [BillOfMaterialController::class, 'exportMultiplePdf'])->name('bom.export.multiple');
+         Route::get('/{id}/export-pdf', [BillOfMaterialController::class, 'exportPdf'])->name('export-pdf');
+        Route::get('/{id}/export-pdf-qrcode', [BillOfMaterialController::class, 'exportPdfWithQrCode'])->name('export-pdf-qrcode');
+        Route::get('/{id}/preview-pdf', [BillOfMaterialController::class, 'previewPdf'])->name('preview-pdf');
+        Route::get('/{id}/preview-pdf-qrcode', [BillOfMaterialController::class, 'previewPdfWithQrCode'])->name('preview-pdf-qrcode');
+        Route::post('/export/multiple', [BillOfMaterialController::class, 'exportMultiplePdf'])->name('export.multiple');
         
     });
 
