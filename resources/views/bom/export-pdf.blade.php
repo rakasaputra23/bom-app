@@ -86,7 +86,7 @@
         
         .header-right {
             display: table-cell;
-            width: 26%;
+            width: 25%;
             vertical-align: top;
             padding: 8px;
         }
@@ -188,9 +188,9 @@
             max-width: 26% !important;
         }
         .col-keterangan { 
-            width: 26% !important; 
-            min-width: 26% !important; 
-            max-width: 26% !important;
+            width: 25% !important; 
+            min-width: 25% !important; 
+            max-width: 25% !important;
         }
         
         /* TEXT HANDLING */
@@ -250,6 +250,27 @@
             margin: 4px 0;
         }
         
+        /* QR Code Styles */
+        .qr-code {
+            width: 35px;
+            height: 35px;
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .signature-space-with-qr {
+            height: 45px;
+            margin: 4px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
         .signature-name-line {
             font-size: 8pt;
             text-align: left;
@@ -265,9 +286,15 @@
         }
         
         .signature-name-line.right {
-            text-align: center;
-            margin-left: 10px;
+            text-align: right; /* Changed from center to right */
+            margin-right: 15px; /* Add some space from right edge */
+            margin-left: 0px;
         }
+        
+        .signature-col:first-child .qr-code {
+            margin: 0;
+        }
+
         
         .signature-nip {
             font-size: 7pt;
@@ -277,6 +304,11 @@
         
         .signature-nip.left {
             text-align: left;
+        }   
+        
+        .signature-nip.right {
+            text-align: right; /* This was already correct */
+            margin-right: 70px; /* Add some space from right edge to match name */
         }
         
         .signature-date.right {
@@ -289,6 +321,11 @@
             text-align: left;
             margin-right: 0px;
             padding-left: 70px;
+        }
+        
+        /* New style for right column QR code positioning */
+        .signature-col:last-child .signature-space-with-qr {
+            justify-content: center; /* Center the QR code like the middle column */
         }
         
         .page-number {
@@ -532,14 +569,14 @@
                         <tr class="empty-row">
                             <td class="col-rev"></td>
                             <td class="col-no">{{ $globalIndex + 1 }}</td>
-                            <td class="col-kode text-left">{{ $item->kodeMaterial ? $item->kodeMaterial->kode_material : '' }}</td>
-                            <td class="col-deskripsi text-left">{{ $item->kodeMaterial ? $item->kodeMaterial->nama_material : '' }}</td>
+                            <td class="col-kode text-left">{{ ($item->kodeMaterial && isset($item->kodeMaterial->kode_material)) ? $item->kodeMaterial->kode_material : '' }}</td>
+                            <td class="col-deskripsi text-left">{{ ($item->kodeMaterial && isset($item->kodeMaterial->nama_material)) ? $item->kodeMaterial->nama_material : '' }}</td>
                             <td class="col-qty text-right">
                                 @php
                                     $qty = 0;
                                     if ($item->qty !== null && $item->qty !== 0) {
                                         $qty = $item->qty;
-                                    } elseif ($item->kodeMaterial && $item->kodeMaterial->uom && $item->kodeMaterial->uom->qty) {
+                                    } elseif ($item->kodeMaterial && isset($item->kodeMaterial->uom) && $item->kodeMaterial->uom && isset($item->kodeMaterial->uom->qty)) {
                                         $qty = $item->kodeMaterial->uom->qty;
                                     } else {
                                         $qty = 1;
@@ -552,14 +589,14 @@
                                     $satuan = '';
                                     if ($item->satuan && trim($item->satuan) !== '') {
                                         $satuan = $item->satuan;
-                                    } elseif ($item->kodeMaterial && $item->kodeMaterial->uom && $item->kodeMaterial->uom->satuan) {
+                                    } elseif ($item->kodeMaterial && isset($item->kodeMaterial->uom) && $item->kodeMaterial->uom && isset($item->kodeMaterial->uom->satuan)) {
                                         $satuan = $item->kodeMaterial->uom->satuan;
                                     }
                                     echo $satuan;
                                 @endphp
                             </td>
-                            <td class="col-spesifikasi text-left">{{ $item->kodeMaterial && $item->kodeMaterial->spesifikasi ? $item->kodeMaterial->spesifikasi : '' }}</td>
-                            <td class="col-keterangan text-left">{{ $item->keterangan ?: '' }}</td>
+                            <td class="col-spesifikasi text-left">{{ ($item->kodeMaterial && isset($item->kodeMaterial->spesifikasi)) ? $item->kodeMaterial->spesifikasi : '' }}</td>
+                            <td class="col-keterangan text-left">{{ isset($item->keterangan) ? $item->keterangan : '' }}</td>
                         </tr>
                     @endforeach
                     
@@ -579,29 +616,30 @@
                 </tbody>
             </table>
             
-            <!-- Signature Section - PERBAIKAN: Tampilkan nama dan NIP di setiap halaman -->
+            <!-- Signature Section dengan QR Code - MUNCUL DI SETIAP HALAMAN -->
             <div class="signature-section">
                 <div class="signature-row">
                     <div class="signature-col">
                         <div class="signature-date">
-                            {{-- Tampilkan tanggal hanya di halaman terakhir --}}
-                            @if($pageNum == $totalPages)
-                                Tanggal: {{ $bom->created_at ? date('d/m/Y', strtotime($bom->created_at)) : '' }}
-                            @else
-                                Tanggal:
-                            @endif
+                            Tanggal: {{ $bom->created_at ? date('d/m/Y', strtotime($bom->created_at)) : '' }}
                         </div>
                         <div class="signature-title">Disiapkan oleh:</div>
-                        <div class="signature-space"></div>
+                        @if(isset($createdByQrCode) && $createdByQrCode)
+                            <div class="signature-space-with-qr">
+                                <div class="qr-code">
+                                    <img src="data:image/svg+xml;base64,{{ $createdByQrCode }}" alt="QR Code Created By">
+                                </div>
+                            </div>
+                        @else
+                            <div class="signature-space"></div>
+                        @endif
                         <div class="signature-name-line">
-                            {{-- PERBAIKAN: Tampilkan nama di setiap halaman --}}
                             @if($bom->createdBy)
                                 ( {{ $bom->createdBy->nama }} )
                             @else
                                 ( _________________________ )
                             @endif
                         </div>
-                        {{-- PERBAIKAN: Tampilkan NIP di setiap halaman --}}
                         @if($bom->createdBy && $bom->createdBy->nip)
                             <div class="signature-nip left">{{ $bom->createdBy->nip }}</div>
                         @endif
@@ -609,24 +647,25 @@
                     
                     <div class="signature-col">
                         <div class="signature-date">
-                            {{-- Tampilkan tanggal approval hanya di halaman terakhir --}}
-                            @if($pageNum == $totalPages)
-                                Tanggal: {{ $bom->approved_by_1_at ? date('d/m/Y', strtotime($bom->approved_by_1_at)) : '' }}
-                            @else
-                                Tanggal:
-                            @endif
+                            Tanggal: {{ $bom->approved_by_1_at ? date('d/m/Y', strtotime($bom->approved_by_1_at)) : '' }}
                         </div>
                         <div class="signature-title">Diperiksa oleh:</div>
-                        <div class="signature-space"></div>
+                        @if(isset($approvedBy1QrCode) && $approvedBy1QrCode)
+                            <div class="signature-space-with-qr">
+                                <div class="qr-code">
+                                    <img src="data:image/svg+xml;base64,{{ $approvedBy1QrCode }}" alt="QR Code Approved By 1">
+                                </div>
+                            </div>
+                        @else
+                            <div class="signature-space"></div>
+                        @endif
                         <div class="signature-name-line center">
-                            {{-- PERBAIKAN: Tampilkan nama di setiap halaman --}}
                             @if($bom->approvedBy1)
                                 ( {{ $bom->approvedBy1->nama }} )
                             @else
                                 ( _________________________ )
                             @endif
                         </div>
-                        {{-- PERBAIKAN: Tampilkan NIP di setiap halaman --}}
                         @if($bom->approvedBy1 && $bom->approvedBy1->nip)
                             <div class="signature-nip">{{ $bom->approvedBy1->nip }}</div>
                         @endif
@@ -634,24 +673,25 @@
                     
                     <div class="signature-col">
                         <div class="signature-date right">
-                            {{-- Tampilkan tanggal approval hanya di halaman terakhir --}}
-                            @if($pageNum == $totalPages)
-                                Tanggal: {{ $bom->approved_by_2_at ? date('d/m/Y', strtotime($bom->approved_by_2_at)) : '' }}
-                            @else
-                                Tanggal:
-                            @endif
+                            Tanggal: {{ $bom->approved_by_2_at ? date('d/m/Y', strtotime($bom->approved_by_2_at)) : '' }}
                         </div>
                         <div class="signature-title right">Disahkan oleh:</div>
-                        <div class="signature-space"></div>
+                        @if(isset($approvedBy2QrCode) && $approvedBy2QrCode)
+                            <div class="signature-space-with-qr">
+                                <div class="qr-code">
+                                    <img src="data:image/svg+xml;base64,{{ $approvedBy2QrCode }}" alt="QR Code Approved By 2">
+                                </div>
+                            </div>
+                        @else
+                            <div class="signature-space"></div>
+                        @endif
                         <div class="signature-name-line right">
-                            {{-- PERBAIKAN: Tampilkan nama di setiap halaman --}}
                             @if($bom->approvedBy2)
                                 ( {{ $bom->approvedBy2->nama }} )
                             @else
                                 ( _________________________ )
                             @endif
                         </div>
-                        {{-- PERBAIKAN: Tampilkan NIP di setiap halaman --}}
                         @if($bom->approvedBy2 && $bom->approvedBy2->nip)
                             <div class="signature-nip right">{{ $bom->approvedBy2->nip }}</div>
                         @endif

@@ -86,7 +86,7 @@
         
         .header-right {
             display: table-cell;
-            width: 26%;
+            width: 25%;
             vertical-align: top;
             padding: 8px;
         }
@@ -188,9 +188,9 @@
             max-width: 26% !important;
         }
         .col-keterangan { 
-            width: 26% !important; 
-            min-width: 26% !important; 
-            max-width: 26% !important;
+            width: 25% !important; 
+            min-width: 25% !important; 
+            max-width: 25% !important;
         }
         
         /* TEXT HANDLING */
@@ -250,7 +250,7 @@
             margin: 4px 0;
         }
         
-        /* QR Code Styles */
+        /* QR Code Styles - keeping for potential future use */
         .qr-code {
             width: 35px;
             height: 35px;
@@ -286,18 +286,24 @@
         }
         
         .signature-name-line.right {
-            text-align: center;
-            margin-left: 10px;
+            text-align: right; /* Changed from center to right */
+            margin-right: 15px; /* Add some space from right edge */
+            margin-left: 0px;
         }
         
-        /* QR Code positioning adjustments */
-        .signature-col:first-child .signature-space-with-qr {
-            justify-content: flex-start;
-        }
-        
+        /* QR Code positioning for each column */
         .signature-col:first-child .qr-code {
-            margin: 0;
+            margin: 0; /* Left column - align left */
         }
+        
+        .signature-col:nth-child(2) .qr-code {
+            margin: 0 auto; /* Middle column - center */
+        }
+        
+        .signature-col:last-child .qr-code {
+            margin: 0 70px 0 auto; /* Right column - align right with 70px margin */
+        }
+
         
         .signature-nip {
             font-size: 7pt;
@@ -310,8 +316,8 @@
         }
         
         .signature-nip.right {
-            text-align: center;
-            margin-left: 10px;
+            text-align: right; /* This was already correct */
+            margin-right: 15px; /* Add some space from right edge to match name */
         }
         
         .signature-date.right {
@@ -325,6 +331,8 @@
             margin-right: 0px;
             padding-left: 70px;
         }
+        
+        /* New style for right column QR code positioning - removed since not using QR codes */
         
         .page-number {
             position: fixed;
@@ -567,14 +575,14 @@
                         <tr class="empty-row">
                             <td class="col-rev"></td>
                             <td class="col-no">{{ $globalIndex + 1 }}</td>
-                            <td class="col-kode text-left">{{ $item->kodeMaterial ? $item->kodeMaterial->kode_material : '' }}</td>
-                            <td class="col-deskripsi text-left">{{ $item->kodeMaterial ? $item->kodeMaterial->nama_material : '' }}</td>
+                            <td class="col-kode text-left">{{ ($item->kodeMaterial && isset($item->kodeMaterial->kode_material)) ? $item->kodeMaterial->kode_material : '' }}</td>
+                            <td class="col-deskripsi text-left">{{ ($item->kodeMaterial && isset($item->kodeMaterial->nama_material)) ? $item->kodeMaterial->nama_material : '' }}</td>
                             <td class="col-qty text-right">
                                 @php
                                     $qty = 0;
                                     if ($item->qty !== null && $item->qty !== 0) {
                                         $qty = $item->qty;
-                                    } elseif ($item->kodeMaterial && $item->kodeMaterial->uom && $item->kodeMaterial->uom->qty) {
+                                    } elseif ($item->kodeMaterial && isset($item->kodeMaterial->uom) && $item->kodeMaterial->uom && isset($item->kodeMaterial->uom->qty)) {
                                         $qty = $item->kodeMaterial->uom->qty;
                                     } else {
                                         $qty = 1;
@@ -587,14 +595,14 @@
                                     $satuan = '';
                                     if ($item->satuan && trim($item->satuan) !== '') {
                                         $satuan = $item->satuan;
-                                    } elseif ($item->kodeMaterial && $item->kodeMaterial->uom && $item->kodeMaterial->uom->satuan) {
+                                    } elseif ($item->kodeMaterial && isset($item->kodeMaterial->uom) && $item->kodeMaterial->uom && isset($item->kodeMaterial->uom->satuan)) {
                                         $satuan = $item->kodeMaterial->uom->satuan;
                                     }
                                     echo $satuan;
                                 @endphp
                             </td>
-                            <td class="col-spesifikasi text-left">{{ $item->kodeMaterial && $item->kodeMaterial->spesifikasi ? $item->kodeMaterial->spesifikasi : '' }}</td>
-                            <td class="col-keterangan text-left">{{ $item->keterangan ?: '' }}</td>
+                            <td class="col-spesifikasi text-left">{{ ($item->kodeMaterial && isset($item->kodeMaterial->spesifikasi)) ? $item->kodeMaterial->spesifikasi : '' }}</td>
+                            <td class="col-keterangan text-left">{{ isset($item->keterangan) ? $item->keterangan : '' }}</td>
                         </tr>
                     @endforeach
                     
