@@ -35,9 +35,6 @@ class BillOfMaterialController extends Controller
     }
 
     
-/**
- * Enhanced Generate User QR Code with better error handling
- */
 private function generateUserQrCode($user)
 {
     if (!$user) {
@@ -45,33 +42,177 @@ private function generateUserQrCode($user)
     }
 
     try {
-        // Buat data untuk QR Code dengan format yang lebih terstruktur
         $qrData = json_encode([
-            'type' => 'user_signature',
             'nama' => $user->nama,
             'nip' => $user->nip,
-            'generated_at' => now()->toISOString(),
-            'app' => config('app.name', 'BOM System')
         ]);
         
-        // Generate QR Code sebagai SVG string
-        $qrCode = QrCode::format('svg')
-            ->size(80)
-            ->margin(0)
-            ->errorCorrection('M') // Medium error correction
-            ->generate($qrData);
+        $logoPath = public_path('img/logo-qinka.png');
         
-        // Convert SVG to base64 untuk embedding di PDF
-        $qrCodeBase64 = base64_encode($qrCode);
+        $qrCodeBuilder = QrCode::format('png')
+            ->size(800)
+            ->margin(2)
+            ->errorCorrection('H');
+        
+        $baseQrCode = $qrCodeBuilder->generate($qrData);
+        
+        $tempQrPath = storage_path('app/temp/base_qr_' . time() . '.png');
+        if (!file_exists(dirname($tempQrPath))) {
+            mkdir(dirname($tempQrPath), 0755, true);
+        }
+        file_put_contents($tempQrPath, $baseQrCode);
+        
+        $finalQrCode = $this->applyGradientDesign($tempQrPath, $logoPath);
+        
+        if (file_exists($tempQrPath)) {
+            unlink($tempQrPath);
+        }
+        
+        $qrCodeBase64 = base64_encode($finalQrCode);
         
         return $qrCodeBase64;
         
     } catch (\Exception $e) {
-        \Log::error('QR Code generation error: ' . $e->getMessage(), [
-            'user_id' => $user->id ?? null,
-            'user_nama' => $user->nama ?? null
-        ]);
         return null;
+    }
+}
+
+private function applyGradientDesign($qrCodePath, $logoPath)
+{
+    if (!extension_loaded('gd')) {
+        return file_get_contents($qrCodePath);
+    }
+
+    try {
+        $baseImage = imagecreatefrompng($qrCodePath);
+        $width = imagesx($baseImage);
+        $height = imagesy($baseImage);
+        
+        $canvas = imagecreatetruecolor($width, $height);
+        $white = imagecolorallocate($canvas, 255, 255, 255);
+        imagefill($canvas, 0, 0, $white);
+        
+        for ($x = 0; $x < $width; $x++) {
+            for ($y = 0; $y < $height; $y++) {
+                $rgb = imagecolorat($baseImage, $x, $y);
+                $colors = imagecolorsforindex($baseImage, $rgb);
+                
+                if ($colors['red'] < 128) {
+                    $gradientColor = $this->getGradientColor($x, $y, $width, $height, $canvas);
+                    imagesetpixel($canvas, $x, $y, $gradientColor);
+                }
+            }
+        }
+        
+        if (file_exists($logoPath)) {
+            $this->addLogoToCenter($canvas, $logoPath, $width, $height);
+        }
+        
+        ob_start();
+        imagepng($canvas);
+        $imageData = ob_get_contents();
+        ob_end_clean();
+        
+        imagedestroy($baseImage);
+        imagedestroy($canvas);
+        
+        return $imageData;
+        
+    } catch (\Exception $e) {
+        return file_get_contents($qrCodePath);
+    }
+}
+
+private function getGradientColor($x, $y, $width, $height, $canvas)
+{
+    $ratioX = $x / $width;
+    $ratioY = $y / $height;
+    
+    $topRed = 220;
+    $topGreen = 50;
+    $topBlue = 47;
+    
+    $bottomRed = 100;
+    $bottomGreen = 100;
+    $bottomBlue = 100;
+    
+    $red = (int)($topRed + ($bottomRed - $topRed) * $ratioY);
+    $green = (int)($topGreen + ($bottomGreen - $topGreen) * $ratioY);
+    $blue = (int)($topBlue + ($bottomBlue - $topBlue) * $ratioY);
+    
+    $red = max(0, min(255, $red));
+    $green = max(0, min(255, $green));
+    $blue = max(0, min(255, $blue));
+    
+    return imagecolorallocate($canvas, $red, $green, $blue);
+}
+
+private function addLogoToCenter($canvas, $logoPath, $width, $height)
+{
+    $logoImage = $this->createImageFromFile($logoPath);
+    if (!$logoImage) {
+        return;
+    }
+    
+    $logoWidth = imagesx($logoImage);
+    $logoHeight = imagesy($logoImage);
+    
+    $maxLogoSize = min($width, $height) / 2;
+    
+    if ($logoWidth > $maxLogoSize || $logoHeight > $maxLogoSize) {
+        $ratio = min($maxLogoSize / $logoWidth, $maxLogoSize / $logoHeight);
+        $newWidth = (int)($logoWidth * $ratio);
+        $newHeight = (int)($logoHeight * $ratio);
+        
+        $resizedLogo = imagecreatetruecolor($newWidth, $newHeight);
+        imagealphablending($resizedLogo, false);
+        imagesavealpha($resizedLogo, true);
+        $transparent = imagecolorallocatealpha($resizedLogo, 255, 255, 255, 127);
+        imagefill($resizedLogo, 0, 0, $transparent);
+        imagealphablending($resizedLogo, true);
+        
+        imagecopyresampled($resizedLogo, $logoImage, 0, 0, 0, 0, $newWidth, $newHeight, $logoWidth, $logoHeight);
+        imagedestroy($logoImage);
+        $logoImage = $resizedLogo;
+        $logoWidth = $newWidth;
+        $logoHeight = $newHeight;
+    }
+    
+    $logoX = (int)(($width - $logoWidth) / 2);
+    $logoY = (int)(($height - $logoHeight) / 2);
+    
+    $this->addWhiteBackground($canvas, $logoX - 10, $logoY - 10, $logoWidth + 20, $logoHeight + 20);
+    
+    imagecopy($canvas, $logoImage, $logoX, $logoY, 0, 0, $logoWidth, $logoHeight);
+    
+    imagedestroy($logoImage);
+}
+
+private function addWhiteBackground($canvas, $x, $y, $width, $height)
+{
+    $white = imagecolorallocate($canvas, 255, 255, 255);
+    imagefilledrectangle($canvas, $x, $y, $x + $width, $y + $height, $white);
+}
+
+private function createImageFromFile($filePath)
+{
+    $imageInfo = getimagesize($filePath);
+    if (!$imageInfo) {
+        return false;
+    }
+    
+    switch ($imageInfo[2]) {
+        case IMAGETYPE_JPEG:
+            return imagecreatefromjpeg($filePath);
+        case IMAGETYPE_PNG:
+            $image = imagecreatefrompng($filePath);
+            imagealphablending($image, true);
+            imagesavealpha($image, true);
+            return $image;
+        case IMAGETYPE_GIF:
+            return imagecreatefromgif($filePath);
+        default:
+            return false;
     }
 }
 

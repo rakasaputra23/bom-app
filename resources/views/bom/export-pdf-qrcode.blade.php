@@ -317,7 +317,7 @@
         
         .signature-nip.right {
             text-align: right; /* This was already correct */
-            margin-right: 15px; /* Add some space from right edge to match name */
+            margin-right: 70px; /* Add some space from right edge to match name */
         }
         
         .signature-date.right {
