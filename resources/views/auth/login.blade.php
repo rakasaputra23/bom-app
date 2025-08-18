@@ -81,29 +81,121 @@
       max-width: 500px;
       padding: 2rem;
       width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    /* Logo di Left Side - Transparan dan lebih besar */
+    /* FIXED: Logo di Left Side - BENAR-BENAR Independent dari semua konten */
     .logo-illustration-large {
-      width: auto;
-      height: auto;
-      margin: 0 auto;
-      background: transparent;
-      backdrop-filter: none;
-      border-radius: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: visible;
-      box-shadow: none;
-      border: none;
+      position: fixed !important;
+      top: 15px !important;
+      right: calc(35% + 15px) !important;
+      z-index: 9999 !important;
+      background: rgba(255, 255, 255, 0.15) !important;
+      backdrop-filter: blur(10px) !important;
+      border-radius: 12px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25) !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      padding: 8px 12px !important;
+      margin: 0 !important;
+      transform: none !important;
+      width: auto !important;
+      height: auto !important;
+      min-width: 70px !important;
+      min-height: 45px !important;
     }
 
     .logo-illustration-large img {
-      height: 80px;
-      width: auto;
-      max-width: none;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+      height: 42px !important;
+      width: auto !important;
+      max-width: none !important;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)) !important;
+      margin: 0 !important;
+      display: block !important;
+      object-fit: contain !important;
+    }
+
+    /* Enhanced Responsive Design - Logo positioning untuk SEMUA ukuran layar */
+    
+    /* Large Desktop */
+    @media (min-width: 1401px) {
+      .logo-illustration-large {
+        top: 20px !important;
+        right: calc(35% + 20px) !important;
+        padding: 10px 15px !important;
+      }
+
+      .logo-illustration-large img {
+        height: 50px !important;
+      }
+    }
+
+    /* Medium Desktop */
+    @media (max-width: 1400px) and (min-width: 1201px) {
+      .login-left {
+        width: 62%;
+      }
+      
+      .login-right {
+        width: 38%;
+      }
+
+      .logo-illustration-large {
+        top: 18px !important;
+        right: calc(38% + 18px) !important;
+        padding: 9px 13px !important;
+      }
+
+      .logo-illustration-large img {
+        height: 48px !important;
+      }
+    }
+
+    /* Small Desktop - CRITICAL untuk 1006px */
+    @media (max-width: 1200px) and (min-width: 993px) {
+      .login-left {
+        width: 60%;
+      }
+      
+      .login-right {
+        width: 40%;
+      }
+
+      .logo-illustration-large {
+        top: 16px !important;
+        right: calc(40% + 16px) !important;
+        padding: 8px 12px !important;
+      }
+
+      .logo-illustration-large img {
+        height: 46px !important;
+      }
+    }
+
+    /* Tablet */
+    @media (max-width: 992px) and (min-width: 769px) {
+      .login-left {
+        width: 55%;
+      }
+      
+      .login-right {
+        width: 45%;
+      }
+
+      .logo-illustration-large {
+        top: 15px !important;
+        right: calc(45% + 15px) !important;
+        padding: 8px 12px !important;
+      }
+
+      .logo-illustration-large img {
+        height: 45px !important;
+      }
     }
 
     .welcome-text {
@@ -144,6 +236,7 @@
       padding: 1rem;
       background: #ffffff;
       box-sizing: border-box;
+      position: relative;
     }
 
     .login-box {
@@ -467,14 +560,16 @@
         max-width: 100%;
       }
       
+      /* Logo untuk mobile - kembali ke absolute karena layout berubah */
       .logo-illustration-large {
-        width: auto;
-        height: auto;
-        margin-bottom: 1rem;
+        position: absolute !important;
+        top: 12px !important;
+        right: 12px !important;
+        padding: 6px 10px !important;
       }
-      
+
       .logo-illustration-large img {
-        height: 65px;
+        height: 40px !important;
       }
       
       .login-box {
@@ -505,7 +600,8 @@
       .login-box {
         width: 95%;
         max-width: 320px;
-        margin: 1rem;
+        margin: 1rem auto;
+        margin-top: 70px;
       }
       
       .card-body, .card-header {
@@ -518,13 +614,16 @@
         padding-bottom: 1.5rem;
       }
       
+      /* Logo untuk small mobile */
       .logo-illustration-large {
-        width: auto;
-        height: auto;
+        position: absolute !important;
+        top: 10px !important;
+        right: 10px !important;
+        padding: 5px 8px !important;
       }
       
       .logo-illustration-large img {
-        height: 55px;
+        height: 35px !important;
       }
       
       .illustration-content {
@@ -547,17 +646,20 @@
       }
       
       .login-box {
-        margin: 0.5rem;
+        margin: 0.5rem auto;
         width: calc(100% - 1rem);
       }
-      
+
+      /* Logo untuk very small mobile */
       .logo-illustration-large {
-        width: auto;
-        height: auto;
+        position: absolute !important;
+        top: 8px !important;
+        right: 8px !important;
+        padding: 4px 6px !important;
       }
-      
+
       .logo-illustration-large img {
-        height: 45px;
+        height: 30px !important;
       }
     }
 
@@ -572,6 +674,18 @@
       
       .illustration-content {
         padding: 0.5rem;
+      }
+
+      /* Logo untuk extra small */
+      .logo-illustration-large {
+        position: absolute !important;
+        top: 6px !important;
+        right: 6px !important;
+        padding: 3px 5px !important;
+      }
+
+      .logo-illustration-large img {
+        height: 28px !important;
       }
     }
 
@@ -598,14 +712,16 @@
         padding: 0.5rem;
       }
       
+      /* Logo untuk landscape */
       .logo-illustration-large {
-        width: auto;
-        height: auto;
-        margin-bottom: 0.5rem;
+        position: absolute !important;
+        top: 10px !important;
+        right: 10px !important;
+        padding: 5px 8px !important;
       }
       
       .logo-illustration-large img {
-        height: 35px;
+        height: 32px !important;
       }
       
       .welcome-text {
@@ -629,6 +745,10 @@
       
       .card-body {
         padding: 1rem 1.5rem 0.8rem;
+      }
+      
+      .login-box {
+        margin-top: 0;
       }
     }
 
@@ -657,6 +777,10 @@
 
     .illustration-content {
       animation: fadeInLeft 0.8s ease-out;
+    }
+
+    .logo-illustration-large {
+      animation: fadeInRight 1s ease-out 0.3s both;
     }
 
     /* Additional AdminLTE-like enhancements */
@@ -711,10 +835,12 @@
 <div class="login-page">
   <!-- Left Side - Illustration -->
   <div class="login-left">
+    <!-- Logo Independent - MOVED OUTSIDE illustration-content -->
+    <div class="logo-illustration-large">
+      <img src="{{ asset('dist/img/logo-login.png') }}" alt="Logo INKA">
+    </div>
+    
     <div class="illustration-content">
-      <div class="logo-illustration-large">
-        <img src="{{ asset('dist/img/logo-login.png') }}" alt="Logo INKA">
-      </div>
       <div class="welcome-text">Welcome to BOM System</div>
       <div class="welcome-subtitle">PT. INKA Multi Solusi</div>
       <div class="welcome-description">
@@ -722,7 +848,6 @@
       </div>
     </div>
   </div>
-    
 
   <!-- Right Side - Login Form -->
   <div class="login-right">

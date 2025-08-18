@@ -102,8 +102,12 @@ class BillOfMaterial extends Model
 
 
     
-// Method untuk generate nomor BOM otomatis
-    public static function generateNomorBom($proyekId, $jenisDokumenId)
+/**
+ * Generate nomor BOM berdasarkan jenis dokumen
+ * Format: {kode_unit}/{nama_perusahaan}/{jenis_dokumen}-{kode_proyek}/{tahun}
+ * Kode unit: 4 + nomor urut (berdasarkan jenis dokumen, bukan proyek)
+ */
+public static function generateNomorBom($proyekId, $jenisDokumenId)
 {
     try {
         // Get data proyek dan jenis dokumen
@@ -113,7 +117,7 @@ class BillOfMaterial extends Model
         // 1. Nama Perusahaan - otomatis IMS
         $namaPerusahaan = 'IMS';
         
-        // 2. Jenis Dokumen - dari tabel jenis_dokumen
+        // 2. Jenis Dokumen - dari tabel jenis_dokumen (BRM, ERC, dll)
         $jenisDokumenKode = $jenisDokumen->kode_dokumen;
         
         // 3. Kode Proyek - dari tabel proyek
@@ -122,22 +126,24 @@ class BillOfMaterial extends Model
         // 4. Tahun - tahun pembuatan BOM
         $tahun = date('Y');
         
-        // 5. Nomor Urut - auto increment berdasarkan kombinasi proyek+jenis dokumen+tahun
-        $searchPrefix = "4%/IMS/{$jenisDokumenKode}-{$kodeProyek}/{$tahun}";
-        
-        // Cari nomor urut terakhir untuk kombinasi ini
-        $lastBom = static::where('nomor_bom', 'like', $searchPrefix)
-            ->orderBy('nomor_bom', 'desc')
+        // 5. Cari nomor urut terakhir berdasarkan JENIS DOKUMEN dan TAHUN saja
+        // Mencari semua BOM dengan jenis dokumen yang sama (tidak peduli proyek)
+        $lastBom = static::where('jenis_dokumen_id', $jenisDokumenId)
+            ->whereYear('created_at', $tahun)
+            ->orderByRaw('CAST(SUBSTRING_INDEX(nomor_bom, "/", 1) AS UNSIGNED) DESC')
             ->first();
         
-        $nomorUrut = 1; // Default nomor urut
-        if ($lastBom) {
+        $nomorUrut = 1; // Default nomor urut mulai dari 01
+        
+        if ($lastBom && $lastBom->nomor_bom) {
             // Extract nomor urut dari kode unit (4XX)
             $parts = explode('/', $lastBom->nomor_bom);
-            if (count($parts) >= 4 && strlen($parts[0]) >= 2) { // 401/IMS/BRM-E12/2025
+            if (count($parts) >= 4 && strlen($parts[0]) >= 3) { // 401/IMS/BRM-E12/2025
                 $kodeUnit = $parts[0]; // Ambil bagian pertama (4XX)
-                $lastNumber = intval(substr($kodeUnit, 1)); // Ambil XX dari 4XX
-                $nomorUrut = $lastNumber + 1;
+                if (substr($kodeUnit, 0, 1) === '4') { // Pastikan dimulai dengan 4
+                    $lastNumber = intval(substr($kodeUnit, 1)); // Ambil XX dari 4XX
+                    $nomorUrut = $lastNumber + 1;
+                }
             }
         }
         
@@ -157,6 +163,73 @@ class BillOfMaterial extends Model
         return static::generateFallbackNomorBom();
     }
 }
+
+    /**
+ * Fallback method untuk generate nomor BOM jika terjadi error
+ */
+public static function generateFallbackNomorBom()
+{
+    $timestamp = time();
+    $randomNumber = rand(10, 99);
+    return "TEMP_{$timestamp}_{$randomNumber}";
+}
+
+    /**
+ * Get next nomor urut untuk jenis dokumen tertentu
+ */
+public static function getNextNomorUrut($jenisDokumenId, $tahun = null)
+{
+    if (!$tahun) {
+        $tahun = date('Y');
+    }
+    
+    $lastBom = self::where('jenis_dokumen_id', $jenisDokumenId)
+                   ->whereYear('created_at', $tahun)
+                   ->orderByRaw('CAST(SUBSTRING_INDEX(nomor_bom, "/", 1) AS UNSIGNED) DESC')
+                   ->first();
+    
+    if (!$lastBom || !$lastBom->nomor_bom) {
+        return 1;
+    }
+    
+    // Extract nomor urut dari format: 401/IMS/BRM-4566/2025
+    $parts = explode('/', $lastBom->nomor_bom);
+    if (count($parts) >= 4 && strlen($parts[0]) >= 2) {
+        $kodeUnit = $parts[0]; // 4XX
+        $lastNomorUrut = intval(substr($kodeUnit, 1)); // XX dari 4XX
+        return $lastNomorUrut + 1;
+    }
+    
+    return 1;
+}
+
+/**
+ * Check if nomor BOM already exists
+ */
+public static function isNomorBomExists($nomorBom, $excludeId = null)
+{
+    $query = self::where('nomor_bom', $nomorBom);
+    
+    if ($excludeId) {
+        $query->where('id', '!=', $excludeId);
+    }
+    
+    return $query->exists();
+}
+
+
+    /**
+ * Validate nomor BOM format
+ * Expected format: 401/IMS/BRM-4566/2025 atau 402/IMS/ERC-1234/2025
+ */
+public static function validateNomorBomFormat($nomorBom)
+{
+    // Pattern untuk format: 4XX/IMS/JENIS_DOKUMEN-KODE_PROYEK/YYYY
+    $pattern = '/^4\d{2}\/IMS\/[A-Z0-9]+-[A-Z0-9\-]+\/\d{4}$/';
+    
+    return preg_match($pattern, $nomorBom);
+}
+
 
     // Available categories
     public static function getAvailableCategories()
