@@ -20,10 +20,13 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Form Lupa Password (input NIP)
+// Form Lupa Password (input NIP untuk kirim email)
 Route::get('/password/reset', [AuthController::class, 'showForgotPassword'])->name('password.request');
 
-// Form Reset Password Manual (input NIP + password baru)
+// Kirim email reset password
+Route::post('/password/email', [AuthController::class, 'sendResetPasswordEmail'])->name('password.email');
+
+// Form Reset Password (dari email atau manual)
 Route::get('/password/reset/form', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('/password/reset', [AuthController::class, 'resetPassword'])->name('password.update');
 
