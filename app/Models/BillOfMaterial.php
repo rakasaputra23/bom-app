@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\JenisDokumen;
 use Carbon\Carbon;
 
 class BillOfMaterial extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'bill_of_material';
 
@@ -33,11 +34,14 @@ class BillOfMaterial extends Model
         'rejected_note'
     ];
 
+    protected $dates = ['deleted_at'];
+
     protected $casts = [
         'tanggal' => 'date',
         'approved_by_1_at' => 'datetime',
         'approved_by_2_at' => 'datetime',
         'rejected_at' => 'datetime',
+        'deleted_at' => 'datetime',
         // PERBAIKAN: Pastikan semua field user ID di-cast sebagai integer
         'created_by' => 'integer',
         'approved_by_1' => 'integer',
