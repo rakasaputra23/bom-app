@@ -34,8 +34,10 @@ class ResetPasswordMail extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
+        \Log::info('Custom ResetPasswordMail called with subject: BOM System Reset Password');
+        
         return new Envelope(
-            subject: '[BOM System] Reset Password - NIP: ' . $this->user->nip,
+            subject: 'BOM System - Reset Password - NIP: ' . $this->user->nip,
         );
     }
 
