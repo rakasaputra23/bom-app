@@ -330,7 +330,24 @@ $(document).ready(function() {
             name: 'action', 
             orderable: false, 
             searchable: false,
-            width: '12%'
+            width: '12%',
+            render: function(data, type, row) {
+                let buttons = '';
+                
+                if (permissions.canEdit) {
+                    buttons += `<button onclick="editJenisDokumen(${row.id})" class="btn btn-sm btn-warning mr-1" title="Edit">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>`;
+                }
+                
+                if (permissions.canDelete) {
+                    buttons += `<button onclick="deleteJenisDokumen(${row.id}, '${row.kode_dokumen}', '${row.nama_dokumen}')" class="btn btn-sm btn-danger" title="Hapus">
+                        <i class="fas fa-trash"></i> Hapus
+                    </button>`;
+                }
+                
+                return buttons || '-';
+            }
         });
     }
 

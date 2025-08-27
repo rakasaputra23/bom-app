@@ -264,13 +264,13 @@ $(document).ready(function() {
                 
                 if (permissions.canEdit) {
                     buttons += `<button onclick="editUom(${row.id})" class="btn btn-sm btn-warning mr-1" title="Edit">
-                        <i class="fas fa-edit"></i>
+                        <i class="fas fa-edit"></i> Edit
                     </button>`;
                 }
                 
                 if (permissions.canDelete) {
                     buttons += `<button onclick="deleteUom(${row.id}, '${row.satuan}')" class="btn btn-sm btn-danger" title="Hapus">
-                        <i class="fas fa-trash"></i>
+                        <i class="fas fa-trash"></i> Hapus
                     </button>`;
                 }
                 
