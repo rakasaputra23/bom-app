@@ -29,6 +29,12 @@
         <i class="fas fa-cube"></i>
       </div>
       <a href="#" class="small-box-footer">Kelola Kode Material <i class="fas fa-arrow-circle-right"></i></a>
+      
+      <!-- Coming Soon Overlay -->
+      <div class="coming-soon-overlay">
+        <div class="coming-soon-text">Coming Soon</div>
+        <div class="progress-text">On Progress</div>
+      </div>
     </div>
   </div>
 
@@ -43,6 +49,12 @@
         <i class="fas fa-edit"></i>
       </div>
       <a href="#" class="small-box-footer">Lihat Revisi <i class="fas fa-arrow-circle-right"></i></a>
+      
+      <!-- Coming Soon Overlay -->
+      <div class="coming-soon-overlay">
+        <div class="coming-soon-text">Coming Soon</div>
+        <div class="progress-text">On Progress</div>
+      </div>
     </div>
   </div>
 
@@ -57,6 +69,12 @@
         <i class="fas fa-project-diagram"></i>
       </div>
       <a href="#" class="small-box-footer">Kelola Proyek <i class="fas fa-arrow-circle-right"></i></a>
+      
+      <!-- Coming Soon Overlay -->
+      <div class="coming-soon-overlay">
+        <div class="coming-soon-text">Coming Soon</div>
+        <div class="progress-text">On Progress</div>
+      </div>
     </div>
   </div>
 
@@ -71,6 +89,12 @@
         <i class="fas fa-balance-scale"></i>
       </div>
       <a href="#" class="small-box-footer">Kelola YUOM <i class="fas fa-arrow-circle-right"></i></a>
+      
+      <!-- Coming Soon Overlay -->
+      <div class="coming-soon-overlay">
+        <div class="coming-soon-text">Coming Soon</div>
+        <div class="progress-text">On Progress</div>
+      </div>
     </div>
   </div>
 </div>
@@ -147,6 +171,11 @@
           </div>
         </div>
       </div>
+      
+      <!-- Disabled Overlay -->
+      <div class="disabled-overlay">
+        <div class="disabled-text">Coming Soon</div>
+      </div>
     </div>
   </div>
 
@@ -211,6 +240,11 @@
         <a href="javascript:void(0)" class="btn btn-sm btn-info float-left">Transaksi Baru</a>
         <a href="javascript:void(0)" class="btn btn-sm btn-secondary float-right">Lihat Semua</a>
       </div>
+      
+      <!-- Disabled Overlay -->
+      <div class="disabled-overlay">
+        <div class="disabled-text">Coming Soon</div>
+      </div>
     </div>
   </div>
 </div>
@@ -219,6 +253,85 @@
 <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<style>
+  .coming-soon-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    z-index: 10;
+  }
+  
+  .coming-soon-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+  }
+  
+  .progress-text {
+    font-size: 0.9rem;
+    color: #007bff;
+    font-weight: 500;
+  }
+  
+  .small-box {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .small-box .icon {
+    z-index: 0;
+  }
+  
+  .small-box .inner {
+    position: relative;
+    z-index: 5;
+  }
+  
+  .small-box .small-box-footer {
+    position: relative;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-tab-disabled {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  
+  .disabled-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    border-radius: 0.5rem;
+  }
+  
+  .disabled-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #6c757d;
+    transform: rotate(-5deg);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  }
+</style>
 @endpush
 
 @push('scripts')
@@ -255,6 +368,22 @@ $(function () {
       }
     }
   })
+  
+  // Prevent clicking on disabled elements
+  $('.coming-soon-overlay, .disabled-overlay').closest('.small-box, .card').on('click', function(e) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Fitur Dalam Pengembangan',
+      text: 'Fitur ini sedang dalam pengembangan (Coming Soon)',
+      icon: 'info',
+      confirmButtonText: 'Mengerti'
+    });
+    return false;
+  });
+  
+  // Change cursor for disabled elements
+  $('.coming-soon-overlay, .disabled-overlay').closest('.small-box, .card').css('cursor', 'not-allowed');
+  $('.coming-soon-overlay, .disabled-overlay').closest('.small-box, .card').find('a').css('pointer-events', 'none');
 })
 </script>
 @endpush

@@ -542,7 +542,37 @@
     min-width: 140px;
 }
 
+/* Mobile responsive styles */
 @media (max-width: 768px) {
+    .modal-dialog {
+        margin: 5px;
+        max-width: none;
+        width: calc(100% - 10px);
+    }
+    
+    .modal-xl {
+        max-width: none;
+        width: calc(100% - 10px);
+    }
+    
+    .modal-body {
+        padding: 10px;
+    }
+    
+    .form-group.row {
+        margin-bottom: 0.5rem;
+    }
+    
+    .col-form-label {
+        font-size: 12px;
+        padding: 5px 0;
+    }
+    
+    .form-control-plaintext {
+        font-size: 12px;
+        padding: 5px 0;
+    }
+    
     .preview-buttons {
         flex-direction: column !important;
     }
@@ -556,6 +586,16 @@
     .export-dropdown .dropdown-menu {
         min-width: 180px;
     }
+}
+
+.mobile-item-card {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    transition: box-shadow 0.2s ease;
+}
+
+.mobile-item-card:hover {
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
 /* Fix dropdown z-index issues */
@@ -921,14 +961,14 @@ $(document).ready(function() {
   var currentBomId = null;
   var currentAction = null;
 
-  // FIXED: View BOM function - moved outside and properly separated
+// FIXED: View BOM function - moved outside and properly separated
 function loadBomDetail(bomId) {
   $.ajax({
     url: `/bom/${bomId}`,
     type: 'GET',
     dataType: 'json',
     success: function(response) {
-      // Restore modal body structure
+      // Restore modal body structure with responsive layout
       $('#viewModal .modal-body').html(`
         <div class="container-fluid">
           <div class="row mb-3">
@@ -994,25 +1034,33 @@ function loadBomDetail(bomId) {
           </div>
           <div class="row mb-3">
             <div class="col-md-12 text-center">
-              <h4 class="bg-light py-2" id="view_kategori"></h4>
+              <h4 class="bg-primary text-white py-2" id="view_kategori" style="margin: 0;"></h4>
             </div>
           </div>
-          <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-              <thead class="bg-secondary">
-                <tr>
-                  <th width="5%">NO</th>
-                  <th width="15%">KODE MATERIAL</th>
-                  <th width="25%">DESKRIPSI</th>
-                  <th width="10%">QTY</th>
-                  <th width="10%">SATUAN</th>
-                  <th width="15%">SPESIFIKASI</th>
-                  <th width="20%">KETERANGAN</th>
-                </tr>
-              </thead>
-              <tbody id="view_items">
-              </tbody>
-            </table>
+          
+          <!-- DESKTOP TABLE - Hidden on mobile -->
+          <div class="d-none d-md-block">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped">
+                <thead class="bg-dark text-white">
+                  <tr>
+                    <th width="5%" class="text-center">NO</th>
+                    <th width="15%" class="text-center">KODE MATERIAL</th>
+                    <th width="25%" class="text-center">DESKRIPSI</th>
+                    <th width="10%" class="text-center">QTY</th>
+                    <th width="15%" class="text-center">SATUAN</th>
+                    <th width="15%" class="text-center">SPESIFIKASI</th>
+                    <th width="15%" class="text-center">KETERANGAN</th>
+                  </tr>
+                </thead>
+                <tbody id="view_items_desktop">
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- MOBILE CARDS - Hidden on desktop -->
+          <div class="d-md-none" id="view_items_mobile">
           </div>
         </div>
       `);
@@ -1094,8 +1142,10 @@ function loadBomDetail(bomId) {
         $('#approval_history').show();
       }
 
-      // PERBAIKAN: Fill items table - sesuai dengan logika export PDF
+      // PERBAIKAN: Fill items table with responsive layout
       var itemsHtml = '';
+      var mobileItemsHtml = '';
+
       if (response.item_bom && response.item_bom.length > 0) {
           response.item_bom.forEach(function(item, index) {
               // Logika qty dan satuan yang sama dengan export PDF
@@ -1122,22 +1172,80 @@ function loadBomDetail(bomId) {
                   satuan = item.kode_material.uom.satuan;
               }
               
+              let qtyDisplay = qty % 1 === 0 ? qty.toString() : qty.toFixed(2);
+              let kodeMaterial = item.kode_material ? item.kode_material.kode_material : '-';
+              let namaMaterial = item.kode_material ? item.kode_material.nama_material : '-';
+              let spesifikasi = item.kode_material && item.kode_material.spesifikasi ? item.kode_material.spesifikasi : '-';
+              let keterangan = item.keterangan || '-';
+              
+              // DESKTOP TABLE ROW
               itemsHtml += `
                   <tr>
-                      <td>${index + 1}</td>
-                      <td><strong>${item.kode_material ? item.kode_material.kode_material : '-'}</strong></td>
-                      <td>${item.kode_material ? item.kode_material.nama_material : '-'}</td>
-                      <td class="text-right"><strong>${qty.toLocaleString('id-ID')}</strong></td>
-                      <td class="text-center"><span class="badge badge-light">${satuan}</span></td>
-                      <td><small>${item.kode_material && item.kode_material.spesifikasi ? item.kode_material.spesifikasi : '-'}</small></td>
-                      <td><small>${item.keterangan || '-'}</small></td>
+                      <td class="text-center">${index + 1}</td>
+                      <td class="text-center"><strong>${kodeMaterial}</strong></td>
+                      <td>${namaMaterial}</td>
+                      <td class="text-center"><strong>${qtyDisplay}</strong></td>
+                      <td class="text-center">${satuan}</td>
+                      <td class="text-center" title="${spesifikasi}">${spesifikasi.length > 20 ? spesifikasi.substring(0, 20) + '...' : spesifikasi}</td>
+                      <td class="text-center" title="${keterangan}"><small>${keterangan.length > 15 ? keterangan.substring(0, 15) + '...' : keterangan}</small></td>
                   </tr>
+              `;
+              
+              // MOBILE CARD
+              mobileItemsHtml += `
+                  <div class="card mb-2 mobile-item-card">
+                      <div class="card-body p-3">
+                          <div class="row no-gutters">
+                              <div class="col-2">
+                                  <span class="badge badge-primary">${index + 1}</span>
+                              </div>
+                              <div class="col-10">
+                                  <div class="row mb-2">
+                                      <div class="col-12">
+                                          <strong class="text-primary">${kodeMaterial}</strong>
+                                      </div>
+                                  </div>
+                                  <div class="row mb-2">
+                                      <div class="col-12">
+                                          <small class="text-dark">${namaMaterial}</small>
+                                      </div>
+                                  </div>
+                                  <div class="row mb-2">
+                                      <div class="col-4">
+                                          <small class="text-muted">Qty:</small><br>
+                                          <strong class="text-success">${qtyDisplay}</strong>
+                                      </div>
+                                      <div class="col-4">
+                                          <small class="text-muted">Satuan:</small><br>
+                                          <span class="badge badge-light">${satuan}</span>
+                                      </div>
+                                      <div class="col-4">
+                                          <small class="text-muted">Spesifikasi:</small><br>
+                                          <small title="${spesifikasi}">${spesifikasi.length > 15 ? spesifikasi.substring(0, 15) + '...' : spesifikasi}</small>
+                                      </div>
+                                  </div>
+                                  <div class="row">
+                                      <div class="col-12">
+                                          <small class="text-muted">Keterangan:</small><br>
+                                          <small class="text-info" title="${keterangan}">${keterangan.length > 25 ? keterangan.substring(0, 25) + '...' : keterangan}</small>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
               `;
           });
       } else {
           itemsHtml = '<tr><td colspan="7" class="text-center text-muted"><em>Tidak ada item</em></td></tr>';
+          mobileItemsHtml = '<div class="alert alert-info text-center"><em>Tidak ada item</em></div>';
       }
-      $('#view_items').html(itemsHtml);
+      
+      // Fill desktop table
+      $('#view_items_desktop').html(itemsHtml);
+      
+      // Fill mobile cards
+      $('#view_items_mobile').html(mobileItemsHtml);
     },
     error: function(xhr) {
       $('#viewModal .modal-body').html(`

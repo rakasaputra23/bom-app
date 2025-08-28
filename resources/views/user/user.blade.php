@@ -47,6 +47,9 @@
                         <i class="fas fa-plus"></i> Tambah User
                     </button>
                     @endif
+                    <button type="button" class="btn btn-secondary btn-sm ml-1" onclick="refreshTable()" title="Refresh Data">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
                 </div>
             </div>
             <div class="card-body">
@@ -242,46 +245,70 @@ $(document).ready(function() {
         }
     });
 
-    // Pastikan DataTables sudah dimuat
-    if (typeof $.fn.DataTable === 'undefined') {
-        console.error('DataTables tidak dimuat dengan benar');
-        return;
-    }
-
+    // IMPROVED: DataTables initialization with better configuration
     let table = $('#userTable').DataTable({
         processing: true,
-        serverSide: false,
+        serverSide: false, // Client-side processing
+        destroy: true, // Allow re-initialization
         ajax: {
             url: '{{ route("user.getData") }}',
-            type: 'GET'
+            type: 'GET',
+            cache: false, // Disable cache
+            error: function(xhr, error, thrown) {
+                console.error('DataTable Ajax Error:', xhr, error, thrown);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Gagal memuat data. Silakan refresh halaman.'
+                });
+            }
         },
         columns: [
-            { data: 'nip' },
-            { data: 'nama' },
-            { data: 'posisi' },
-            { data: 'email' },
-            { data: 'group_nama' },
-            { data: 'created_at' },
+            { 
+                data: 'nip',
+                name: 'nip'
+            },
+            { 
+                data: 'nama',
+                name: 'nama'
+            },
+            { 
+                data: 'posisi',
+                name: 'posisi'
+            },
+            { 
+                data: 'email',
+                name: 'email'
+            },
+            { 
+                data: 'group_nama',
+                name: 'group_nama',
+                orderable: false
+            },
+            { 
+                data: 'created_at',
+                name: 'created_at'
+            },
             {
                 data: 'id',
+                name: 'actions',
+                orderable: false,
+                searchable: false,
                 render: function(data, type, row) {
                     let buttons = '<div class="btn-group" role="group">';
                     
-                    // Tombol Detail - hanya muncul jika ada permission
                     if (permissions.canView) {
                         buttons += `<button type="button" class="btn btn-sm btn-info" onclick="showDetail(${data})" title="Detail">
                             <i class="fas fa-eye"></i>
                         </button>`;
                     }
                     
-                    // Tombol Edit - hanya muncul jika ada permission
                     if (permissions.canEdit) {
                         buttons += `<button type="button" class="btn btn-sm btn-warning" onclick="editUser(${data})" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>`;
                     }
                     
-                    // Tombol Hapus - hanya muncul jika ada permission
                     if (permissions.canDelete) {
                         buttons += `<button type="button" class="btn btn-sm btn-danger" onclick="deleteUser(${data})" title="Hapus">
                             <i class="fas fa-trash"></i>
@@ -290,9 +317,8 @@ $(document).ready(function() {
                     
                     buttons += '</div>';
                     
-                    // Jika tidak ada permission sama sekali, tampilkan dash
                     if (!permissions.canView && !permissions.canEdit && !permissions.canDelete) {
-                        return '-';
+                        return '<span class="text-muted">-</span>';
                     }
                     
                     return buttons;
@@ -305,11 +331,18 @@ $(document).ready(function() {
         responsive: true,
         autoWidth: false,
         pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
-        order: [[1, 'asc']]
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+        order: [[1, 'asc']],
+        // IMPROVED: Better draw callback for debugging
+        drawCallback: function(settings) {
+            console.log('DataTable redrawn with', settings.json ? settings.json.data.length : 'unknown', 'rows');
+        }
     });
 
-    // Form submission
+    // IMPROVED: Make table variable global for debugging
+    window.userTable = table;
+
+    // Form submission with improved error handling
     $('#userForm').on('submit', function(e) {
         e.preventDefault();
         
@@ -321,7 +354,6 @@ $(document).ready(function() {
             formData.append('_method', 'PUT');
         }
 
-        // Show loading state
         const submitBtn = $(this).find('button[type="submit"]');
         const originalText = submitBtn.html();
         submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
@@ -336,14 +368,25 @@ $(document).ready(function() {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
+                console.log('Form submit success:', response);
                 if (response.success) {
                     $('#userModal').modal('hide');
-                    table.ajax.reload();
-                    Swal.fire('Berhasil!', response.message, 'success');
+                    // IMPROVED: Force reload with callback
+                    table.ajax.reload(function() {
+                        console.log('Table reloaded after form submit');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }, false);
                     resetForm();
                 }
             },
             error: function(xhr) {
+                console.error('Form submit error:', xhr);
                 if (xhr.status === 422) {
                     let errors = xhr.responseJSON.errors;
                     $('.form-control').removeClass('is-invalid');
@@ -358,7 +401,6 @@ $(document).ready(function() {
                 }
             },
             complete: function() {
-                // Reset button state
                 submitBtn.html(originalText).prop('disabled', false);
             }
         });
@@ -375,6 +417,28 @@ $(document).ready(function() {
         $(this).siblings('.invalid-feedback').text('');
     });
 });
+
+// IMPROVED: Global refresh function
+function refreshTable() {
+    if (window.userTable) {
+        console.log('Manual table refresh triggered');
+        window.userTable.ajax.reload(function() {
+            console.log('Manual table refresh completed');
+        }, false);
+        
+        // Show brief loading indicator
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 1000
+        });
+        Toast.fire({
+            icon: 'info',
+            title: 'Memperbarui data...'
+        });
+    }
+}
 
 function resetForm() {
     $('#userForm')[0].reset();
@@ -394,12 +458,7 @@ function resetForm() {
 }
 
 function editUser(id) {
-    // Check permission di JavaScript juga untuk keamanan tambahan
-    const permissions = {
-        canEdit: {{ $canEdit ? 'true' : 'false' }}
-    };
-    
-    if (!permissions.canEdit) {
+    if (!{{ $canEdit ? 'true' : 'false' }}) {
         Swal.fire({
             icon: 'error',
             title: 'Akses Ditolak!',
@@ -423,18 +482,14 @@ function editUser(id) {
         $('#password_confirmation').prop('required', false);
         
         $('#userModal').modal('show');
-    }).fail(function() {
+    }).fail(function(xhr) {
+        console.error('Edit user error:', xhr);
         Swal.fire('Error!', 'Gagal memuat data user', 'error');
     });
 }
 
 function showDetail(id) {
-    // Check permission di JavaScript juga untuk keamanan tambahan
-    const permissions = {
-        canView: {{ $canView ? 'true' : 'false' }}
-    };
-    
-    if (!permissions.canView) {
+    if (!{{ $canView ? 'true' : 'false' }}) {
         Swal.fire({
             icon: 'error',
             title: 'Akses Ditolak!',
@@ -494,18 +549,15 @@ function showDetail(id) {
         `;
         $('#detailUserContent').html(content);
         $('#detailUserModal').modal('show');
-    }).fail(function() {
+    }).fail(function(xhr) {
+        console.error('Show detail error:', xhr);
         Swal.fire('Error!', 'Gagal memuat detail user', 'error');
     });
 }
 
+// COMPLETELY IMPROVED: Delete function with better error handling and debugging
 function deleteUser(id) {
-    // Check permission di JavaScript juga untuk keamanan tambahan
-    const permissions = {
-        canDelete: {{ $canDelete ? 'true' : 'false' }}
-    };
-    
-    if (!permissions.canDelete) {
+    if (!{{ $canDelete ? 'true' : 'false' }}) {
         Swal.fire({
             icon: 'error',
             title: 'Akses Ditolak!',
@@ -526,10 +578,14 @@ function deleteUser(id) {
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            // Show loading
+            // Show loading immediately
             Swal.fire({
                 title: 'Menghapus...',
+                text: 'Sedang memproses permintaan Anda',
                 allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                showConfirmButton: false,
                 didOpen: () => {
                     Swal.showLoading();
                 }
@@ -542,18 +598,91 @@ function deleteUser(id) {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
-                    if (response.success) {
-                        table.ajax.reload();
-                        Swal.fire('Berhasil!', response.message, 'success');
+                    console.log('Delete response:', response);
+                    
+                    if (response && response.success) {
+                        // IMPROVED: Multiple strategies to ensure table refresh
+                        console.log('Delete successful, refreshing table...');
+                        
+                        // Strategy 1: Force reload with callback
+                        if (window.userTable) {
+                            window.userTable.ajax.reload(function(json) {
+                                console.log('Table reloaded after delete, new data:', json);
+                                
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    text: response.message || 'User berhasil dihapus',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                                
+                            }, false); // false = don't reset paging
+                        } else {
+                            console.error('Table object not found, forcing page reload');
+                            location.reload();
+                        }
+                        
+                    } else {
+                        console.error('Delete failed, response:', response);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: response?.message || 'Terjadi kesalahan saat menghapus data'
+                        });
                     }
                 },
-                error: function(xhr) {
-                    let message = xhr.responseJSON?.message || 'Terjadi kesalahan pada server';
-                    Swal.fire('Error!', message, 'error');
-                }
+                error: function(xhr, textStatus, errorThrown) {
+                    console.error('Delete ajax error:', {
+                        xhr: xhr,
+                        textStatus: textStatus,
+                        errorThrown: errorThrown,
+                        status: xhr.status,
+                        responseText: xhr.responseText
+                    });
+                    
+                    let message = 'Terjadi kesalahan pada server';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    } else if (xhr.status === 404) {
+                        message = 'Data tidak ditemukan';
+                    } else if (xhr.status === 403) {
+                        message = 'Akses ditolak';
+                    } else if (xhr.status === 500) {
+                        message = 'Kesalahan server internal';
+                    } else if (xhr.status === 0) {
+                        message = 'Koneksi terputus, periksa jaringan internet Anda';
+                    }
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: message
+                    });
+                },
+                timeout: 30000 // 30 seconds timeout
             });
         }
     });
 }
+
+// IMPROVED: Add keyboard shortcuts for debugging
+$(document).keydown(function(e) {
+    // Ctrl+Shift+R = Force refresh table (for debugging)
+    if (e.ctrlKey && e.shiftKey && e.which === 82) {
+        e.preventDefault();
+        console.log('Force refresh triggered by keyboard shortcut');
+        refreshTable();
+    }
+});
+
+// IMPROVED: Add visibility change handler to refresh when tab becomes active
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && window.userTable) {
+        console.log('Tab became visible, refreshing table');
+        window.userTable.ajax.reload(null, false);
+    }
+});
 </script>
 @endpush
