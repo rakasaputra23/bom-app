@@ -91,7 +91,9 @@
                       id="revisi_id" name="revisi_id" required style="width: 100%;">
                 <option value="">Pilih Revisi</option>
                 @foreach($revisis as $revisi)
-                  <option value="{{ $revisi->id }}" {{ old('revisi_id', $billOfMaterial->revisi_id) == $revisi->id ? 'selected' : '' }}>
+                  <option value="{{ $revisi->id }}" 
+                          data-jenis-revisi="{{ $revisi->jenis_revisi }}"
+                          {{ old('revisi_id', $billOfMaterial->revisi_id) == $revisi->id ? 'selected' : '' }}>
                     {{ $revisi->nama_revisi }}
                   </option>
                 @endforeach
@@ -138,18 +140,27 @@
               <table class="table table-bordered table-sm" id="itemTableDesktop">
                 <thead class="thead-light">
                   <tr>
-                    <th style="width: 20%;">Kode Material <span class="text-danger">*</span></th>
-                    <th style="width: 25%;">Deskripsi</th>
-                    <th style="width: 10%;">Qty</th>
-                    <th style="width: 10%;">Satuan</th>
-                    <th style="width: 15%;">Spesifikasi</th>
-                    <th style="width: 15%;">Keterangan</th>
+                    <th style="width: 5%;">No</th>
+                    <th style="width: 8%;">Rev</th>
+                    <th style="width: 18%;">Kode Material <span class="text-danger">*</span></th>
+                    <th style="width: 22%;">Deskripsi</th>
+                    <th style="width: 8%;">Qty</th>
+                    <th style="width: 8%;">Satuan</th>
+                    <th style="width: 13%;">Spesifikasi</th>
+                    <th style="width: 13%;">Keterangan</th>
                     <th style="width: 5%;">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   @foreach($billOfMaterial->itemBom as $index => $item)
                   <tr data-row="{{ $index }}">
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td>
+                      <input type="text" class="form-control rev-input bg-light text-center" 
+                             name="items[{{ $index }}][rev]" 
+                             value="{{ old('items.'.$index.'.rev', $item->rev) }}" 
+                             readonly>
+                    </td>
                     <td>
                       <select class="form-control material-select select2" name="items[{{ $index }}][material_id]" data-row="{{ $index }}" required style="width: 100%;">
                         <option value="">Pilih Kode Material</option>
@@ -204,6 +215,14 @@
                 <button type="button" class="btn btn-danger btn-sm remove-item" title="Hapus Item">
                   <i class="fas fa-trash"></i>
                 </button>
+              </div>
+              
+              <div class="form-group">
+                <label>Rev</label>
+                <input type="text" class="form-control rev-input bg-light text-center" 
+                       name="items[{{ $index }}][rev]" 
+                       value="{{ old('items.'.$index.'.rev', $item->rev) }}" 
+                       readonly>
               </div>
               
               <div class="form-group">
@@ -385,7 +404,7 @@
         
         <div class="alert alert-info">
           <small><i class="fas fa-info-circle"></i> <strong>Catatan:</strong> 
-          Nomor BOM dan Proyek tidak dapat diubah setelah BOM dibuat.</small>
+          Nomor BOM dan Proyek tidak dapat diubah setelah BOM dibuat. Field Rev akan otomatis terisi berdasarkan jenis revisi yang dipilih.</small>
         </div>
       </div>
     </div>
@@ -481,6 +500,12 @@
   font-size: 0.875rem;
 }
 
+/* Rev field styling */
+.rev-input {
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 576px) {
   .card-body {
@@ -534,8 +559,9 @@
 <script>
 $(document).ready(function() {
   let rowCounter = {{ count($billOfMaterial->itemBom) }};
+  let currentJenisRevisi = '{{ $billOfMaterial->revisi->jenis_revisi ?? '' }}'; // Store current revision type
   
-  // Initialize main selects - removed proyek_id since it's now read-only
+  // Initialize main selects
   const initSelect2 = (selector, placeholder) => {
     $(selector).select2({
       theme: 'bootstrap4',
@@ -550,6 +576,26 @@ $(document).ready(function() {
   // Initialize Select2 for existing material selects
   $('.material-select').each(function() {
     initSelect2($(this), 'Pilih Kode Material');
+  });
+
+  // Auto-fill rev fields for existing items
+  function updateRevFields() {
+    $('.rev-input').each(function() {
+      $(this).val(currentJenisRevisi);
+    });
+  }
+
+  // Update rev fields when page loads
+  updateRevFields();
+
+  // Handle revision change - update all rev fields
+  $('#revisi_id').on('change', function() {
+    const selectedOption = $(this).find('option:selected');
+    const jenisRevisi = selectedOption.data('jenis-revisi') || '';
+    currentJenisRevisi = jenisRevisi;
+    
+    // Update all existing rev fields
+    updateRevFields();
   });
 
   // Force auto-fill untuk existing items setelah Select2 ready
@@ -580,7 +626,8 @@ $(document).ready(function() {
         const materialValue = $desktopRow.find('.material-select').val();
         $mobileCard.find('.material-select').val(materialValue);
         
-        // Sync other fields
+        // Sync other fields including rev
+        $mobileCard.find('.rev-input').val($desktopRow.find('.rev-input').val());
         $mobileCard.find('.desc').val($desktopRow.find('.desc').val());
         $mobileCard.find('.qty-input').val($desktopRow.find('.qty-input').val());
         $mobileCard.find('.uom').val($desktopRow.find('.uom').val());
@@ -702,11 +749,18 @@ $(document).ready(function() {
     return isValid;
   }
 
-  // Add new item
+  // Add new item - updated with rev field
   function addNewItem() {
-    // Desktop table row template
+    // Desktop table row template - updated with rev column
     const desktopTemplate = `
       <tr data-row="${rowCounter}">
+        <td class="text-center">${rowCounter + 1}</td>
+        <td>
+          <input type="text" class="form-control rev-input bg-light text-center" 
+                 name="items[${rowCounter}][rev]" 
+                 value="${currentJenisRevisi}" 
+                 readonly>
+        </td>
         <td>
           <select class="form-control material-select select2" name="items[${rowCounter}][material_id]" data-row="${rowCounter}" required style="width: 100%;">
             <option value="">Pilih Kode Material</option>
@@ -730,7 +784,7 @@ $(document).ready(function() {
       </tr>
     `;
     
-    // Mobile card template
+    // Mobile card template - updated with rev field
     const mobileTemplate = `
       <div class="item-card-mobile" data-row="${rowCounter}">
         <div class="card-header">
@@ -738,6 +792,14 @@ $(document).ready(function() {
           <button type="button" class="btn btn-danger btn-sm remove-item" title="Hapus Item">
             <i class="fas fa-trash"></i>
           </button>
+        </div>
+        
+        <div class="form-group">
+          <label>Rev</label>
+          <input type="text" class="form-control rev-input bg-light text-center" 
+                 name="items[${rowCounter}][rev]" 
+                 value="${currentJenisRevisi}" 
+                 readonly>
         </div>
         
         <div class="form-group">
@@ -827,12 +889,14 @@ $(document).ready(function() {
     }
   });
 
-  // Update indices after removal
+  // Update indices after removal - updated with rev field
   function updateArrayIndices() {
     let index = 0;
     $('#itemTableDesktop tbody tr').each(function() {
       const $row = $(this);
       $row.attr('data-row', index);
+      $row.find('td:first').text(index + 1); // Update row number
+      $row.find('.rev-input').attr('name', `items[${index}][rev]`);
       $row.find('.material-select').attr('name', `items[${index}][material_id]`).attr('data-row', index);
       $row.find('.qty-input').attr('name', `items[${index}][qty]`);
       $row.find('.uom').attr('name', `items[${index}][satuan]`);
@@ -845,6 +909,7 @@ $(document).ready(function() {
       const $card = $(this);
       $card.attr('data-row', index);
       $card.find('.card-header strong').text(`Item #${index + 1}`);
+      $card.find('.rev-input').attr('name', `items[${index}][rev]`);
       $card.find('.material-select').attr('name', `items[${index}][material_id]`).attr('data-row', index);
       $card.find('.qty-input').attr('name', `items[${index}][qty]`);
       $card.find('.uom').attr('name', `items[${index}][satuan]`);
@@ -880,18 +945,6 @@ $(document).ready(function() {
 
   // Form submission handler
   $('#bomForm').on('submit', function(e) {
-    const error = validateForm();
-    if (error) {
-      e.preventDefault();
-      showAlert('warning', 'Peringatan!', error);
-      return false;
-    }
-  });
-
-  // Submit button handler
-  $('button[name="action"][value="submit"]').on('click', function(e) {
-    e.preventDefault();
-    
     const error = validateForm();
     if (error) {
       showAlert('warning', 'Peringatan!', error);

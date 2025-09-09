@@ -269,7 +269,7 @@
                 </button>
 
                 <!-- Export PDF Dropdown - IMPROVED -->
-                @if(Auth::user()->can('bom.export'))
+                @if(Auth::user()->can('export-pdf'))
                     <div class="btn-group export-dropdown" role="group">
                         <button type="button" class="btn btn-sm btn-success dropdown-toggle" 
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"

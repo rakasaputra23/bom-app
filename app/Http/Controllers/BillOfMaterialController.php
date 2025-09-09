@@ -1105,7 +1105,7 @@ public function update(Request $request, $id)
 private function canExportBom($bom)
 {
     // Check basic export permission
-    if (!Auth::user()->can('bom.export')) {
+    if (!Auth::user()->can('export-pdf')) {
         return false;
     }
     
@@ -1391,7 +1391,7 @@ public function previewPdfWithQrCode($id)
             }
             
             // Check permission
-            if (!Auth::user()->can('bom.export')) {
+            if (!Auth::user()->can('export-pdf')) {
                 return back()->with('error', 'Anda tidak memiliki akses untuk export PDF');
             }
             
