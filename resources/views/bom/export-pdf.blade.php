@@ -531,7 +531,7 @@
                         <span class="info-label">Tgl. Terbit</span>: {{ $bom->tanggal ? date('d/m/Y', strtotime($bom->tanggal)) : '' }}
                     </div>
                     <div class="info-field">
-                        <span class="info-label">Revisi</span>: {{ $bom->revisi ? $bom->revisi->jenis_revisi . ' - ' . $bom->revisi->keterangan : 'Tidak ada revisi' }}
+                        <span class="info-label">Revisi List</span>: {{ $bom->revisi ? $bom->revisi->jenis_revisi . ' - ' . $bom->revisi->keterangan : 'Tidak ada revisi' }}
                     </div>
                 </div>
             </div>

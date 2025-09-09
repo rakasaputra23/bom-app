@@ -188,11 +188,11 @@
               <table class="table table-bordered table-sm" id="itemTableDesktop">
                 <thead class="thead-light">
                   <tr>
-                    <th style="width: 25%;">Kode Material <span class="text-danger">*</span></th>
-                    <th style="width: 20%;">Deskripsi</th>
-                    <th style="width: 15%;">Qty</th>
+                    <th style="width: 20%;">Kode Material <span class="text-danger">*</span></th>
+                    <th style="width: 25%;">Deskripsi</th>
+                    <th style="width: 10%;">Qty</th>
                     <th style="width: 10%;">Satuan</th>
-                    <th style="width: 20%;">Spesifikasi</th>
+                    <th style="width: 15%;">Spesifikasi</th>
                     <th style="width: 15%;">Keterangan</th>
                     <th style="width: 5%;">Aksi</th>
                   </tr>
@@ -343,15 +343,7 @@
 <link rel="stylesheet" href="{{ asset('plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') }}">
 <!-- Custom CSS -->
 <style>
-/* Fix untuk Select2 dropdown z-index */
-.main-header .navbar {
-  z-index: 1030 !important;
-}
-
-.main-sidebar {
-  z-index: 1020 !important;
-}
-
+/* Select2 z-index fixes */
 .select2-container {
   z-index: 1000 !important;
 }
@@ -360,105 +352,12 @@
   z-index: 1010 !important;
 }
 
-.select2-container--bootstrap4 .select2-dropdown {
-  z-index: 1010 !important;
-  border: 1px solid #ced4da !important;
-  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) !important;
-}
-
-#itemTableDesktop .select2-container {
-  z-index: 1005 !important;
-}
-
-#itemTableDesktop .select2-dropdown {
-  z-index: 1015 !important;
-}
-
 .select2-container--open {
   z-index: 1005 !important;
 }
 
 .select2-container--open .select2-dropdown {
   z-index: 1015 !important;
-}
-
-.card {
-  position: relative;
-  z-index: 1;
-}
-
-.card-body {
-  position: relative;
-  z-index: 2;
-}
-
-.content-wrapper {
-  z-index: 1;
-}
-
-.select2-container .select2-selection {
-  position: relative;
-  z-index: 1;
-}
-
-.select2-container--bootstrap4.select2-container--open .select2-selection {
-  z-index: 1005 !important;
-}
-
-.table-responsive {
-  position: relative;
-  z-index: 1;
-}
-
-.table-responsive .select2-container {
-  z-index: 1005 !important;
-}
-
-.table-responsive .select2-dropdown {
-  z-index: 1015 !important;
-}
-
-.navbar-nav .nav-item .nav-link,
-.navbar-brand,
-.navbar-toggler {
-  position: relative;
-  z-index: 1040 !important;
-}
-
-/* Mobile Sidebar Fix */
-@media (max-width: 991.98px) {
-  .main-sidebar {
-    z-index: 1050 !important;
-  }
-  
-  .main-sidebar .sidebar {
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  
-  /* Pastikan sidebar overlay bisa diklik */
-  .sidebar-mini.sidebar-collapse .main-sidebar:hover {
-    width: 250px !important;
-  }
-  
-  /* Fix untuk mobile menu toggle */
-  [data-widget="pushmenu"] {
-    pointer-events: auto !important;
-    z-index: 1060 !important;
-  }
-  
-  /* Pastikan backdrop sidebar bisa diklik untuk menutup */
-  .sidebar-open .content-wrapper::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.1);
-    z-index: 1040;
-    pointer-events: auto;
-  }
 }
 
 /* SweetAlert2 z-index */
@@ -484,12 +383,6 @@
 
 .swal2-shown .swal2-container * {
   pointer-events: auto !important;
-}
-
-.swal2-shown .form-control:focus,
-.swal2-shown .select2-container--bootstrap4 .select2-selection--single:focus {
-  box-shadow: none !important;
-  border-color: #ced4da !important;
 }
 
 .swal2-backdrop-show {
@@ -547,21 +440,8 @@
   font-size: 0.875rem;
 }
 
-.item-card-mobile .form-control,
-.item-card-mobile .select2-container {
-  font-size: 0.875rem;
-}
-
-.item-card-mobile .btn-danger {
-  padding: 0.375rem 0.75rem;
-}
-
 /* Responsive adjustments */
 @media (max-width: 576px) {
-  .table-responsive {
-    font-size: 0.875rem;
-  }
-  
   .card-body {
     padding: 1rem 0.75rem;
   }
@@ -569,12 +449,6 @@
   .item-card-mobile {
     padding: 0.75rem;
     margin-bottom: 0.75rem;
-  }
-  
-  .item-card-mobile .form-control,
-  .item-card-mobile .select2-container--bootstrap4 .select2-selection--single {
-    height: calc(1.8125rem + 2px);
-    font-size: 0.875rem;
   }
   
   .btn-sm {
@@ -585,20 +459,9 @@
   .form-control {
     font-size: 0.875rem;
   }
-  
-  .select2-container--bootstrap4 .select2-selection--single {
-    height: calc(1.8125rem + 2px);
-    font-size: 0.875rem;
-  }
 }
 
-@media (max-width: 768px) {
-  .card-body {
-    padding: 1rem 0.75rem;
-  }
-}
-
-/* Desktop Table Styling - Full width columns */
+/* Desktop Table Styling */
 #itemTableDesktop th,
 #itemTableDesktop td {
   vertical-align: middle;
@@ -617,20 +480,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* Kolom yang dapat scroll horizontal jika diperlukan */
-#itemTableDesktop tbody tr td:nth-child(2),
-#itemTableDesktop tbody tr td:nth-child(5) {
-  max-width: 200px;
-  word-wrap: break-word;
-  white-space: normal;
-}
-
-#itemTableDesktop tbody tr td:nth-child(6) {
-  max-width: 150px;
-  word-wrap: break-word;
-  white-space: normal;
 }
 </style>
 @endpush
@@ -651,8 +500,7 @@ $(document).ready(function() {
       theme: 'bootstrap4',
       placeholder,
       allowClear: true,
-      width: '100%',
-      dropdownAutoWidth: true
+      width: '100%'
     });
   };
 
@@ -716,10 +564,43 @@ $(document).ready(function() {
     generateNomorBom();
   });
   
-  // Material change handler
+  // Sinkronisasi data antara desktop dan mobile view
+  function syncDataBetweenViews() {
+    // Sync dari desktop ke mobile
+    $('#itemTableDesktop tbody tr').each(function(index) {
+      const $desktopRow = $(this);
+      const $mobileCard = $(`.item-card-mobile[data-row="${$desktopRow.data('row')}"]`);
+      
+      if ($mobileCard.length) {
+        // Sync select value
+        const materialValue = $desktopRow.find('.material-select').val();
+        $mobileCard.find('.material-select').val(materialValue);
+        
+        // Sync other fields
+        $mobileCard.find('.desc').val($desktopRow.find('.desc').val());
+        $mobileCard.find('.qty-input').val($desktopRow.find('.qty-input').val());
+        $mobileCard.find('.uom').val($desktopRow.find('.uom').val());
+        $mobileCard.find('.spec').val($desktopRow.find('.spec').val());
+        $mobileCard.find('input[name*="keterangan"]').val($desktopRow.find('input[name*="keterangan"]').val());
+      }
+    });
+  }
+
+  // Event listener untuk perubahan screen size
+  let resizeTimeout;
+  $(window).on('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function() {
+      syncDataBetweenViews();
+    }, 250);
+  });
+
+  // Material change handler - perbaikan untuk sinkronisasi
   $(document).on('change', '.material-select', function() {
-    const $option = $(this).find('option:selected');
-    const rowIndex = $(this).data('row');
+    const $select = $(this);
+    const $container = $select.closest('tr, .item-card-mobile');
+    const rowIndex = $container.data('row');
+    const $option = $select.find('option:selected');
     
     if ($option.val()) {
       const data = {
@@ -729,44 +610,72 @@ $(document).ready(function() {
         qty: $option.data('qty') || 1
       };
       
-      // Update desktop table
-      const $desktopRow = $(`#itemTableDesktop tbody tr[data-row="${rowIndex}"]`);
-      if ($desktopRow.length) {
-        $desktopRow.find('.desc-field').val(data.desc);
-        $desktopRow.find('.spec-field').val(data.spec);
-        $desktopRow.find('.uom-field').val(data.uom);
-        $desktopRow.find('.qty-input').val(data.qty);
-      }
+      // Update current view
+      const $qtyInput = $container.find('.qty-input');
+      $container.find('.desc').val(data.desc);
+      $container.find('.spec').val(data.spec);
+      $container.find('.uom').val(data.uom);
       
-      // Update mobile card
-      const $mobileCard = $(`.item-card-mobile[data-row="${rowIndex}"]`);
-      if ($mobileCard.length) {
-        $mobileCard.find('.desc-field').val(data.desc);
-        $mobileCard.find('.spec-field').val(data.spec);
-        $mobileCard.find('.uom-field').val(data.uom);
-        $mobileCard.find('.qty-input').val(data.qty);
+      // Set qty dari UOM dan buat readonly
+      $qtyInput.val(data.qty);
+      $qtyInput.addClass('bg-light').prop('readonly', true);
+      
+      // Sinkronisasi ke view yang lain
+      if ($container.is('tr')) {
+        // Update mobile card
+        const $mobileCard = $(`.item-card-mobile[data-row="${rowIndex}"]`);
+        if ($mobileCard.length) {
+          $mobileCard.find('.material-select').val($option.val()).trigger('change.select2');
+          $mobileCard.find('.desc').val(data.desc);
+          $mobileCard.find('.spec').val(data.spec);
+          $mobileCard.find('.uom').val(data.uom);
+          $mobileCard.find('.qty-input').val(data.qty).addClass('bg-light').prop('readonly', true);
+        }
+      } else {
+        // Update desktop row
+        const $desktopRow = $(`#itemTableDesktop tbody tr[data-row="${rowIndex}"]`);
+        if ($desktopRow.length) {
+          $desktopRow.find('.material-select').val($option.val()).trigger('change.select2');
+          $desktopRow.find('.desc').val(data.desc);
+          $desktopRow.find('.spec').val(data.spec);
+          $desktopRow.find('.uom').val(data.uom);
+          $desktopRow.find('.qty-input').val(data.qty).addClass('bg-light').prop('readonly', true);
+        }
       }
       
       checkDuplicateMaterials();
     } else {
-      // Clear fields for both desktop and mobile
-      const $desktopRow = $(`#itemTableDesktop tbody tr[data-row="${rowIndex}"]`);
-      const $mobileCard = $(`.item-card-mobile[data-row="${rowIndex}"]`);
+      // Clear fields pada kedua view
+      $container.find('.desc, .spec, .uom').val('');
+      $container.find('.qty-input').val('').removeClass('bg-light').prop('readonly', false);
       
-      $desktopRow.find('.desc-field, .spec-field, .uom-field, .qty-input').val('');
-      $mobileCard.find('.desc-field, .spec-field, .uom-field, .qty-input').val('');
+      // Clear pada view yang lain juga
+      if ($container.is('tr')) {
+        const $mobileCard = $(`.item-card-mobile[data-row="${rowIndex}"]`);
+        $mobileCard.find('.desc, .spec, .uom').val('');
+        $mobileCard.find('.qty-input').val('').removeClass('bg-light').prop('readonly', false);
+      } else {
+        const $desktopRow = $(`#itemTableDesktop tbody tr[data-row="${rowIndex}"]`);
+        $desktopRow.find('.desc, .spec, .uom').val('');
+        $desktopRow.find('.qty-input').val('').removeClass('bg-light').prop('readonly', false);
+      }
     }
   });
 
-  // Optimized duplicate check
+  // Optimized duplicate check - hanya check yang visible
   function checkDuplicateMaterials() {
     const materials = [];
     let isValid = true;
     
-    $('.material-select').each(function() {
+    // Tentukan selector berdasarkan view yang aktif (desktop atau mobile)
+    const isDesktopView = window.innerWidth >= 768;
+    const selector = isDesktopView ? '#itemTableDesktop tbody .material-select' : '.item-card-mobile .material-select';
+    
+    $(selector).each(function() {
       const $this = $(this);
       const value = $this.val();
       
+      // Clear previous validation
       $this.removeClass('is-invalid').next('.invalid-feedback').remove();
       
       if (value && materials.includes(value)) {
@@ -800,26 +709,12 @@ $(document).ready(function() {
             @endforeach
           </select>
         </td>
-        <td>
-          <input type="text" class="form-control desc-field" name="items[${rowCounter}][deskripsi]" readonly>
-        </td>
-        <td>
-          <input type="number" class="form-control qty-input" name="items[${rowCounter}][qty]" min="1" step="0.01" required readonly>
-        </td>
-        <td>
-          <input type="text" class="form-control uom-field" name="items[${rowCounter}][satuan]" readonly>
-        </td>
-        <td>
-          <input type="text" class="form-control spec-field" name="items[${rowCounter}][spesifikasi]" readonly>
-        </td>
-        <td>
-          <input type="text" class="form-control" name="items[${rowCounter}][keterangan]" placeholder="Keterangan">
-        </td>
-        <td>
-          <button type="button" class="btn btn-danger btn-sm remove-item" title="Hapus Item">
-            <i class="fas fa-trash"></i>
-          </button>
-        </td>
+        <td><input type="text" class="form-control desc bg-light" readonly></td>
+        <td><input type="number" class="form-control qty-input bg-light" name="items[${rowCounter}][qty]" step="0.01" min="0.01" readonly></td>
+        <td><input type="text" class="form-control uom bg-light" name="items[${rowCounter}][satuan]" readonly></td>
+        <td><input type="text" class="form-control spec bg-light" readonly></td>
+        <td><input type="text" class="form-control" name="items[${rowCounter}][keterangan]" placeholder="Keterangan (opsional)"></td>
+        <td><button type="button" class="btn btn-danger btn-sm remove-item" title="Hapus Item"><i class="fas fa-trash"></i></button></td>
       </tr>
     `;
     
@@ -851,27 +746,27 @@ $(document).ready(function() {
         
         <div class="form-group">
           <label>Deskripsi</label>
-          <input type="text" class="form-control desc-field" name="items[${rowCounter}][deskripsi]" readonly>
+          <input type="text" class="form-control desc bg-light" readonly>
         </div>
         
         <div class="row">
           <div class="col-6">
             <div class="form-group">
               <label>Qty <span class="text-danger">*</span></label>
-              <input type="number" class="form-control qty-input" name="items[${rowCounter}][qty]" min="1" step="0.01" required readonly>
+              <input type="number" class="form-control qty-input bg-light" name="items[${rowCounter}][qty]" step="0.01" min="0.01" readonly>
             </div>
           </div>
           <div class="col-6">
             <div class="form-group">
               <label>Satuan</label>
-              <input type="text" class="form-control uom-field" name="items[${rowCounter}][satuan]" readonly>
+              <input type="text" class="form-control uom bg-light" name="items[${rowCounter}][satuan]" readonly>
             </div>
           </div>
         </div>
         
         <div class="form-group">
           <label>Spesifikasi</label>
-          <textarea class="form-control spec-field" name="items[${rowCounter}][spesifikasi]" rows="2" readonly style="resize: none; overflow-y: auto;"></textarea>
+          <textarea class="form-control spec bg-light" rows="2" readonly style="resize: none; overflow-y: auto;"></textarea>
         </div>
         
         <div class="form-group">
@@ -894,14 +789,19 @@ $(document).ready(function() {
 
   $('#addItem').click(addNewItem);
   
-  // Remove item with validation - FUNGSI MINIMAL 1 ITEM
+  // Remove item with validation - perbaikan untuk responsive
   $(document).on('click', '.remove-item', function() {
     const $container = $(this).closest('[data-row]');
     const rowIndex = $container.data('row');
-    const totalItems = $('.item-card-mobile, #itemTableDesktop tbody tr').length;
     
-    if (totalItems > 1) {
-      // Remove from both desktop and mobile
+    // Hitung total item dari view yang aktif
+    const isDesktopView = window.innerWidth >= 768;
+    const itemCount = isDesktopView ? 
+      $('#itemTableDesktop tbody tr').length : 
+      $('.item-card-mobile').length;
+    
+    if (itemCount > 1) {
+      // Destroy select2 dan remove dari kedua view
       $(`#itemTableDesktop tbody tr[data-row="${rowIndex}"]`).find('.material-select').select2('destroy');
       $(`.item-card-mobile[data-row="${rowIndex}"]`).find('.material-select').select2('destroy');
       
@@ -909,21 +809,39 @@ $(document).ready(function() {
       $(`.item-card-mobile[data-row="${rowIndex}"]`).remove();
       
       checkDuplicateMaterials();
-      updateMobileItemNumbers();
+      updateArrayIndices();
     } else {
-      // TAMPILKAN ALERT JIKA MENCOBA MENGHAPUS ITEM TERAKHIR
       showAlert('warning', 'Tidak dapat menghapus!', 'Minimal harus ada 1 item BOM. Item ini tidak dapat dihapus.');
     }
   });
 
-  // Update mobile item numbers after removal
-  function updateMobileItemNumbers() {
-    $('.item-card-mobile').each(function(index) {
-      $(this).find('.card-header strong').text(`Item #${index + 1}`);
+  // Update indices after removal
+  function updateArrayIndices() {
+    let index = 0;
+    $('#itemTableDesktop tbody tr').each(function() {
+      const $row = $(this);
+      $row.attr('data-row', index);
+      $row.find('.material-select').attr('name', `items[${index}][material_id]`).attr('data-row', index);
+      $row.find('.qty-input').attr('name', `items[${index}][qty]`);
+      $row.find('.uom').attr('name', `items[${index}][satuan]`);
+      $row.find('input[placeholder*="Keterangan"]').attr('name', `items[${index}][keterangan]`);
+      index++;
+    });
+    
+    index = 0;
+    $('.item-card-mobile').each(function() {
+      const $card = $(this);
+      $card.attr('data-row', index);
+      $card.find('.card-header strong').text(`Item #${index + 1}`);
+      $card.find('.material-select').attr('name', `items[${index}][material_id]`).attr('data-row', index);
+      $card.find('.qty-input').attr('name', `items[${index}][qty]`);
+      $card.find('.uom').attr('name', `items[${index}][satuan]`);
+      $card.find('input[placeholder*="Keterangan"]').attr('name', `items[${index}][keterangan]`);
+      index++;
     });
   }
   
-  // Form validation
+  // Form validation - perbaiki untuk responsive
   function validateForm() {
     // Check if nomor BOM sudah di-generate
     const nomorBom = $('#nomor_bom').val();
@@ -931,21 +849,36 @@ $(document).ready(function() {
       return 'Silakan pilih proyek dan jenis dokumen untuk generate nomor BOM';
     }
     
-    const hasItems = $('.item-card-mobile, #itemTableDesktop tbody tr').length > 0;
+    // Tentukan view yang aktif
+    const isDesktopView = window.innerWidth >= 768;
+    const itemSelector = isDesktopView ? '#itemTableDesktop tbody tr' : '.item-card-mobile';
+    
+    const hasItems = $(itemSelector).length > 0;
     if (!hasItems) return 'Minimal harus ada 1 item!';
     
     let hasValidItems = false;
-    $('.material-select').each(function() {
-      const $container = $(this).closest('[data-row]');
-      const materialId = $(this).val();
+    let hasInvalidQty = false;
+    
+    $(itemSelector).each(function() {
+      const $container = $(this);
+      const materialId = $container.find('.material-select').val();
       const qty = $container.find('.qty-input').val();
       
-      if (materialId && qty && parseFloat(qty) > 0) {
-        hasValidItems = true;
-        return false; // Break loop
+      // Reset validation state
+      $container.find('.qty-input').removeClass('is-invalid').next('.invalid-feedback').remove();
+      
+      if (materialId) {
+        if (!qty || qty === '' || parseFloat(qty) <= 0) {
+          hasInvalidQty = true;
+          $container.find('.qty-input').addClass('is-invalid');
+          $('<div class="invalid-feedback">Quantity harus diisi dan lebih dari 0</div>').insertAfter($container.find('.qty-input'));
+        } else {
+          hasValidItems = true;
+        }
       }
     });
     
+    if (hasInvalidQty) return 'Ada item dengan quantity yang tidak valid. Pastikan semua quantity diisi dan lebih dari 0';
     if (!hasValidItems) return 'Minimal harus ada 1 item dengan material dan quantity yang valid';
     if (!checkDuplicateMaterials()) return 'Terdapat material yang sama dipilih lebih dari sekali!';
     
@@ -1070,8 +1003,25 @@ $(document).ready(function() {
     return Swal.fire(config);
   }
 
+  // Sync keterangan field antara desktop dan mobile
+  $(document).on('input', 'input[name*="keterangan"]', function() {
+    const $input = $(this);
+    const $container = $input.closest('tr, .item-card-mobile');
+    const rowIndex = $container.data('row');
+    const value = $input.val();
+    
+    // Sync ke view yang lain
+    if ($container.is('tr')) {
+      // Update mobile card
+      $(`.item-card-mobile[data-row="${rowIndex}"] input[name*="keterangan"]`).val(value);
+    } else {
+      // Update desktop row
+      $(`#itemTableDesktop tbody tr[data-row="${rowIndex}"] input[name*="keterangan"]`).val(value);
+    }
+  });
+
   // Clear validation on input change
-  $(document).on('change', 'input, select', function() {
+  $(document).on('change input', 'input, select', function() {
     $(this).removeClass('is-invalid').next('.invalid-feedback').remove();
   });
 });
