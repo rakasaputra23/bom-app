@@ -5,7 +5,7 @@
     <title>Bill of Material - {{ $bom->nomor_bom }}</title>
     <style>
         @page {
-            margin: 8mm;
+            margin: 6mm;
             size: A4 landscape;
         }
         
@@ -23,7 +23,7 @@
             border: 3px solid #000;
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             position: relative;
         }
         
@@ -217,6 +217,7 @@
             table-layout: fixed;
             height: 120px;
             border-top: 3px solid #000;
+            position: relative;
         }
         
         .signature-row {
@@ -250,7 +251,7 @@
             margin: 4px 0;
         }
         
-        /* QR Code Styles - keeping for potential future use */
+        /* QR Code Styles */
         .qr-code {
             width: 35px;
             height: 35px;
@@ -286,25 +287,24 @@
         }
         
         .signature-name-line.right {
-            text-align: right; /* Changed from center to right */
-            margin-right: 15px; /* Add some space from right edge */
+            text-align: right;
+            margin-right: 15px;
             margin-left: 0px;
         }
         
         /* QR Code positioning for each column */
         .signature-col:first-child .qr-code {
-            margin: 0; /* Left column - align left */
+            margin: 0;
         }
         
         .signature-col:nth-child(2) .qr-code {
-            margin: 0 auto; /* Middle column - center */
+            margin: 0 auto;
         }
         
         .signature-col:last-child .qr-code {
-            margin: 0 70px 0 auto; /* Right column - align right with 70px margin */
+            margin: 0 70px 0 auto;
         }
 
-        
         .signature-nip {
             font-size: 7pt;
             text-align: center;
@@ -316,8 +316,8 @@
         }
         
         .signature-nip.right {
-            text-align: right; /* This was already correct */
-            margin-right: 70px; /* Add some space from right edge to match name */
+            text-align: right;
+            margin-right: 70px;
         }
         
         .signature-date.right {
@@ -332,17 +332,25 @@
             padding-left: 70px;
         }
         
-        /* New style for right column QR code positioning - removed since not using QR codes */
-        
-        .page-number {
-            position: fixed;
-            bottom: 5mm;
-            right: 10mm;
+        /* FOOTER POSITIONING - DIPERBAIKI */
+        .form-number {
+            position: absolute;
+            bottom: 3px;
+            left: 8px;
             font-size: 8pt;
             color: #000;
-            background: white;
-            padding: 2px 4px;
-            z-index: 1000;
+            font-weight: normal;
+            z-index: 1001;
+        }
+        
+        .page-number {
+            position: absolute;
+            bottom: 3px;
+            right: 8px;
+            font-size: 8pt;
+            color: #000;
+            font-weight: normal;
+            z-index: 1001;
         }
         
         .empty-row {
@@ -373,34 +381,31 @@
                 page-break-before: always;
             }
             
-            .page-number {
-                position: absolute;
-                bottom: 5mm;
-                right: 10mm;
-            }
-            
             .main-table tr {
                 page-break-inside: avoid;
+            }
+            
+            /* Pastikan footer tetap di bawah */
+            .form-number {
+                position: fixed;
+                bottom: 3mm;
+                left: 8mm;
+            }
+            
+            .page-number {
+                position: fixed;
+                bottom: 3mm;
+                right: 8mm;
             }
         }
         
         .content-page {
-            min-height: calc(100vh - 35mm);
-            margin-bottom: 20px;
+            position: relative;
+            margin-bottom: 25px;
         }
         
-        /* Responsive adjustments */
-        @media screen and (max-width: 1200px) {
-            .header {
-                font-size: 7pt;
-            }
-            
-            .main-table th,
-            .main-table td {
-                font-size: 7pt;
-                padding: 2px;
-            }
-            
+        /* Responsive adjustments - DIOPTIMALKAN untuk A4 Landscape */
+        @media screen and (max-width: 1400px) {
             .header-center h1 {
                 font-size: 24pt;
             }
@@ -408,15 +413,24 @@
             .header-center h2 {
                 font-size: 20pt;
             }
-        }
-        
-        @media screen and (max-width: 900px) {
-            .main-table th,
-            .main-table td {
-                font-size: 6pt;
-                padding: 1px;
+            
+            .logo-text {
+                font-size: 16pt;
+                padding: 20px 6px;
             }
             
+            .main-table th,
+            .main-table td {
+                font-size: 7pt;
+                padding: 2px 1px;
+            }
+            
+            .info-field {
+                font-size: 7pt;
+            }
+        }
+        
+        @media screen and (max-width: 1200px) {
             .header-center h1 {
                 font-size: 22pt;
             }
@@ -426,23 +440,60 @@
             }
             
             .logo-text {
+                font-size: 14pt;
+                padding: 15px 5px;
+            }
+            
+            .main-table th,
+            .main-table td {
+                font-size: 6pt;
+                padding: 2px 1px;
+            }
+            
+            .signature-date,
+            .signature-title,
+            .signature-name-line {
+                font-size: 7pt;
+            }
+            
+            .signature-nip {
+                font-size: 6pt;
+            }
+        }
+        
+        @media screen and (max-width: 900px) {
+            .main-table th,
+            .main-table td {
+                font-size: 5pt;
+                padding: 1px;
+            }
+            
+            .header-center h1 {
+                font-size: 20pt;
+            }
+            
+            .header-center h2 {
                 font-size: 16pt;
-                padding: 20px 5px;
+            }
+            
+            .logo-text {
+                font-size: 12pt;
+                padding: 10px 3px;
             }
         }
     </style>
 </head>
 <body>
     @php
-        // KONFIGURASI UTAMA - PERBAIKAN
-        $maxRowsPerPage = 16; // Maksimal 16 row per halaman (sesuai kebutuhan Anda)
+        // KONFIGURASI UTAMA - DIOPTIMALKAN
+        $maxRowsPerPage = 18; // Maksimal 19 row per halaman untuk mengisi space yang kosong
         
         // Ambil semua item BOM
         $allItems = $bom->itemBom ? $bom->itemBom->values()->all() : [];
         
-        // ALGORITMA PERBAIKAN - Pembagian halaman yang sederhana dan konsisten
+        // ALGORITMA PEMBAGIAN HALAMAN - DIPERTAHANKAN
         $pages = [];
-        $itemsPerPage = $maxRowsPerPage; // Setiap item = 1 row
+        $itemsPerPage = $maxRowsPerPage;
         $totalItems = count($allItems);
         
         if ($totalItems == 0) {
@@ -480,7 +531,7 @@
         
         $totalPages = count($pages);
         
-        // Logo path logic
+        // Logo path logic - DIPERTAHANKAN
         $logoPath = '';
         $logoPaths = [
             public_path('img/logo-qinka.png'),
@@ -513,7 +564,7 @@
         @endphp
         
         <div class="main-container content-page">
-            <!-- Header Section -->
+            <!-- Header Section - DIPERTAHANKAN -->
             <div class="header">
                 <div class="header-left">
                     @if($logoPath && file_exists($logoPath))
@@ -537,12 +588,12 @@
                         <span class="info-label">Tgl. Terbit</span>: {{ $bom->tanggal ? date('d/m/Y', strtotime($bom->tanggal)) : '' }}
                     </div>
                     <div class="info-field">
-                        <span class="info-label">Revisi List</span>: {{ $bom->revisi ? $bom->revisi->jenis_revisi . ' - ' . $bom->revisi->keterangan : 'Tidak ada revisi' }}
+                        <span class="info-label">Revisi List</span>: {{ $bom->revisi ? $bom->revisi->jenis_revisi : 'Tidak ada revisi' }}
                     </div>
                 </div>
             </div>
             
-            <!-- Main Table -->
+            <!-- Main Table - DIPERTAHANKAN -->
             <table class="main-table">
                 <colgroup>
                     <col class="col-rev">
@@ -622,7 +673,7 @@
                 </tbody>
             </table>
             
-            <!-- Signature Section dengan QR Code - MUNCUL DI SETIAP HALAMAN -->
+            <!-- Signature Section - DIPERTAHANKAN -->
             <div class="signature-section">
                 <div class="signature-row">
                     <div class="signature-col">
@@ -706,10 +757,14 @@
             </div>
         </div>
         
-        <!-- Page Number -->
+        <!-- Form Number dan Page Number - DIPERBAIKI POSITIONING -->
+        <div class="form-number">
+            Form No.: IV-096 Rev.0
+        </div>
+        
         <div class="page-number">
             Halaman {{ $pageNum }} of {{ $totalPages }}
         </div>
     @endfor
-</body>
+</body> 
 </html>
